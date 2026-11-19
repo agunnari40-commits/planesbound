@@ -12,8 +12,15 @@
   let animId = 0;
   let open = false;
   let THREE = null;
+  /** Monotonic boot generation — Esc / re-open invalidates in-flight boots. */
+  let bootGeneration = 0;
+  let openingInFlight = false;
   const keys = new Set();
   const clock = { last: 0 };
+
+  function isBootCurrent(gen) {
+    return open && gen === bootGeneration;
+  }
 
   function ensureDom() {
     if (layer) return;
@@ -297,11 +304,16 @@
     return group;
   }
 
-  async function bootWebGL(p) {
+  async function bootWebGL(p, gen) {
     const T = await loadThree();
+    if (!isBootCurrent(gen)) return false;
 
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
+
+    // Tear down any leftover GL before attaching a new renderer to the canvas
+    teardownGl();
+    if (!isBootCurrent(gen)) return false;
 
     renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -394,7 +406,7 @@
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function tick(now) {
-      if (!open) return;
+      if (!isBootCurrent(gen) || !renderer || !camera) return;
       animId = requestAnimationFrame(tick);
       const dt = Math.min(0.05, (now - clock.last) / 1000);
       clock.last = now;
@@ -437,6 +449,10 @@
       controls.update();
       renderer.render(scene, camera);
     }
+    if (!isBootCurrent(gen)) {
+      teardownGl();
+      return false;
+    }
     animId = requestAnimationFrame(tick);
 
     // Cinematic intro ease
@@ -446,7 +462,7 @@
       camera.position.set(start.x, start.y, start.z);
       const t0 = performance.now();
       const intro = (t) => {
-        if (!open) return;
+        if (!isBootCurrent(gen) || !camera) return;
         const u = Math.min(1, (t - t0) / 1600);
         const e = 1 - Math.pow(1 - u, 3);
         camera.position.set(
@@ -458,6 +474,7 @@
       };
       requestAnimationFrame(intro);
     }
+    return true;
   }
 
   function onResize() {
@@ -484,7 +501,15 @@
   }
 
   async function openRoom() {
+    // Single in-flight open — bump generation so any prior await is ignored
+    if (openingInFlight) {
+      bootGeneration += 1;
+    }
+    openingInFlight = true;
+    const gen = ++bootGeneration;
+
     ensureDom();
+    teardownGl();
     const p = party();
     updateLabels(p);
     layer.setAttribute("data-open", "true");
@@ -496,12 +521,20 @@
     window.addEventListener("keyup", onKeyUp, true);
 
     try {
-      await bootWebGL(p);
-      canvas.focus({ preventScroll: true });
+      const ok = await bootWebGL(p, gen);
+      if (!isBootCurrent(gen)) return;
+      if (ok) {
+        canvas.focus({ preventScroll: true });
+      } else if (isBootCurrent(gen)) {
+        showFallback(p);
+      }
     } catch (err) {
+      if (!isBootCurrent(gen)) return;
       console.warn("White room WebGL unavailable, using 2.5D fallback", err);
       teardownGl();
       showFallback(p);
+    } finally {
+      if (gen === bootGeneration) openingInFlight = false;
     }
   }
 
@@ -521,7 +554,13 @@
   }
 
   function close() {
-    if (!open) return;
+    // Invalidate any in-flight boot (Esc during Three.js load)
+    bootGeneration += 1;
+    openingInFlight = false;
+    if (!open && layer?.getAttribute("data-open") !== "true") {
+      teardownGl();
+      return;
+    }
     open = false;
     keys.clear();
     window.removeEventListener("resize", onResize);
@@ -529,7 +568,10 @@
     window.removeEventListener("keyup", onKeyUp, true);
     teardownGl();
     if (layer) layer.setAttribute("data-open", "false");
-    if (fallback) fallback.dataset.on = "false";
+    if (fallback) {
+      fallback.dataset.on = "false";
+      if (canvas) canvas.style.display = "block";
+    }
     document.body.style.overflow = "";
   }
 
