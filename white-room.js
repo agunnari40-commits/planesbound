@@ -49,9 +49,12 @@
     } else {
       if (sub) {
         sub.textContent =
-          "Inside the white room — Player and Companion stand ready for the planes.";
+          "Inside the white room — skinned party stands ready. Click a figure to target.";
       }
-      if (help) help.textContent = "Drag to look · WASD / arrows to roam · Esc returns to space";
+      if (help) {
+        help.textContent =
+          "Drag to look · Click mesh/hitbox to target · WASD roam · Esc clears target / returns to space";
+      }
       if (labels) labels.style.opacity = "1";
       layer?.setAttribute("data-mode", "interior");
     }
@@ -83,6 +86,11 @@
         </div>
         <p class="white-room-help" id="whiteRoomHelp">Drag to look · Click the white room to enter · Esc to leave</p>
         <div class="white-room-labels" id="whiteRoomLabels" aria-hidden="true" style="opacity:0"></div>
+        <div class="white-room-target" id="whiteRoomTarget" hidden>
+          <span class="white-room-target-name" id="whiteRoomTargetName"></span>
+          <span class="white-room-target-meta" id="whiteRoomTargetMeta"></span>
+        </div>
+        <label class="white-room-debug-hit"><input type="checkbox" id="whiteRoomDebugHit" /> Hitboxes</label>
       </div>`;
     document.body.appendChild(layer);
     canvas = document.getElementById("whiteRoomCanvas");
@@ -90,6 +98,10 @@
     document.getElementById("whiteRoomExit").addEventListener("click", close);
     document.getElementById("whiteRoomCastOff").addEventListener("click", () => {
       document.dispatchEvent(new CustomEvent("planesbound-cast-off"));
+    });
+    document.getElementById("whiteRoomDebugHit")?.addEventListener("change", (e) => {
+      const on = !!e.target.checked;
+      scene?.userData?.setHitboxDebug?.(on);
     });
   }
 
@@ -835,21 +847,86 @@
       }
       artMats.push(mat);
     };
-    const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player", registerArtMat);
-    const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion", registerArtMat);
-    [playerFig, companionFig].forEach((fig) => {
-      fig.traverse((obj) => {
-        if (obj.isMesh && obj.material && "emissiveIntensity" in obj.material) {
-          registerArtMat(obj.material);
-        }
+
+    /** @type {any[]} */
+    let actors = [];
+    let selectedActor = null;
+    let hoveredActor = null;
+    let useSkinned = false;
+
+    const Wow = window.PlanesboundWowActors;
+    let playerFig;
+    let companionFig;
+
+    async function spawnSkinnedParty() {
+      if (!Wow?.createActor) throw new Error("Wow actors unavailable");
+      const debugOn = !!document.getElementById("whiteRoomDebugHit")?.checked;
+      const playerActor = await Wow.createActor({
+        id: "player",
+        role: "player",
+        url: Wow.MODEL.player,
+        label: p.player.name,
+        tint: 0xc5a059,
+        x: -1.85,
+        z: -0.55,
+        scale: 1.08,
+        debug: debugOn,
       });
-    });
-    playerFig.visible = false;
-    companionFig.visible = false;
-    playerFig.position.z = -0.6;
-    companionFig.position.z = -0.6;
-    // Parent under chamber so standees stay planted with the floor
-    chamber.group.add(playerFig, companionFig);
+      const companionActor = await Wow.createActor({
+        id: "companion",
+        role: "companion",
+        url: Wow.MODEL.companion,
+        label: p.companion.name,
+        tint: 0x7eb0c8,
+        x: 1.85,
+        z: -0.55,
+        scale: 1.05,
+        debug: debugOn,
+      });
+      if (!isBootCurrent(gen)) {
+        playerActor.dispose();
+        companionActor.dispose();
+        return null;
+      }
+      playerActor.root.visible = false;
+      companionActor.root.visible = false;
+      // Face roughly toward camera / room center
+      playerActor.root.rotation.y = Math.PI * 0.15;
+      companionActor.root.rotation.y = -Math.PI * 0.15;
+      chamber.group.add(playerActor.root, companionActor.root);
+      actors = [playerActor, companionActor];
+      useSkinned = true;
+      return { playerFig: playerActor.root, companionFig: companionActor.root };
+    }
+
+    try {
+      const spawned = await spawnSkinnedParty();
+      if (!isBootCurrent(gen)) return false;
+      if (spawned) {
+        playerFig = spawned.playerFig;
+        companionFig = spawned.companionFig;
+      } else {
+        throw new Error("spawn aborted");
+      }
+    } catch (err) {
+      console.warn("Skinned actors unavailable — standee fallback", err);
+      playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player", registerArtMat);
+      companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion", registerArtMat);
+      [playerFig, companionFig].forEach((fig) => {
+        fig.traverse((obj) => {
+          if (obj.isMesh && obj.material && "emissiveIntensity" in obj.material) {
+            registerArtMat(obj.material);
+          }
+        });
+      });
+      playerFig.visible = false;
+      companionFig.visible = false;
+      playerFig.position.z = -0.6;
+      companionFig.position.z = -0.6;
+      chamber.group.add(playerFig, companionFig);
+      useSkinned = false;
+      actors = [];
+    }
 
     // Static near-field star dust (no idle spin)
     const moteGeo = new T.BufferGeometry();
@@ -934,6 +1011,41 @@
       requestAnimationFrame(step);
     }
 
+    function updateTargetHud(actor) {
+      const box = document.getElementById("whiteRoomTarget");
+      const nameEl = document.getElementById("whiteRoomTargetName");
+      const metaEl = document.getElementById("whiteRoomTargetMeta");
+      if (!box) return;
+      if (!actor) {
+        box.hidden = true;
+        return;
+      }
+      const info = actor.role === "companion" ? p.companion : p.player;
+      if (nameEl) nameEl.textContent = info.name;
+      if (metaEl) metaEl.textContent = `${info.race} · ${info.className}`;
+      box.hidden = false;
+      actor.setLabel?.(`${info.name}`, null, null);
+    }
+
+    function clearSelection() {
+      if (selectedActor) selectedActor.setSelected(false);
+      selectedActor = null;
+      updateTargetHud(null);
+    }
+
+    function selectActor(actor) {
+      if (!actor) {
+        clearSelection();
+        return;
+      }
+      if (selectedActor && selectedActor !== actor) selectedActor.setSelected(false);
+      selectedActor = actor;
+      actor.setSelected(true);
+      updateTargetHud(actor);
+      // WoW-feel: selected unit plays a short attack flourish, then idle
+      if (useSkinned && !reduced) actor.play("attack", { once: true, fade: 0.12 });
+    }
+
     function enterInterior() {
       if (viewMode === "interior" || !isLiveBoot(gen)) return;
       controls?.setEnabled(false);
@@ -941,6 +1053,19 @@
       companionFig.visible = true;
       // HUD flips immediately; camera eases in (static chamber — no idle motion)
       setHudMode("interior");
+      if (useSkinned && !reduced) {
+        actors.forEach((a, i) => {
+          // Soft walk-in-place pulse so silhouettes read as alive
+          setTimeout(() => {
+            if (!isLiveBoot(gen) || !a.root.visible) return;
+            a.play("walk");
+            setTimeout(() => {
+              if (!isLiveBoot(gen)) return;
+              a.play("idle");
+            }, 1600 + i * 200);
+          }, 400 + i * 350);
+        });
+      }
       const endPos = new T.Vector3(0, 2.05, 3.8);
       const endTarget = new T.Vector3(0, 1.55, -0.8);
       animateCameraTo(
@@ -958,6 +1083,11 @@
     function returnToSpace() {
       if (viewMode !== "interior" || !isLiveBoot(gen)) return;
       keys.clear();
+      clearSelection();
+      if (hoveredActor) {
+        hoveredActor.setHovered(false);
+        hoveredActor = null;
+      }
       controls?.setEnabled(false);
       playerFig.visible = false;
       companionFig.visible = false;
@@ -981,15 +1111,45 @@
     scene.userData.bootGen = gen;
     scene.userData.enterInterior = enterInterior;
     scene.userData.returnToSpace = returnToSpace;
-
-    function tryEnterFromPointer(e) {
-      if (viewMode !== "exterior" || !camera || !raycaster || enterAnim) return false;
+    scene.userData.clearSelection = clearSelection;
+    scene.userData.hasSelection = () => !!selectedActor;
+    scene.userData.setHitboxDebug = (on) => {
+      actors.forEach((a) => a.setDebug?.(!!on));
+    };
+    scene.userData.actors = actors;
+    scene.userData.selectActorById = (id) => {
+      const a = actors.find((x) => x.id === id);
+      if (a) selectActor(a);
+      return !!a;
+    };
+    scene.userData.pickAt = (clientX, clientY) => {
+      if (!camera || !raycaster) return null;
       const rect = canvas.getBoundingClientRect();
       const ndc = new T.Vector2(
+        ((clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1,
+        -((clientY - rect.top) / Math.max(1, rect.height)) * 2 + 1
+      );
+      raycaster.setFromCamera(ndc, camera);
+      const hit = Wow?.pickActor?.(raycaster, actors, true);
+      return hit
+        ? { id: hit.id, ndc: [ndc.x, ndc.y] }
+        : { id: null, ndc: [ndc.x, ndc.y], volHits: raycaster.intersectObjects(actors.flatMap((a) => a.hitVolumes), false).length };
+    };
+    window.PlanesboundWhiteRoom && Object.assign(window.PlanesboundWhiteRoom, {
+      pickAt: (x, y) => scene?.userData?.pickAt?.(x, y),
+    });
+
+    function pointerNdc(e) {
+      const rect = canvas.getBoundingClientRect();
+      return new T.Vector2(
         ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1,
         -((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 + 1
       );
-      raycaster.setFromCamera(ndc, camera);
+    }
+
+    function tryEnterFromPointer(e) {
+      if (viewMode !== "exterior" || !camera || !raycaster || enterAnim) return false;
+      raycaster.setFromCamera(pointerNdc(e), camera);
       const hits = raycaster.intersectObjects(roomPickables, true);
       if (hits.length) {
         enterInterior();
@@ -998,17 +1158,76 @@
       return false;
     }
 
+    function trySelectFromPointer(e) {
+      // Allow targeting during the enter camera ease — only room-enter pick is gated on enterAnim
+      if (viewMode !== "interior" || !camera || !raycaster || !useSkinned) return false;
+      raycaster.setFromCamera(pointerNdc(e), camera);
+      const hit = Wow?.pickActor?.(raycaster, actors, true);
+      if (hit) {
+        selectActor(hit);
+        return true;
+      }
+      clearSelection();
+      return false;
+    }
+
+    function tryHoverFromPointer(e) {
+      if (viewMode !== "interior" || !camera || !raycaster || !useSkinned) {
+        if (hoveredActor) {
+          hoveredActor.setHovered(false);
+          hoveredActor = null;
+        }
+        canvas.style.cursor = "";
+        return;
+      }
+      raycaster.setFromCamera(pointerNdc(e), camera);
+      const hit = Wow?.pickActor?.(raycaster, actors, true);
+      if (hit !== hoveredActor) {
+        if (hoveredActor) hoveredActor.setHovered(false);
+        hoveredActor = hit;
+        if (hoveredActor && hoveredActor !== selectedActor) hoveredActor.setHovered(true);
+      }
+      canvas.style.cursor = hit ? "pointer" : "";
+    }
+
+    // Ignore the native `click` that follows an enterInterior pointerup so the
+    // same gesture cannot also select a newly-visible actor during enterAnim.
+    let ignoreSelectUntil = 0;
+    function markEnterGesture() {
+      ignoreSelectUntil = performance.now() + 450;
+    }
+
+    // Interior selection: orbit onClick when enabled; canvas click only while
+    // orbit is disabled (camera ease) — XOR so selectActor / attack never double-fire.
     controls.setOnClick((e) => {
-      tryEnterFromPointer(e);
+      if (viewMode === "exterior") {
+        if (tryEnterFromPointer(e)) markEnterGesture();
+      } else {
+        trySelectFromPointer(e);
+      }
     });
 
-    // Backup click path (synthetic / accessibility) when orbit drag gating misses
     const onCanvasClick = (e) => {
-      if (viewMode !== "exterior") return;
-      tryEnterFromPointer(e);
+      if (viewMode === "exterior") {
+        if (tryEnterFromPointer(e)) markEnterGesture();
+        return;
+      }
+      // Drop the enter-gesture click; later clicks during ease may still target
+      if (performance.now() < ignoreSelectUntil) return;
+      // During enter ease controls are disabled; allow picks without waiting for orbit
+      if (viewMode === "interior" && enterAnim) {
+        trySelectFromPointer(e);
+      }
+    };
+    const onCanvasMove = (e) => {
+      if (viewMode === "interior") tryHoverFromPointer(e);
     };
     canvas.addEventListener("click", onCanvasClick);
-    scene.userData.removeClick = () => canvas.removeEventListener("click", onCanvasClick);
+    canvas.addEventListener("pointermove", onCanvasMove);
+    scene.userData.removeClick = () => {
+      canvas.removeEventListener("click", onCanvasClick);
+      canvas.removeEventListener("pointermove", onCanvasMove);
+    };
 
     clock.last = performance.now();
 
@@ -1050,10 +1269,14 @@
       }
 
       if (playerFig.visible) {
-        [playerFig, companionFig].forEach((fig) => {
-          const bb = fig.userData.billboard;
-          if (bb) bb.lookAt(camera.position);
-        });
+        if (useSkinned) {
+          for (const a of actors) a.update?.(dt);
+        } else {
+          [playerFig, companionFig].forEach((fig) => {
+            const bb = fig.userData.billboard;
+            if (bb) bb.lookAt(camera.position);
+          });
+        }
       }
 
       // Static camera/chamber pose — motion lives in the ART only
@@ -1119,6 +1342,11 @@
       e.preventDefault();
       e.stopPropagation();
       if (viewMode === "interior") {
+        // Esc clears target first (WoW-style), then exits to space
+        if (scene?.userData?.hasSelection?.()) {
+          scene.userData.clearSelection?.();
+          return;
+        }
         if (scene?.userData?.returnToSpace) {
           scene.userData.returnToSpace();
         } else if (fallback?.dataset?.on === "true") {
@@ -1256,7 +1484,15 @@
       close,
       enter: () => scene?.userData?.enterInterior?.(),
       exitInterior: () => scene?.userData?.returnToSpace?.(),
+      select: (id) => scene?.userData?.selectActorById?.(id),
+      clearTarget: () => scene?.userData?.clearSelection?.(),
+      setHitboxDebug: (on) => scene?.userData?.setHitboxDebug?.(!!on),
+      getActors: () => scene?.userData?.actors || [],
     };
+    document.addEventListener("planesbound-wr-select", (e) => {
+      const id = e.detail?.id;
+      if (id) window.PlanesboundWhiteRoom.select?.(id);
+    });
   }
 
   if (document.readyState === "loading") {

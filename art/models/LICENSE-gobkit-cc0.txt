@@ -1,0 +1,4 @@
+Gobkit Free Humanoids (human003) — CC0 1.0
+Source: https://gobkit.com / https://gobkit.itch.io
+Files: player.glb (KnightCaptain), companion.glb (Archer), foe.glb (HeavyWarrior)
+License: CC0 1.0 — public domain, no attribution required.
