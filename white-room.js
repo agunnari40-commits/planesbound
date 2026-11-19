@@ -830,6 +830,8 @@
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     enterAnim = null;
+    /** Monotonic id so a newer enter/exit tween supersedes any in-flight rAF. */
+    let camTweenId = 0;
 
     function animateCameraTo(endPos, endTarget, duration, done, opts) {
       if (!camera || !controls) {
@@ -841,6 +843,9 @@
         controls.setLimits(opts.limits.minR, opts.limits.maxR);
       }
       if (reduced) {
+        // Cancel any prior tween so a later rAF cannot snap over this reduced-motion pose
+        camTweenId += 1;
+        enterAnim = null;
         camera.position.copy(endPos);
         controls.target.copy(endTarget);
         camera.lookAt(endTarget);
@@ -852,9 +857,11 @@
       const startPos = camera.position.clone();
       const startTarget = controls.target.clone();
       const t0 = performance.now();
-      enterAnim = { gen };
+      const tweenId = ++camTweenId;
+      enterAnim = { gen, id: tweenId };
       const step = (t) => {
-        if (!isBootCurrent(gen) || !camera || !controls || enterAnim?.gen !== gen) return;
+        // Only the latest tween owns the camera (Esc mid-enter must not leave dual rAFs)
+        if (!isBootCurrent(gen) || !camera || !controls || enterAnim?.id !== tweenId) return;
         const u = Math.min(1, (t - t0) / duration);
         const e = 1 - Math.pow(1 - u, 3);
         camera.position.lerpVectors(startPos, endPos, e);
@@ -864,7 +871,7 @@
         controls.syncFromCam?.();
         if (u < 1) requestAnimationFrame(step);
         else {
-          enterAnim = null;
+          if (enterAnim?.id === tweenId) enterAnim = null;
           camera.position.copy(endPos);
           controls.target.copy(endTarget);
           camera.lookAt(endTarget);
