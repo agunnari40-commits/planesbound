@@ -593,8 +593,9 @@
       flex-direction: column;
       z-index: 5;
       background:
-        linear-gradient(180deg, color-mix(in oklab, #1a140c 88%, transparent), color-mix(in oklab, #0c101c 92%, transparent)),
-        url("art/companion-parchment.png") top / 220% auto no-repeat;
+        linear-gradient(180deg, color-mix(in oklab, #1a140c 78%, transparent), color-mix(in oklab, #0c101c 86%, transparent)),
+        url("art/hud-panel.png") top center / 180% auto no-repeat,
+        url("art/roster-hud-panel.png") center / cover no-repeat;
       border-right: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
       box-shadow:
         inset -1px 0 0 color-mix(in oklab, #d7ecff 18%, transparent),
@@ -981,7 +982,7 @@
     <div class="races-stack">
       <div class="being-card being-card--player">
         <div class="being-screen" aria-hidden="true">
-          <img class="being-screen-art" src="art/player-screen.png" alt="" width="540" height="720" decoding="async" />
+          <img class="being-screen-art" src="art/roster-hud-panel.png" alt="" width="540" height="720" decoding="async" />
           <div class="being-portrait">
             <img id="playerBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>
@@ -1005,7 +1006,7 @@
       </div>
       <div class="being-card being-card--companion">
         <div class="being-screen" aria-hidden="true">
-          <img class="being-screen-art" src="art/companion-screen.png" alt="" width="540" height="720" decoding="async" />
+          <img class="being-screen-art" src="art/roster-hud-panel.png" alt="" width="540" height="720" decoding="async" />
           <div class="being-portrait">
             <img id="companionBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>

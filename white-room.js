@@ -98,11 +98,17 @@
     const stage = document.getElementById("whiteRoomFallbackStage");
     stage.innerHTML = `
       <figure class="white-room-figure">
-        <img src="${p.player.art}" alt="" width="180" height="180" onerror="this.src='art/races/human.png'" />
+        <div class="white-room-standee">
+          <img class="white-room-standee-plate" src="art/figure-player.png" alt="" width="220" height="330" />
+          <img class="white-room-standee-emblem" src="${p.player.art}" alt="" width="96" height="96" onerror="this.src='art/races/human.png'" />
+        </div>
         <figcaption>${escapeHtml(p.player.name)}<span>${escapeHtml(p.player.race)} · ${escapeHtml(p.player.className)}</span></figcaption>
       </figure>
       <figure class="white-room-figure white-room-figure--companion">
-        <img src="${p.companion.art}" alt="" width="180" height="180" onerror="this.src='art/races/human.png'" />
+        <div class="white-room-standee">
+          <img class="white-room-standee-plate" src="art/figure-companion.png" alt="" width="220" height="330" />
+          <img class="white-room-standee-emblem" src="${p.companion.art}" alt="" width="96" height="96" onerror="this.src='art/races/human.png'" />
+        </div>
         <figcaption>${escapeHtml(p.companion.name)}<span>${escapeHtml(p.companion.race)} · ${escapeHtml(p.companion.className)}</span></figcaption>
       </figure>`;
   }
@@ -218,88 +224,130 @@
     return mat;
   }
 
-  function makeFigure(T, url, x, tint) {
-    const group = new T.Group();
-    group.position.set(x, 0, 0);
-
-    const pedestal = new T.Mesh(
-      new T.CylinderGeometry(0.7, 0.9, 0.14, 48),
-      new T.MeshStandardMaterial({
-        color: 0xe8e8e8,
-        roughness: 0.28,
-        metalness: 0.12,
-        emissive: 0xd0d0d0,
-        emissiveIntensity: 0.08,
-      })
-    );
-    pedestal.position.y = 0.07;
-    pedestal.receiveShadow = true;
-    pedestal.castShadow = true;
-    group.add(pedestal);
-
-    const ring = new T.Mesh(
-      new T.TorusGeometry(0.95, 0.028, 12, 64),
-      new T.MeshStandardMaterial({
-        color: tint || 0xc5a059,
-        roughness: 0.35,
-        metalness: 0.45,
-        emissive: tint || 0xc5a059,
-        emissiveIntensity: 0.45,
-      })
-    );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.1;
-    group.add(ring);
-
-    // Portrait disc (mesh + texture) — more reliable than sprites in headless GL
-    const portraitGeo = new T.CircleGeometry(0.95, 48);
-    const portraitMat = new T.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.55,
-      metalness: 0.05,
-      transparent: true,
-      side: T.DoubleSide,
-    });
+  function loadTex(T, url, onOk) {
     const loader = new T.TextureLoader();
     loader.load(
       url,
       (tex) => {
         tex.colorSpace = T.SRGBColorSpace;
-        portraitMat.map = tex;
-        portraitMat.needsUpdate = true;
+        onOk(tex);
       },
       undefined,
       () => {
         loader.load("art/races/human.png", (tex) => {
           tex.colorSpace = T.SRGBColorSpace;
-          portraitMat.map = tex;
-          portraitMat.needsUpdate = true;
+          onOk(tex);
         });
       }
     );
-    const portrait = new T.Mesh(portraitGeo, portraitMat);
-    portrait.position.y = 1.55;
-    portrait.castShadow = true;
-    group.add(portrait);
+  }
 
-    const body = new T.Mesh(
-      new T.CylinderGeometry(0.28, 0.4, 1.15, 18),
+  /**
+   * Rich figure standee: painted plate + race medallion (no bare cylinders).
+   * @param {"player"|"companion"} role
+   */
+  function makeFigure(T, url, x, tint, role) {
+    const group = new T.Group();
+    group.position.set(x, 0, 0);
+
+    // Single billboard: plate + emblem + frame share one lookAt (local z stays on the standee)
+    const billboard = new T.Group();
+    billboard.position.y = 1.85;
+    group.add(billboard);
+    group.userData.billboard = billboard;
+
+    const plateUrl =
+      role === "companion" ? "art/figure-companion.png" : "art/figure-player.png";
+
+    // depthWrite on plate so nearer standees occlude farther ones (no global renderOrder)
+    const plateMat = new T.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.55,
+      metalness: 0.08,
+      transparent: true,
+      alphaTest: 0.08,
+      side: T.DoubleSide,
+      depthWrite: true,
+      depthTest: true,
+    });
+    loadTex(T, plateUrl, (tex) => {
+      plateMat.map = tex;
+      plateMat.needsUpdate = true;
+    });
+    const plate = new T.Mesh(new T.PlaneGeometry(2.2, 3.3), plateMat);
+    plate.position.set(0, 0, 0);
+    plate.castShadow = true;
+    billboard.add(plate);
+
+    const emblemMat = new T.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.45,
+      metalness: 0.12,
+      transparent: true,
+      alphaTest: 0.08,
+      side: T.DoubleSide,
+      depthWrite: true,
+      depthTest: true,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    });
+    loadTex(T, url, (tex) => {
+      emblemMat.map = tex;
+      emblemMat.needsUpdate = true;
+    });
+    // Local to this standee's plate only — depth buffer handles cross-standee occlusion
+    const emblem = new T.Mesh(new T.CircleGeometry(0.42, 48), emblemMat);
+    emblem.position.set(0, 0.7, 0.02);
+    emblem.castShadow = true;
+    billboard.add(emblem);
+
+    const ring = new T.Mesh(
+      new T.TorusGeometry(0.48, 0.022, 12, 48),
       new T.MeshStandardMaterial({
-        color: 0xdedede,
-        roughness: 0.5,
-        metalness: 0.08,
+        color: tint || 0xc5a059,
+        roughness: 0.35,
+        metalness: 0.5,
+        emissive: tint || 0xc5a059,
+        emissiveIntensity: 0.4,
+        depthWrite: true,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       })
     );
-    body.position.y = 0.72;
-    body.castShadow = true;
-    group.add(body);
+    ring.position.set(0, 0.7, 0.025);
+    billboard.add(ring);
 
-    // Keep a soft sprite halo behind the disc
-    const sprite = new T.Sprite(makeSpriteMaterial(T, url, 0xffffff));
-    sprite.scale.set(2.4, 2.4, 1);
-    sprite.position.y = 1.55;
-    sprite.material.opacity = 0.35;
-    group.add(sprite);
+    const base = new T.Mesh(
+      new T.CylinderGeometry(0.55, 0.7, 0.1, 48),
+      new T.MeshStandardMaterial({
+        color: 0xe4e4e4,
+        roughness: 0.3,
+        metalness: 0.15,
+        emissive: tint || 0xc5a059,
+        emissiveIntensity: 0.08,
+      })
+    );
+    base.position.y = 0.05;
+    base.receiveShadow = true;
+    base.castShadow = true;
+    group.add(base);
+
+    const floorRing = new T.Mesh(
+      new T.TorusGeometry(0.78, 0.02, 10, 64),
+      new T.MeshStandardMaterial({
+        color: tint || 0xc5a059,
+        roughness: 0.4,
+        metalness: 0.4,
+        emissive: tint || 0xc5a059,
+        emissiveIntensity: 0.35,
+      })
+    );
+    floorRing.rotation.x = Math.PI / 2;
+    floorRing.position.y = 0.08;
+    group.add(floorRing);
 
     return group;
   }
@@ -377,8 +425,8 @@
     horizon.position.y = 0.02;
     scene.add(horizon);
 
-    const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059);
-    const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8);
+    const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player");
+    const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion");
     scene.add(playerFig, companionFig);
 
     // Soft floating motes
@@ -432,12 +480,10 @@
         }
       }
 
-      // Billboards: face camera
-      playerFig.children.forEach((ch) => {
-        if (ch.isMesh && ch.geometry?.type === "CircleGeometry") ch.lookAt(camera.position);
-      });
-      companionFig.children.forEach((ch) => {
-        if (ch.isMesh && ch.geometry?.type === "CircleGeometry") ch.lookAt(camera.position);
+      // One lookAt per standee — emblem/frame are children of the plate billboard
+      [playerFig, companionFig].forEach((fig) => {
+        const bb = fig.userData.billboard;
+        if (bb) bb.lookAt(camera.position);
       });
 
       if (!reduced) {
@@ -570,7 +616,7 @@
     if (layer) layer.setAttribute("data-open", "false");
     if (fallback) {
       fallback.dataset.on = "false";
-      if (canvas) canvas.style.display = "block";
+      canvas.style.display = "block";
     }
     document.body.style.overflow = "";
   }
