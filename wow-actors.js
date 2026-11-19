@@ -356,6 +356,8 @@
     const clipIdle = findClip(clips, ["Idle", "idle"]);
     const clipWalk = findClip(clips, ["Walk", "walk", "Run", "run"]);
     const clipAttack = findClip(clips, ["Attack", "attack", "Special", "special"]);
+    const clipHit = findClip(clips, ["Hit", "hit", "Impact", "impact"]);
+    const clipDeath = findClip(clips, ["Death", "death", "Die", "die"]);
     let current = null;
     let currentName = "";
 
@@ -364,7 +366,12 @@
       if (name === "idle") clip = clipIdle;
       else if (name === "walk") clip = clipWalk || clipIdle;
       else if (name === "attack") clip = clipAttack || clipIdle;
-      else clip = findClip(clips, [name]) || clipIdle;
+      else if (name === "hit") clip = clipHit || clipIdle;
+      else if (name === "death") {
+        clip = clipDeath || clipHit || clipIdle;
+        once = true;
+        loop = false;
+      } else clip = findClip(clips, [name]) || clipIdle;
       if (!clip) return;
       if (currentName === name && current && !once) return;
       const next = mixer.clipAction(clip);
@@ -391,7 +398,8 @@
         const onDone = (e) => {
           if (e.action !== next) return;
           mixer.removeEventListener("finished", onDone);
-          play("idle");
+          // Hold death pose; otherwise return to idle for hit/attack flourishes
+          if (name !== "death") play("idle");
         };
         mixer.addEventListener("finished", onDone);
       }

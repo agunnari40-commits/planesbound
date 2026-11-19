@@ -747,6 +747,48 @@
       object-fit: cover;
       display: block;
     }
+    .being-portrait-stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .being-screen[data-video-path="stage3d"] .being-portrait img {
+      opacity: 0;
+    }
+    .video-mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.55rem;
+      margin: 0.45rem 0 0;
+      padding: 0 0.15rem;
+    }
+    .video-mode-row label {
+      font-family: Cinzel, serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brass-bright);
+    }
+    .video-mode-row select {
+      appearance: none;
+      border: 1px solid color-mix(in oklab, var(--brass) 55%, transparent);
+      border-radius: 0.35rem;
+      background: color-mix(in oklab, #1a1510 88%, transparent);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.72rem;
+      padding: 0.28rem 0.5rem;
+      min-width: 7.5rem;
+    }
+    .video-mode-row select:focus-visible {
+      outline: 2px solid var(--brass-bright);
+      outline-offset: 1px;
+    }
     .being-screen-fade {
       position: absolute;
       inset: auto 0 0;
@@ -987,6 +1029,14 @@
         <span class="pill" id="racesCount">…</span>
         <span>Human first · wheel / drag</span>
       </p>
+      <div class="video-mode-row" title="Player &amp; companion screen render path">
+        <label for="videoModeSelect">Video mode</label>
+        <select id="videoModeSelect" data-video-mode-select aria-label="Video quality mode">
+          <option value="high">High</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="performance">Performance</option>
+        </select>
+      </div>
     </div>
     <div class="races-stack">
       <div class="being-card being-card--player">
@@ -1138,6 +1188,14 @@
     <div class="game-shell" id="gameShell" data-open="false" hidden>
       <header class="game-hud" id="gameHud" data-theme="parchment">
         <div class="game-hud-party" id="gameHudParty"></div>
+        <div class="game-hud-video">
+          <label for="gameVideoModeSelect">Video</label>
+          <select id="gameVideoModeSelect" data-video-mode-select aria-label="Video quality mode">
+            <option value="high">High</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="performance">Performance</option>
+          </select>
+        </div>
         <div class="game-hud-actions">
           <button type="button" class="game-btn" id="openCompanionFromGame" onclick="document.getElementById('openCompanion')?.click()">Companion</button>
           <button type="button" class="game-btn game-btn--ghost" id="gameExit">Exit play · Esc</button>
@@ -1151,6 +1209,7 @@
               <strong id="gameSceneTargetName"></strong>
               <span id="gameSceneTargetMeta"></span>
             </div>
+            <p class="game-scene-beat" id="gameSceneBeat" hidden></p>
             <p class="game-scene-hint" id="gameSceneHint"></p>
           </div>
           <div class="game-scene-copy">
@@ -1730,6 +1789,7 @@ const planes = [
   <script src="races-menu.js" defer></script>
   <script src="character-sheets.js" defer></script>
   <script src="wow-actors.js" defer></script>
+  <script src="video-mode.js" defer></script>
   <script src="white-room.js" defer></script>
   <script src="game.js" defer></script>
 </body>

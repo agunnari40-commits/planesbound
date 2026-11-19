@@ -1,4 +1,4 @@
-/* Planesbound PAS-6/13/15 — single-player completed chapter voyage */
+/* Planesbound PAS-6/13/15/18/19 — voyage + live combat + video mode */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
@@ -358,6 +358,7 @@
     if (state.equipped === "star-salt" && /survival|perception/i.test(skillName)) mod += 1;
     if (state.equipped === "clear-shard" && /insight|perception/i.test(skillName)) mod += 1;
     if (state.equipped === "void-line" && /athletics/i.test(skillName)) mod += 2;
+    if (state.equipped === "prism-scale" && /athletics|insight/i.test(skillName)) mod += 1;
     if (state.fatigue >= state.fatigueMax - 1) mod -= 1;
     return mod;
   }
@@ -537,18 +538,64 @@
   function openPoolEncounter() {
     if (state.poolChecked || encounter) return;
     const ath = skillMod("Athletics");
+    const ins = skillMod("Insight");
     encounter = {
       kind: "pool-skirmish",
+      live: true,
       title: "Pool guardian — light with teeth",
-      body: `A luminous coil bars the curtain. Skirmish: Athletics (d20${ath ? ` + ${ath}` : ""} vs DC 14) or take a bruise and slip past.`,
-      choices: [
-        { id: "fight", label: "Opposed Athletics" },
-        { id: "slip", label: "Slip past (take 2 damage)" },
-      ],
+      body: "A luminous coil bars the curtain. Target the foe, then strike, speak softly, or call your companion. Equipped gear and mid-fight Use decisions matter.",
+      foeName: "Pool Coil",
+      foeHp: 16,
+      foeHpMax: 16,
+      threat: 0,
+      threatMax: 3,
+      assistUsed: false,
+      targeted: false,
+      resolving: false,
       ath,
+      ins,
       dc: 14,
+      dcSoft: 12,
+      choices: [],
     };
+    syncLiveChoices();
     renderEncounter();
+  }
+
+  function syncLiveChoices() {
+    if (!encounter?.live) return;
+    const needTarget = !encounter.targeted;
+    const busy = !!encounter.resolving;
+    encounter.choices = [
+      {
+        id: "strike",
+        label: needTarget ? "Strike (target foe first)" : `Strike · Athletics vs DC ${encounter.dc}`,
+        disabled: needTarget || busy,
+      },
+      {
+        id: "soft",
+        label: `Soft word · Insight vs DC ${encounter.dcSoft}`,
+        disabled: busy,
+      },
+      {
+        id: "assist",
+        label: encounter.assistUsed ? "Companion spent" : "Companion assist",
+        disabled: busy || encounter.assistUsed || needTarget,
+      },
+      {
+        id: "slip",
+        label: "Slip past (take 2 damage)",
+        disabled: busy,
+      },
+    ];
+  }
+
+  function combatEquipBonus() {
+    if (state.equipped === "void-line") return { dmg: 2, label: "Void Line" };
+    if (state.equipped === "star-salt") return { dmg: 1, label: "Star Salt" };
+    if (state.equipped === "clear-shard") return { dmg: 1, label: "Clear Shard" };
+    if (state.equipped === "prism-scale") return { dmg: 1, label: "Prism Scale" };
+    return { dmg: 0, label: null };
   }
 
   /** Esc cancel: close modal with no HP/fatigue/checked side effects. */
@@ -597,7 +644,6 @@
 
   async function bootEncounterStage(enc) {
     clearStageFlourishTimer();
-    // Tear down prior live stage without bumping gen twice — capture gen after
     if (stage) {
       try {
         stage.dispose?.();
@@ -616,12 +662,12 @@
       return;
     }
     const Wow = window.PlanesboundWowActors;
+    const Video = window.PlanesboundVideoMode;
     const canvas = el("gameSceneCanvas");
     const vp = el("gameSceneViewport");
     if (!Wow?.createActor || !canvas || !vp) return;
 
     const gen = ++stageBootGen;
-    // Show viewport before measuring so getBoundingClientRect is real
     vp.dataset.active = "true";
     vp.setAttribute("aria-hidden", "false");
     el("gameScene")?.setAttribute("data-stage", "true");
@@ -629,10 +675,8 @@
     let renderer = null;
     let actors = [];
     let animId = 0;
-    let disposedEarly = false;
 
     const abortCleanup = () => {
-      disposedEarly = true;
       if (animId) cancelAnimationFrame(animId);
       animId = 0;
       actors.forEach((a) => {
@@ -666,31 +710,43 @@
         const height = Math.max(220, r.height || 360);
         return { width, height };
       };
-      // Force layout after display:block
       void vp.offsetWidth;
       let { width, height } = syncSize();
 
-      renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const rOpts = Video?.rendererOpts?.() || { antialias: true, alpha: true };
+      renderer = new T.WebGLRenderer({
+        canvas,
+        antialias: !!rOpts.antialias,
+        alpha: true,
+        powerPreference: rOpts.powerPreference || "default",
+      });
+      if (Video?.applyRenderer) Video.applyRenderer(renderer, T);
+      else renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(width, height, false);
       renderer.outputColorSpace = T.SRGBColorSpace;
       renderer.setClearColor(0x000000, 0);
+      const vMode = Video?.getMode?.();
+      if (renderer.shadowMap) {
+        renderer.shadowMap.enabled = !!vMode?.shadows;
+      }
 
       const scene = new T.Scene();
+      // Static camera — no bob (PAS-18)
       const camera = new T.PerspectiveCamera(42, width / Math.max(1, height), 0.1, 80);
-      camera.position.set(0, 1.85, 5.2);
-      camera.lookAt(0, 1.1, 0);
+      camera.position.set(0, 1.9, 5.6);
+      camera.lookAt(0, 1.15, 0);
 
-      scene.add(new T.HemisphereLight(0xc4d0ff, 0x1a1208, 0.7));
-      const key = new T.DirectionalLight(0xfff6ea, 1.05);
+      scene.add(new T.HemisphereLight(0xc4d0ff, 0x1a1208, 0.72));
+      const key = new T.DirectionalLight(0xfff6ea, 1.1);
       key.position.set(4, 8, 5);
+      key.castShadow = !!vMode?.shadows;
       scene.add(key);
-      const fill = new T.DirectionalLight(0x7eb0c8, 0.35);
+      const fill = new T.DirectionalLight(0x7eb0c8, 0.38);
       fill.position.set(-5, 3, -2);
       scene.add(fill);
 
       const floor = new T.Mesh(
-        new T.CircleGeometry(3.2, 48),
+        new T.CircleGeometry(3.6, 48),
         new T.MeshStandardMaterial({
           color: 0x1a2230,
           roughness: 0.85,
@@ -704,19 +760,23 @@
       scene.add(floor);
 
       const foeLabel =
-        enc.kind === "pool-skirmish"
+        enc.foeName ||
+        (enc.kind === "pool-skirmish"
           ? "Pool Coil"
           : enc.kind === "isle-check"
             ? "Memory Scar"
-            : "Dust Pilot";
+            : "Dust Pilot");
+      const foeHpMax = enc.live ? enc.foeHpMax || 16 : 12;
+      const foeHp = enc.live ? enc.foeHp ?? foeHpMax : foeHpMax;
+
       const playerActor = await Wow.createActor({
         id: "stage-player",
         role: "player",
         url: Wow.MODEL.player,
         label: state.playerName || "Player",
         tint: 0xc5a059,
-        x: -1.35,
-        z: 0.4,
+        x: -1.55,
+        z: 0.55,
         scale: 1.0,
         hp: state.hp,
         hpMax: state.hpMax,
@@ -730,21 +790,52 @@
         abortCleanup();
         return;
       }
+
+      const companionActor = await Wow.createActor({
+        id: "stage-companion",
+        role: "companion",
+        url: Wow.MODEL.companion,
+        label: beingName(state.companionBeingId),
+        tint: 0x7eb0c8,
+        x: -0.35,
+        z: 1.05,
+        scale: 0.98,
+      });
+      if (gen !== stageBootGen || !encounter) {
+        try {
+          playerActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        try {
+          companionActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        abortCleanup();
+        return;
+      }
+
       const foeActor = await Wow.createActor({
         id: "stage-foe",
         role: "foe",
         url: Wow.MODEL.foe,
         label: foeLabel,
         tint: 0xb84a3a,
-        x: 1.45,
-        z: -0.2,
+        x: 1.55,
+        z: -0.15,
         scale: 1.08,
-        hp: 12,
-        hpMax: 12,
+        hp: foeHp,
+        hpMax: foeHpMax,
       });
       if (gen !== stageBootGen || !encounter) {
         try {
           playerActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        try {
+          companionActor.dispose();
         } catch (_) {
           /* ignore */
         }
@@ -756,10 +847,11 @@
         abortCleanup();
         return;
       }
-      playerActor.root.rotation.y = Math.PI * 0.35;
+      playerActor.root.rotation.y = Math.PI * 0.28;
+      companionActor.root.rotation.y = Math.PI * 0.42;
       foeActor.root.rotation.y = -Math.PI * 0.45;
-      scene.add(playerActor.root, foeActor.root);
-      actors = [playerActor, foeActor];
+      scene.add(playerActor.root, companionActor.root, foeActor.root);
+      actors = [playerActor, companionActor, foeActor];
 
       let selected = null;
       let hovered = null;
@@ -767,20 +859,30 @@
       const reduced = Wow.prefersReducedMotion?.() || false;
       let last = performance.now();
       let disposed = false;
+      let floatMsg = "";
+      let floatUntil = 0;
 
       const hint = el("gameSceneHint");
-      if (hint) hint.textContent = "Click the foe hitbox to target · Esc clears";
+      if (hint) {
+        hint.textContent = enc.live
+          ? "Target foe → Strike / Soft word / Assist · Inventory Use mid-fight · Esc clears"
+          : "Click the foe hitbox to target · Esc clears";
+      }
 
       function resize() {
         if (disposed || !renderer || !camera) return;
         ({ width, height } = syncSize());
         camera.aspect = width / Math.max(1, height);
         camera.updateProjectionMatrix();
+        if (Video?.applyRenderer) Video.applyRenderer(renderer, T);
         renderer.setSize(width, height, false);
       }
-      // Resize now that actors are ready and viewport is visible
       resize();
       window.addEventListener("resize", resize);
+
+      function foeHpNow() {
+        return encounter?.live ? encounter.foeHp : foeHpMax;
+      }
 
       function setTargetHud(actor) {
         const box = el("gameSceneTarget");
@@ -792,14 +894,25 @@
           return;
         }
         if (nameEl) nameEl.textContent = foeLabel;
-        if (meta) meta.textContent = "Hostile · mesh hitbox";
+        const threat = encounter?.live ? encounter.threat : 0;
+        const threatMax = encounter?.live ? encounter.threatMax : 0;
+        if (meta) {
+          meta.textContent = encounter?.live
+            ? `Hostile · HP ${foeHpNow()}/${foeHpMax} · Threat ${threat}/${threatMax}`
+            : "Hostile · mesh hitbox";
+        }
         box.hidden = false;
-        actor.setLabel?.(foeLabel, 12, 12);
+        actor.setLabel?.(foeLabel, foeHpNow(), foeHpMax);
       }
 
       function clearSel() {
         if (selected) selected.setSelected(false);
         selected = null;
+        if (encounter?.live) {
+          encounter.targeted = false;
+          syncLiveChoices();
+          renderEncounterChrome();
+        }
         setTargetHud(null);
       }
 
@@ -821,7 +934,7 @@
           hovered = hit;
           if (hovered && hovered !== selected) hovered.setHovered(true);
         }
-        canvas.style.cursor = hit ? "pointer" : "grab";
+        canvas.style.cursor = hit && hit.role === "foe" ? "crosshair" : hit ? "pointer" : "default";
       };
       const onClick = (e) => {
         if (disposed) return;
@@ -830,11 +943,20 @@
           if (selected && selected !== hit) selected.setSelected(false);
           selected = hit;
           hit.setSelected(true);
+          if (encounter?.live) {
+            encounter.targeted = true;
+            syncLiveChoices();
+            renderEncounterChrome();
+          }
           setTargetHud(hit);
           if (!reduced) {
-            hit.play("idle");
+            companionActor.play("idle");
             playerActor.play("attack", { once: true });
           }
+          companionSay("Marked. I am with you.");
+        } else if (hit && hit.role === "companion") {
+          companionSay(LOCATIONS[state.location]?.companion || "Ready when you are.");
+          if (!reduced) companionActor.play("attack", { once: true });
         } else {
           clearSel();
         }
@@ -849,21 +971,29 @@
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
         for (const a of actors) a.update(dt);
-        if (!reduced) {
-          const t = now * 0.001;
-          camera.position.x = Math.sin(t * 0.15) * 0.15;
-          camera.lookAt(0, 1.1, 0);
-        }
+        // Camera stays static — no bob
         renderer.render(scene, camera);
+        if (floatMsg && now < floatUntil) {
+          const beat = el("gameSceneBeat");
+          if (beat) {
+            beat.hidden = false;
+            beat.textContent = floatMsg;
+          }
+        } else if (floatMsg && now >= floatUntil) {
+          floatMsg = "";
+          const beat = el("gameSceneBeat");
+          if (beat) beat.hidden = true;
+        }
       }
       animId = requestAnimationFrame(tick);
 
       if (!reduced) {
         playerActor.play("idle");
+        companionActor.play("idle");
         foeActor.play("walk");
         setTimeout(() => {
           if (!disposed && gen === stageBootGen) foeActor.play("idle");
-        }, 1800);
+        }, 1600);
       }
 
       if (gen !== stageBootGen || !encounter) {
@@ -875,15 +1005,47 @@
       stage = {
         gen,
         flourishing: false,
+        live: !!enc.live,
         hasFoeTarget: () => selected?.role === "foe",
+        refreshFoeHud() {
+          if (selected?.role === "foe") setTargetHud(selected);
+          else foeActor.setLabel?.(foeLabel, foeHpNow(), foeHpMax);
+        },
+        showBeat(text, ms = 1400) {
+          floatMsg = text;
+          floatUntil = performance.now() + ms;
+          const beat = el("gameSceneBeat");
+          if (beat) {
+            beat.hidden = false;
+            beat.textContent = text;
+          }
+        },
+        playStrike({ hit, kill, assist }) {
+          if (reduced) return;
+          playerActor.play("attack", { once: true });
+          if (assist) companionActor.play("attack", { once: true });
+          if (kill) foeActor.play("death", { once: true });
+          else if (hit) foeActor.play("hit", { once: true });
+        },
+        playFoeStrike() {
+          if (reduced) return;
+          foeActor.play("attack", { once: true });
+          playerActor.play("hit", { once: true });
+        },
+        playSoft() {
+          if (reduced) return;
+          companionActor.play("attack", { once: true });
+          foeActor.play("hit", { once: true });
+        },
         playResolve(won) {
           if (reduced) return;
           if (won) {
             playerActor.play("attack", { once: true });
-            foeActor.play("attack", { once: true });
+            companionActor.play("attack", { once: true });
+            foeActor.play("death", { once: true });
           } else {
             foeActor.play("attack", { once: true });
-            playerActor.play("idle");
+            playerActor.play("hit", { once: true });
           }
         },
         clearSelection: clearSel,
@@ -901,6 +1063,8 @@
             renderer = null;
           }
           canvas.style.cursor = "";
+          const beat = el("gameSceneBeat");
+          if (beat) beat.hidden = true;
         },
       };
     } catch (err) {
@@ -915,12 +1079,214 @@
     }
   }
 
+  function finishEncounter(flourishWon) {
+    const hadStage = !!stage;
+    if (hadStage && stage) {
+      stage.flourishing = true;
+      if (flourishWon != null) stage.playResolve?.(!!flourishWon);
+    }
+    encounter = null;
+    save();
+    const node = el("gameEncounter");
+    if (node) {
+      node.hidden = true;
+      node.dataset.open = "false";
+      node.dataset.live = "false";
+    }
+    syncEncounterChromeLock(false);
+    render();
+    if (hadStage && stage) {
+      clearStageFlourishTimer();
+      const flourishGen = stage.gen;
+      stageFlourishTimer = setTimeout(() => {
+        stageFlourishTimer = 0;
+        if (stage && stage.gen === flourishGen) {
+          teardownEncounterStage();
+        }
+        maybeChapterWin();
+      }, 1100);
+    } else {
+      teardownEncounterStage();
+      maybeChapterWin();
+    }
+  }
+
+  function foeCounterattack() {
+    if (!encounter?.live) return;
+    const dmg = 2 + (encounter.threat >= encounter.threatMax ? 1 : 0);
+    state.hp = Math.max(1, state.hp - dmg);
+    encounter.threat = 0;
+    stage?.playFoeStrike?.();
+    stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
+    pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
+    companionSay("Hold the line — threat reset.");
+  }
+
+  function resolveLiveCombat(choiceId) {
+    if (!encounter?.live || encounter.resolving) return;
+    if (choiceId === "slip") {
+      encounter.resolving = true;
+      state.poolChecked = true;
+      state.hp = Math.max(1, state.hp - 2);
+      pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
+      companionSay("Discretion. The Mineral grit still waits.");
+      recordRoll("Athletics", 0, 0, encounter.dc, false);
+      finishEncounter(false);
+      return;
+    }
+
+    if (choiceId === "strike" && !encounter.targeted) {
+      companionSay("Mark the coil first — click its hitbox.");
+      stage?.showBeat?.("Target the foe", 900);
+      return;
+    }
+
+    encounter.resolving = true;
+    syncLiveChoices();
+    renderEncounterChrome();
+
+    if (choiceId === "assist") {
+      if (encounter.assistUsed || !encounter.targeted) {
+        encounter.resolving = false;
+        syncLiveChoices();
+        renderEncounterChrome();
+        return;
+      }
+      encounter.assistUsed = true;
+      const bonus = combatEquipBonus();
+      const dmg = 3 + bonus.dmg;
+      encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
+      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: true });
+      stage?.showBeat?.(`Companion assist −${dmg}`, 1100);
+      stage?.refreshFoeHud?.();
+      pushJournal(`Companion assist deals ${dmg} to the coil (${encounter.foeHp}/${encounter.foeHpMax}).`);
+      companionSay("Arrow of thought — yours.");
+      if (encounter.foeHp <= 0) {
+        state.poolChecked = true;
+        addItem({
+          id: "prism-scale",
+          name: "Prism Scale",
+          desc: "Shed from a pool guardian. Proof you faced the curtain’s teeth. Equip for a skirmish edge.",
+        });
+        pushJournal("Skirmish won — Prism Scale drops. The curtain yields.");
+        finishEncounter(true);
+        return;
+      }
+      encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
+      if (encounter.threat >= encounter.threatMax) foeCounterattack();
+      encounter.resolving = false;
+      syncLiveChoices();
+      save();
+      render();
+      renderEncounterChrome();
+      stage?.refreshFoeHud?.();
+      return;
+    }
+
+    if (choiceId === "soft") {
+      const roll = rollD20();
+      const mod = skillMod("Insight");
+      const total = roll + mod;
+      const ok = total >= encounter.dcSoft;
+      recordRoll("Insight", roll, mod, encounter.dcSoft, ok);
+      if (ok) {
+        encounter.threat = Math.max(0, encounter.threat - 2);
+        const softDmg = 2 + (state.equipped === "clear-shard" ? 2 : 0);
+        encounter.foeHp = Math.max(0, encounter.foeHp - softDmg);
+        stage?.playSoft?.();
+        stage?.showBeat?.(`Soft word −${softDmg} · threat eases`, 1200);
+        pushJournal(
+          `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — coil loosens (−${softDmg} HP, threat ${encounter.threat}).`
+        );
+        companionSay("Kindness cuts cleaner than steel here.");
+      } else {
+        encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
+        stage?.showBeat?.("Word glances off", 900);
+        pushJournal(
+          `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — miss. Threat rises to ${encounter.threat}.`
+        );
+        companionSay("Try the blade-thought.");
+      }
+      stage?.refreshFoeHud?.();
+      if (encounter.foeHp <= 0) {
+        state.poolChecked = true;
+        addItem({
+          id: "prism-scale",
+          name: "Prism Scale",
+          desc: "Shed from a pool guardian. Proof you faced the curtain’s teeth. Equip for a skirmish edge.",
+        });
+        pushJournal("Skirmish won by word — Prism Scale drops.");
+        finishEncounter(true);
+        return;
+      }
+      if (encounter.threat >= encounter.threatMax) foeCounterattack();
+      encounter.resolving = false;
+      syncLiveChoices();
+      save();
+      render();
+      renderEncounterChrome();
+      stage?.refreshFoeHud?.();
+      return;
+    }
+
+    // strike
+    const roll = rollD20();
+    const mod = skillMod("Athletics");
+    const total = roll + mod;
+    const ok = total >= encounter.dc;
+    recordRoll("Athletics", roll, mod, encounter.dc, ok);
+    const bonus = combatEquipBonus();
+    if (ok) {
+      const dmg = 4 + Math.floor(mod / 2) + bonus.dmg + (total >= encounter.dc + 5 ? 2 : 0);
+      encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
+      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: false });
+      stage?.showBeat?.(
+        `${bonus.label ? bonus.label + " · " : ""}Hit −${dmg}${encounter.foeHp <= 0 ? " · fallen" : ""}`,
+        1300
+      );
+      pushJournal(
+        `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — hit for ${dmg} (${encounter.foeHp}/${encounter.foeHpMax}).`
+      );
+      companionSay(encounter.foeHp <= 0 ? "Down. Curtain opens." : "Again — keep the pressure.");
+    } else {
+      encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
+      stage?.playStrike?.({ hit: false, kill: false, assist: false });
+      stage?.showBeat?.(`Miss · threat ${encounter.threat}/${encounter.threatMax}`, 1100);
+      pushJournal(
+        `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — miss. Threat ${encounter.threat}/${encounter.threatMax}.`
+      );
+      companionSay("Reset your feet.");
+    }
+    stage?.refreshFoeHud?.();
+
+    if (encounter.foeHp <= 0) {
+      state.poolChecked = true;
+      addItem({
+        id: "prism-scale",
+        name: "Prism Scale",
+        desc: "Shed from a pool guardian. Proof you faced the curtain’s teeth. Equip for a skirmish edge.",
+      });
+      pushJournal("Skirmish won — Prism Scale drops. The curtain yields.");
+      companionSay("Clean work. Mineral grit waits.");
+      finishEncounter(true);
+      return;
+    }
+    if (encounter.threat >= encounter.threatMax) foeCounterattack();
+    encounter.resolving = false;
+    syncLiveChoices();
+    save();
+    render();
+    renderEncounterChrome();
+    stage?.refreshFoeHud?.();
+  }
+
   function resolveEncounter(choiceId) {
     if (!encounter) return;
-    const kind = encounter.kind;
-    if (kind === "pool-skirmish" && (choiceId === "fight" || choiceId === "slip")) {
-      stage?.playResolve?.(choiceId === "fight");
+    if (encounter.live) {
+      resolveLiveCombat(choiceId);
+      return;
     }
+    const kind = encounter.kind;
 
     if (kind === "isle-check") {
       state.isleChecked = true;
@@ -941,15 +1307,18 @@
             desc: "A shard that answers when asked who you were. Equip for +Insight/Perception.",
           });
           companionSay("That shard remembers you kindly.");
+          stage?.playResolve?.(true);
         } else {
           pushJournal(
             `Encounter: Perception ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — miss. The scars stay opaque.`
           );
           companionSay("Opaque for now. The common shard still sings.");
+          stage?.playResolve?.(false);
         }
       } else {
         pushJournal("Encounter: you leave the ani-thread unread. The isle does not judge.");
         recordRoll("Perception", 0, 0, encounter.dc, false);
+        stage?.playResolve?.(false);
       }
     } else if (kind === "dust-check") {
       state.dustChecked = true;
@@ -969,12 +1338,14 @@
             desc: "Braided thought-rope. Equip for +Athletics on the Sea.",
           });
           companionSay("Good hands. That line will matter.");
+          stage?.playResolve?.(true);
         } else {
           state.hp = Math.max(1, state.hp - 2);
           pushJournal(
             `Encounter: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcAth} — miss. You bruise for 2 HP (${state.hp}/${state.hpMax}).`
           );
           companionSay("Stay low. The ash is thicker than it looks.");
+          stage?.playResolve?.(false);
         }
       } else if (choiceId === "insight") {
         const roll = rollD20();
@@ -993,79 +1364,25 @@
           });
           state.fatigue = Math.max(0, state.fatigue - 1);
           companionSay("They liked your listening. Fatigue eases.");
+          stage?.playResolve?.(true);
         } else {
           pushJournal(
             `Encounter: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcIns} — miss. Pilots shrug and charge grit-toll.`
           );
           state.fatigue = Math.min(state.fatigueMax, state.fatigue + 1);
           companionSay("Cold market. We pay in sweat.");
+          stage?.playResolve?.(false);
         }
       } else {
         state.hp = Math.max(1, state.hp - 1);
         state.fatigue = Math.min(state.fatigueMax, state.fatigue + 1);
         pushJournal(`Encounter: blind push — 1 HP and +1 fatigue (${state.hp}/${state.hpMax}, fatigue ${state.fatigue}).`);
         recordRoll("Athletics", 0, 0, encounter.dcAth, false);
-      }
-    } else if (kind === "pool-skirmish") {
-      state.poolChecked = true;
-      if (choiceId === "fight") {
-        const roll = rollD20();
-        const mod = encounter.ath || 0;
-        const total = roll + mod;
-        const ok = total >= encounter.dc;
-        recordRoll("Athletics", roll, mod, encounter.dc, ok);
-        if (ok) {
-          pushJournal(
-            `Skirmish: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — success. The coil unravels; a Prism Scale drops.`
-          );
-          addItem({
-            id: "prism-scale",
-            name: "Prism Scale",
-            desc: "Shed from a pool guardian. Proof you faced the curtain’s teeth.",
-          });
-          companionSay("Clean strike. The curtain respects you.");
-        } else {
-          state.hp = Math.max(1, state.hp - 3);
-          pushJournal(
-            `Skirmish: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — miss. Light bites for 3 HP (${state.hp}/${state.hpMax}). You still pass.`
-          );
-          companionSay("We are through — bruised, but through.");
-        }
-      } else {
-        state.hp = Math.max(1, state.hp - 2);
-        pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
-        recordRoll("Athletics", 0, 0, encounter.dc, false);
-        companionSay("Discretion. The Mineral grit still waits.");
+        stage?.playResolve?.(false);
       }
     }
 
-    const hadStage = !!stage;
-    if (hadStage && stage) stage.flourishing = true;
-    encounter = null;
-    save();
-    // Close modal immediately; keep stage briefly for attack flourish
-    const node = el("gameEncounter");
-    if (node) {
-      node.hidden = true;
-      node.dataset.open = "false";
-    }
-    syncEncounterChromeLock(false);
-    render();
-    if (hadStage && stage) {
-      clearStageFlourishTimer();
-      const flourishGen = stage.gen;
-      stageFlourishTimer = setTimeout(() => {
-        stageFlourishTimer = 0;
-        // Only tear down if this is still the same flourish stage
-        if (stage && stage.gen === flourishGen) {
-          teardownEncounterStage();
-        }
-        maybeChapterWin();
-      }, 700);
-    } else {
-      teardownEncounterStage();
-      maybeChapterWin();
-    }
+    finishEncounter(null);
   }
 
   function useItem(id) {
@@ -1110,13 +1427,32 @@
       pushJournal("Mineral Token marks you as a shore-walker. Atlas scribes nod.");
       activeTab = "journal";
     } else if (id === "prism-scale") {
-      pushJournal("Prism Scale catches Sea-light — companion smiles at the spectrum.");
-      activeTab = "journal";
+      state.equipped = state.equipped === "prism-scale" ? null : "prism-scale";
+      pushJournal(
+        state.equipped === "prism-scale"
+          ? "Equipped Prism Scale — skirmish edge while the spectrum holds."
+          : "Unequipped Prism Scale."
+      );
+      activeTab = "status";
+      if (encounter?.live) {
+        syncLiveChoices();
+        companionSay("Scale sings — mid-fight edge.");
+        stage?.showBeat?.(state.equipped === "prism-scale" ? "Prism Scale ready" : "Unequipped", 900);
+      }
     } else {
       pushJournal(`You turn the ${id} over in your hands. Not yet.`);
     }
+    // Mid-fight equip refreshes combat chrome without dismissing the stage
+    if (encounter?.live && (id === "void-line" || id === "star-salt" || id === "clear-shard" || id === "prism-scale")) {
+      syncLiveChoices();
+      stage?.showBeat?.(
+        state.equipped ? `Equipped ${state.equipped}` : "Hands free",
+        900
+      );
+    }
     save();
     render();
+    if (encounter) renderEncounterChrome();
   }
 
   function travelTo(loc) {
@@ -1259,17 +1595,24 @@
     node.className = "game-encounter";
     node.hidden = true;
     node.dataset.open = "false";
+    node.dataset.live = "false";
     node.setAttribute("role", "dialog");
-    node.setAttribute("aria-modal", "true");
+    node.setAttribute("aria-modal", "false");
     node.innerHTML = `<div class="game-encounter-card" tabindex="-1">
-      <h3 id="gameEncounterTitle"></h3>
+      <div class="game-encounter-head">
+        <h3 id="gameEncounterTitle"></h3>
+        <p class="game-encounter-vitals" id="gameEncounterVitals" hidden></p>
+      </div>
       <p id="gameEncounterBody"></p>
       <div class="game-encounter-actions" id="gameEncounterActions"></div>
     </div>`;
-    el("gameLayer")?.appendChild(node);
+    // Dock under scene so voyage stays continuous (not a full-screen modal)
+    const scene = el("gameScene");
+    if (scene) scene.appendChild(node);
+    else el("gameLayer")?.appendChild(node);
     node.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-encounter-choice]");
-      if (!btn) return;
+      if (!btn || btn.disabled) return;
       resolveEncounter(btn.dataset.encounterChoice);
     });
     return node;
@@ -1278,8 +1621,51 @@
   function syncEncounterChromeLock(open) {
     const shell = el("gameShell");
     if (!shell) return;
-    if (open) shell.setAttribute("data-encounter", "true");
-    else shell.removeAttribute("data-encounter");
+    if (!open) {
+      shell.removeAttribute("data-encounter");
+      return;
+    }
+    // live = inventory/status usable mid-fight; check = travel locked, side still readable
+    shell.setAttribute("data-encounter", encounter?.live ? "live" : "check");
+  }
+
+  function renderEncounterChrome() {
+    const node = ensureEncounterDom();
+    if (!node || !encounter) return;
+    const title = el("gameEncounterTitle");
+    const body = el("gameEncounterBody");
+    const actions = el("gameEncounterActions");
+    const vitals = el("gameEncounterVitals");
+    if (title) title.textContent = encounter.title;
+    if (body) {
+      const eq = combatEquipBonus();
+      const liveHint = encounter.live
+        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}.`
+        : "";
+      body.textContent = encounter.body + liveHint;
+    }
+    if (vitals) {
+      if (encounter.live) {
+        vitals.hidden = false;
+        vitals.innerHTML = `<span>HP ${state.hp}/${state.hpMax}</span><span>Foe ${encounter.foeHp}/${encounter.foeHpMax}</span><span>Threat ${encounter.threat}/${encounter.threatMax}</span>`;
+      } else {
+        vitals.hidden = true;
+      }
+    }
+    if (actions) {
+      actions.innerHTML = encounter.choices
+        .map((c) => {
+          const primary =
+            c.id === "roll" ||
+            c.id === "fight" ||
+            c.id === "strike" ||
+            c.id === "athletics" ||
+            c.id === "insight" ||
+            c.id === "assist";
+          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}"${c.disabled ? " disabled" : ""}>${escapeHtml(c.label)}</button>`;
+        })
+        .join("");
+    }
   }
 
   function renderEncounter() {
@@ -1288,27 +1674,15 @@
     const open = !!encounter;
     node.hidden = !open;
     node.dataset.open = open ? "true" : "false";
+    node.dataset.live = encounter?.live ? "true" : "false";
     syncEncounterChromeLock(open);
     if (!open) {
-      // Keep stage alive during post-resolve flourish; Esc/timer tear it down
       if (!stage?.flourishing) teardownEncounterStage();
       return;
     }
-    const title = el("gameEncounterTitle");
-    const body = el("gameEncounterBody");
-    const actions = el("gameEncounterActions");
-    if (title) title.textContent = encounter.title;
-    if (body) body.textContent = encounter.body;
-    if (actions) {
-      actions.innerHTML = encounter.choices
-        .map(
-          (c) =>
-            `<button type="button" class="game-btn${c.id === "roll" || c.id === "fight" || c.id === "athletics" || c.id === "insight" ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}">${escapeHtml(c.label)}</button>`
-        )
-        .join("");
-    }
+    if (encounter.live) syncLiveChoices();
+    renderEncounterChrome();
     requestAnimationFrame(() => node.querySelector(".game-encounter-card")?.focus?.());
-    // Fire-and-forget stage boot (skinned foe for targeting)
     bootEncounterStage(encounter);
   }
 
@@ -1688,12 +2062,14 @@
   }
 
   function onSceneClick(e) {
-    if (encounter || stage?.flourishing) return;
+    // Mid-fight inventory Use is allowed during live combat
     const useBtn = e.target.closest("[data-use-item]");
     if (useBtn) {
+      if (stage?.flourishing) return;
       useItem(useBtn.dataset.useItem);
       return;
     }
+    if (encounter || stage?.flourishing) return;
     const btn = e.target.closest("[data-travel], [data-action]");
     if (!btn || btn.disabled) return;
     if (btn.dataset.travel) {
