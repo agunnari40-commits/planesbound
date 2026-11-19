@@ -566,10 +566,360 @@
         linear-gradient(90deg, color-mix(in oklab, #fbf6ea 80%, transparent) 0 55%, color-mix(in oklab, #0d1528 78%, transparent) 55% 100%);
     }
     .companion-foot span.astral-note { color: #9ec4e8; }
+
+    /* ---- PAS-3 left races dock: Warcraft density × SAO HUD × parchment ---- */
+    .app-shell {
+      display: flex;
+      align-items: stretch;
+      min-height: 100dvh;
+      position: relative;
+      z-index: 1;
+    }
+    .races-dock {
+      flex: 0 0 clamp(220px, 22vw, 280px);
+      width: clamp(220px, 22vw, 280px);
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      max-height: 100dvh;
+      overflow-x: visible;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #1a140c 88%, transparent), color-mix(in oklab, #0c101c 92%, transparent)),
+        url("art/companion-parchment.png") top / 220% auto no-repeat;
+      border-right: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      box-shadow:
+        inset -1px 0 0 color-mix(in oklab, #d7ecff 18%, transparent),
+        12px 0 40px color-mix(in oklab, #000 45%, transparent);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+    }
+    .races-dock::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(135deg, color-mix(in oklab, var(--brass-bright) 22%, transparent), transparent 28%),
+        linear-gradient(225deg, color-mix(in oklab, var(--astral) 18%, transparent), transparent 30%);
+      opacity: .7;
+    }
+    .races-dock-head {
+      position: relative; z-index: 1;
+      padding: .85rem .8rem .7rem;
+      border-bottom: 1px solid color-mix(in oklab, var(--brass) 45%, transparent);
+      background: color-mix(in oklab, #120e0a 70%, transparent);
+    }
+    .races-dock-head .hud-kicker {
+      margin: 0;
+      font-family: Cinzel, serif;
+      font-size: .58rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--brass-bright);
+    }
+    .races-dock-head h2 {
+      margin: .2rem 0 0;
+      font-family: Cinzel, serif;
+      font-size: .95rem;
+      letter-spacing: .06em;
+      color: var(--bone);
+    }
+    .races-meta {
+      margin: .35rem 0 0;
+      font-size: .72rem;
+      color: var(--ink-muted);
+      display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
+    }
+    .races-meta .pill {
+      border: 1px solid color-mix(in oklab, var(--astral) 45%, transparent);
+      border-radius: .35rem;
+      padding: .1rem .4rem;
+      color: #c9dff5;
+      font-family: Cinzel, serif;
+      font-size: .58rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .races-stack {
+      position: relative; z-index: 1;
+      flex: 1;
+      overflow: visible;
+      padding: .65rem .55rem .9rem;
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+    }
+    .being-card {
+      border: 1px solid color-mix(in oklab, var(--brass) 40%, transparent);
+      border-radius: .55rem;
+      overflow: visible;
+      position: relative;
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #000 35%, transparent),
+        0 0 0 1px color-mix(in oklab, var(--astral) 12%, transparent);
+    }
+    .being-card--player {
+      background:
+        linear-gradient(160deg, color-mix(in oklab, #f3e8cf 18%, transparent), transparent 55%),
+        color-mix(in oklab, #1a1510 92%, #3a2a12);
+    }
+    .being-card--companion {
+      background:
+        linear-gradient(160deg, color-mix(in oklab, var(--astral) 16%, transparent), transparent 55%),
+        color-mix(in oklab, #0b1224 92%, #152038);
+    }
+    .being-card .card-label {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .45rem .55rem .2rem;
+      font-family: Cinzel, serif;
+      font-size: .62rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--brass-bright);
+    }
+    .being-card--companion .card-label { color: #9ec4e8; }
+    .being-toggle {
+      width: calc(100% - .7rem);
+      margin: 0 .35rem .35rem;
+      appearance: none;
+      text-align: left;
+      cursor: pointer;
+      border: 1px solid color-mix(in oklab, var(--brass) 50%, transparent);
+      border-radius: .4rem;
+      padding: .45rem .5rem;
+      background: color-mix(in oklab, #0a0806 55%, transparent);
+      color: var(--bone);
+      font: inherit;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .2rem .45rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .being-card--companion .being-toggle {
+      border-color: color-mix(in oklab, var(--astral) 45%, transparent);
+      background: color-mix(in oklab, #101a2e 70%, transparent);
+    }
+    .being-toggle:hover, .being-toggle:focus-visible {
+      border-color: var(--brass-bright);
+      outline: 2px solid color-mix(in oklab, var(--brass) 40%, transparent);
+      outline-offset: 1px;
+    }
+    .being-toggle .pick-name {
+      font-family: Cinzel, serif;
+      font-size: .82rem;
+      letter-spacing: .04em;
+      grid-column: 1;
+    }
+    .being-toggle .pick-chevron {
+      grid-column: 2; grid-row: 1 / span 2;
+      align-self: center;
+      color: var(--ink-muted);
+      font-size: .75rem;
+    }
+    .being-toggle .pick-line {
+      grid-column: 1;
+      font-size: .68rem;
+      line-height: 1.35;
+      color: var(--ink-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .being-toggle .pick-tag {
+      justify-self: start;
+      margin-top: .15rem;
+      font-size: .55rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #c9dff5;
+      border: 1px solid color-mix(in oklab, var(--astral) 35%, transparent);
+      padding: .05rem .3rem;
+      border-radius: .25rem;
+    }
+    .being-list {
+      position: absolute;
+      left: .35rem; right: .35rem;
+      top: calc(100% - .15rem);
+      z-index: 8;
+      border: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      border-radius: .45rem;
+      background:
+        linear-gradient(180deg, #f7f0df 0%, #efe4c8 40%, #e8dcc0 100%);
+      color: #2a2218;
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, #d7ecff 25%, transparent),
+        0 18px 40px color-mix(in oklab, #000 55%, transparent);
+      overflow: hidden;
+      max-height: min(52vh, 420px);
+      display: flex;
+      flex-direction: column;
+    }
+    .being-card--companion .being-list {
+      background:
+        linear-gradient(180deg, #121c30, #0b1224 60%, #152038);
+      color: #e8eef8;
+    }
+    .being-search {
+      flex: 0 0 auto;
+      margin: .45rem .45rem .3rem;
+      border: 1px solid #c4ad7a;
+      border-radius: .35rem;
+      padding: .4rem .5rem;
+      font: inherit;
+      font-size: .82rem;
+      background: #fffaf0;
+      color: #2a2218;
+    }
+    .being-card--companion .being-search {
+      border-color: color-mix(in oklab, #9ec4e8 55%, transparent);
+      background: color-mix(in oklab, #101a2e 90%, transparent);
+      color: #f0f6ff;
+    }
+    .being-search:focus-visible { outline: 2px solid #8a6a32; outline-offset: 1px; }
+    .being-viewport {
+      flex: 1 1 auto;
+      min-height: 160px;
+      max-height: min(42vh, 340px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      cursor: grab;
+      overscroll-behavior: contain;
+    }
+    .being-viewport.is-dragging { cursor: grabbing; }
+    .being-spacer { width: 100%; position: relative; }
+    .being-window { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+    .being-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: .4rem;
+      align-items: center;
+      appearance: none;
+      border: 0;
+      border-bottom: 1px solid color-mix(in oklab, #8a6a32 18%, transparent);
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      padding: 0 .55rem;
+      cursor: pointer;
+    }
+    .being-card--companion .being-row {
+      border-bottom-color: color-mix(in oklab, #9ec4e8 14%, transparent);
+    }
+    .being-row:hover, .being-row:focus-visible {
+      background: color-mix(in oklab, var(--brass) 18%, transparent);
+      outline: none;
+    }
+    .being-row[data-active="true"] {
+      background: color-mix(in oklab, var(--brass) 28%, transparent);
+      box-shadow: inset 3px 0 0 var(--brass-bright);
+    }
+    .being-card--companion .being-row[data-active="true"] {
+      background: color-mix(in oklab, var(--astral) 22%, transparent);
+      box-shadow: inset 3px 0 0 #9ec4e8;
+    }
+    .being-dot {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--brass);
+    }
+    .being-dot[data-trad="core"] { background: #c5a059; }
+    .being-dot[data-trad="srd"] { background: #7eb0c8; }
+    .being-dot[data-trad="folklore"] { background: #9a7a38; }
+    .being-dot[data-trad="original"] { background: #9ec4e8; }
+    .being-name {
+      font-size: .78rem;
+      font-family: Cinzel, serif;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .being-trad {
+      font-size: .55rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .7;
+    }
+    .races-legal {
+      margin: .15rem .55rem 0;
+      font-size: .62rem;
+      line-height: 1.4;
+      color: var(--ink-muted);
+    }
+    .app-shell .wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; }
+      .races-dock {
+        position: relative;
+        width: 100%;
+        flex-basis: auto;
+        max-height: none;
+        clip-path: none;
+        border-right: 0;
+        border-bottom: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      }
+      .races-stack { flex-direction: row; flex-wrap: wrap; }
+      .being-card { flex: 1 1 240px; }
+    }
   </style>
 </head>
 <body>
   <div class="veil" id="pageVeil"></div>
+  <div class="app-shell">
+  <aside class="races-dock" id="racesDock" aria-label="Race and being pickers">
+    <div class="races-dock-head">
+      <p class="hud-kicker">Formation · HUD</p>
+      <h2>Beings Roster</h2>
+      <p class="races-meta">
+        <span class="pill" id="racesCount">…</span>
+        <span>Human first · wheel / drag</span>
+      </p>
+    </div>
+    <div class="races-stack">
+      <div class="being-card being-card--player">
+        <div class="card-label"><span>Player</span><span>Parchment</span></div>
+        <button type="button" class="being-toggle" id="playerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="playerBeingList">
+          <span class="pick-name" id="playerBeingName">Human</span>
+          <span class="pick-chevron" aria-hidden="true">▾</span>
+          <span class="pick-line" id="playerBeingLine">Loading roster…</span>
+          <span class="pick-tag" id="playerBeingTag">core</span>
+        </button>
+        <div class="being-list" id="playerBeingList" role="listbox" aria-label="Player being list" hidden data-open="false">
+          <input class="being-search" id="playerBeingSearch" type="search" placeholder="Search beings…" autocomplete="off" />
+          <div class="being-viewport" id="playerBeingViewport">
+            <div class="being-spacer" id="playerBeingSpacer">
+              <div class="being-window" id="playerBeingWindow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="being-card being-card--companion">
+        <div class="card-label"><span>Companion</span><span>Astral</span></div>
+        <button type="button" class="being-toggle" id="companionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="companionBeingList">
+          <span class="pick-name" id="companionBeingName">Human</span>
+          <span class="pick-chevron" aria-hidden="true">▾</span>
+          <span class="pick-line" id="companionBeingLine">Loading roster…</span>
+          <span class="pick-tag" id="companionBeingTag">core</span>
+        </button>
+        <div class="being-list" id="companionBeingList" role="listbox" aria-label="Companion being list" hidden data-open="false">
+          <input class="being-search" id="companionBeingSearch" type="search" placeholder="Search beings…" autocomplete="off" />
+          <div class="being-viewport" id="companionBeingViewport">
+            <div class="being-spacer" id="companionBeingSpacer">
+              <div class="being-window" id="companionBeingWindow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="races-legal">Legal roster: public-domain folklore/myth names, SRD-safe staples, &amp; original Planesbound coinages. Short original blurbs only — no proprietary MM / SAO / Blizzard text.</p>
+    </div>
+  </aside>
   <div class="wrap" id="pageMain">
     <header>
       <p class="eyebrow">PLANESBOUND GAZETTEER</p>
@@ -639,6 +989,7 @@
       </div>
     </section>
   </div>
+  </div><!-- /.app-shell -->
 
   <div class="companion-backdrop" id="companionDialog" role="dialog" aria-modal="true" aria-labelledby="companionTitle" data-open="false" hidden>
     <div class="companion-sheet" tabindex="-1">
@@ -653,12 +1004,12 @@
       <div class="companion-body">
         <section class="companion-pane companion-pane--notes" aria-labelledby="notesHeading">
           <h3 id="notesHeading">Player notes</h3>
-          <p class="companion-hint">Ink on parchment — bearings, names, &amp; table decisions. Saved in this browser.</p>
+          <p class="companion-hint">Ink on parchment — bearings, names, &amp; table decisions. Being: <strong id="companionPlayerBeingLabel">Human</strong>. Saved in this browser.</p>
           <textarea id="companionNotes" spellcheck="true" placeholder="Session notes, party bearings, questions for the keepers…"></textarea>
         </section>
         <section class="companion-pane companion-pane--si" aria-labelledby="siHeading">
           <h3 id="siHeading">Superintelligence companion</h3>
-          <p class="companion-hint">Silvery counsel from the thought-ocean, keyed to the folio you have open.</p>
+          <p class="companion-hint">Silvery counsel from the thought-ocean. Companion being: <strong id="companionSiBeingLabel">Human</strong>.</p>
           <div class="companion-context" id="companionContext" aria-live="polite"></div>
           <div class="companion-log" id="companionLog" aria-live="polite"></div>
           <form class="companion-compose" id="companionForm">
@@ -972,6 +1323,12 @@ const planes = [
     function companionReply(question) {
       const q = question.toLowerCase();
       const p = currentPlane();
+      const beingsApi = window.PlanesboundBeings;
+      if (/\b(race|being|player|companion|who am i|what am i)\b/.test(q) && beingsApi) {
+        const pl = beingsApi.getPlayer();
+        const co = beingsApi.getCompanion();
+        return `Player being: ${pl.name} (${pl.tradition}) — ${pl.line} Companion being: ${co.name} (${co.tradition}) — ${co.line} Change either from the left Beings Roster.`;
+      }
       if (/\b(astral|thought-?sea|silver|color pool)\b/.test(q)) {
         const astral = byId["astral-sea"];
         return `${astral.name}: ${astral.overview} Travel note — ${astral.travel}`;
@@ -1001,7 +1358,21 @@ const planes = [
 
     const pageMain = document.getElementById("pageMain");
     const pageVeil = document.getElementById("pageVeil");
+    const racesDock = document.getElementById("racesDock");
     const companionSheet = companionDialog.querySelector(".companion-sheet");
+    const companionPlayerBeingLabel = document.getElementById("companionPlayerBeingLabel");
+    const companionSiBeingLabel = document.getElementById("companionSiBeingLabel");
+
+    function syncBeingLabels() {
+      const api = window.PlanesboundBeings;
+      if (!api) return;
+      const p = api.getPlayer();
+      const c = api.getCompanion();
+      if (companionPlayerBeingLabel && p) companionPlayerBeingLabel.textContent = p.name;
+      if (companionSiBeingLabel && c) companionSiBeingLabel.textContent = c.name;
+    }
+    document.addEventListener("planesbound-beings-ready", syncBeingLabels);
+    document.addEventListener("planesbound-beings-changed", syncBeingLabels);
 
     function companionFocusables() {
       return [...companionSheet.querySelectorAll(
@@ -1010,7 +1381,7 @@ const planes = [
     }
 
     function setBackgroundInert(on) {
-      [pageMain, pageVeil].forEach((el) => {
+      [pageMain, pageVeil, racesDock].forEach((el) => {
         if (!el) return;
         if (on) el.setAttribute("inert", "");
         else el.removeAttribute("inert");
@@ -1096,5 +1467,6 @@ const planes = [
     renderFolio(null);
     refreshCompanionContext();
   </script>
+  <script src="races-menu.js" defer></script>
 </body>
 </html>

@@ -17,6 +17,12 @@ Then open `http://localhost:5173/` (hub: `index.html`, players gazetteer: `playe
 - Tap **Astral Sea** on the Inner Ring map (or its rail chip) for the silvery thought-ocean folio (`art/astral-sea.png`).
 - **Companion handout** opens a parchment player-notes + browser-local superintelligence companion panel (Esc closes; notes persist in `localStorage`).
 
+### Beings roster (PAS-3)
+
+- Left **Beings Roster** dock: independent Player + Companion race/being pickers.
+- Catalog: `data/beings.json` (Human first; hundreds of entries). Legal sourcing — folklore/myth names, SRD-safe staples, original coinages; original blurbs only.
+- Virtualized wheel/drag lists in `races-menu.js`.
+
 ## Grok Build / planesbound.grok.me
 
 This tree is Grok-ready as multi-file static HTML:
