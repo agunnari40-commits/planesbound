@@ -12,6 +12,11 @@ python3 -m http.server 5173 --bind 0.0.0.0
 
 Then open `http://localhost:5173/` (hub: `index.html`, players gazetteer: `players.html`).
 
+### Astral Sea + companion (PAS-2)
+
+- Tap **Astral Sea** on the Inner Ring map (or its rail chip) for the silvery thought-ocean folio (`art/astral-sea.png`).
+- **Companion handout** opens a parchment player-notes + browser-local superintelligence companion panel (Esc closes; notes persist in `localStorage`).
+
 ## Grok Build / planesbound.grok.me
 
 This tree is Grok-ready as multi-file static HTML:

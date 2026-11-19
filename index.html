@@ -30,6 +30,15 @@
       --dust: #9a8a78;
       --mineral: #7eb0c8;
       --digital: #5a8a9a;
+      --astral: #a8c4e0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
     * { box-sizing: border-box; }
     body {
@@ -169,6 +178,7 @@
     .hotspot[data-accent="dust"][data-active="true"] { border-color: var(--dust); background: color-mix(in oklab, var(--dust) 30%, transparent); }
     .hotspot[data-accent="mineral"][data-active="true"] { border-color: var(--mineral); background: color-mix(in oklab, var(--mineral) 30%, transparent); }
     .hotspot[data-accent="digital"][data-active="true"] { border-color: var(--digital); background: color-mix(in oklab, var(--digital) 30%, transparent); }
+    .hotspot[data-accent="astral"][data-active="true"] { border-color: var(--astral); background: color-mix(in oklab, var(--astral) 30%, transparent); }
     .folio {
       min-height: 420px; overflow: hidden; display: flex; flex-direction: column;
       background:
@@ -322,6 +332,156 @@
       font-size: .82rem; color: var(--ink-muted); line-height: 1.45;
     }
     .quest-device strong { color: var(--brass-bright); font-family: Cinzel, serif; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+
+    .toolbar-btn {
+      appearance: none; border: 1px solid color-mix(in oklab, var(--brass) 50%, transparent);
+      background: color-mix(in oklab, var(--brass) 16%, transparent);
+      color: var(--brass-bright); font-family: Cinzel, serif; font-size: .68rem;
+      letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+      border-radius: 999px; padding: .45rem .9rem;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .toolbar-btn:hover, .toolbar-btn:focus-visible {
+      background: color-mix(in oklab, var(--brass) 28%, transparent);
+      border-color: var(--brass-bright); color: var(--bone); outline: none;
+    }
+
+    .companion-backdrop {
+      position: fixed; inset: 0; z-index: 40;
+      background: color-mix(in oklab, var(--void) 62%, transparent);
+      display: none; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .companion-backdrop[data-open="true"] { display: flex; }
+    .companion-sheet {
+      width: min(960px, 100%);
+      max-height: min(92dvh, 880px);
+      display: flex; flex-direction: column;
+      border-radius: 1rem;
+      background:
+        linear-gradient(180deg, #f7f0df 0%, #efe4c8 48%, #e7d8b4 100%);
+      color: #2a2218;
+      box-shadow:
+        0 0 0 1px #c4ad7a,
+        0 0 0 4px color-mix(in oklab, #8a6a32 35%, transparent),
+        0 28px 70px -18px color-mix(in oklab, #000 70%, transparent);
+      overflow: hidden;
+      position: relative;
+    }
+    .companion-sheet::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 12% 8%, #fff8e88c, transparent 35%),
+        radial-gradient(ellipse at 88% 92%, #c9b48a55, transparent 40%),
+        repeating-linear-gradient(0deg, transparent, transparent 27px, #2a22180a 28px);
+      opacity: .55;
+    }
+    .companion-head {
+      position: relative; z-index: 1;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+      padding: 1rem 1.1rem .85rem;
+      border-bottom: 1px solid #c4ad7a;
+      background: color-mix(in oklab, #fbf6ea 70%, transparent);
+    }
+    .companion-head h2 {
+      font-family: Cinzel, serif; margin: .15rem 0 0;
+      font-size: 1.15rem; letter-spacing: .04em; color: #5a3f18;
+    }
+    .companion-kicker {
+      margin: 0; font-family: Cinzel, serif; font-size: .62rem;
+      letter-spacing: .2em; text-transform: uppercase; color: #8a6a32;
+    }
+    .companion-close {
+      appearance: none; border: 1px solid #b89a58; background: #f3e8cf;
+      color: #5a3f18; border-radius: .55rem; padding: .35rem .65rem;
+      font-family: Cinzel, serif; font-size: .7rem; letter-spacing: .08em;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .companion-close:hover, .companion-close:focus-visible {
+      background: #eadcb8; outline: 2px solid #8a6a32; outline-offset: 2px;
+    }
+    .companion-body {
+      position: relative; z-index: 1;
+      display: grid; gap: 0; grid-template-columns: 1fr;
+      min-height: 0; flex: 1; overflow: hidden;
+    }
+    @media (min-width: 820px) {
+      .companion-body { grid-template-columns: 1fr 1fr; }
+    }
+    .companion-pane {
+      display: flex; flex-direction: column; min-height: 0;
+      padding: .95rem 1.05rem 1.1rem;
+    }
+    .companion-pane + .companion-pane {
+      border-top: 1px solid #c4ad7a;
+    }
+    @media (min-width: 820px) {
+      .companion-pane + .companion-pane {
+        border-top: 0;
+        border-left: 1px solid #c4ad7a;
+      }
+    }
+    .companion-pane h3 {
+      font-family: Cinzel, serif; margin: 0 0 .55rem;
+      font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: #6b4d1e;
+    }
+    .companion-hint {
+      margin: 0 0 .65rem; font-size: .82rem; line-height: 1.45; color: #5c4a32;
+    }
+    #companionNotes {
+      flex: 1; min-height: 180px; resize: vertical;
+      width: 100%; border: 1px solid #c4ad7a; border-radius: .65rem;
+      background: #fffaf0; color: #2a2218;
+      font-family: "Source Serif 4", Georgia, serif; font-size: .95rem; line-height: 1.55;
+      padding: .75rem .85rem;
+    }
+    #companionNotes:focus-visible { outline: 2px solid #8a6a32; outline-offset: 2px; }
+    .companion-context {
+      border: 1px solid #c4ad7a; border-radius: .65rem;
+      background: #fffaf0; padding: .7rem .8rem; margin-bottom: .65rem;
+      font-size: .86rem; line-height: 1.5; color: #3a2e20;
+    }
+    .companion-context strong { color: #5a3f18; }
+    .companion-log {
+      flex: 1; min-height: 140px; overflow-y: auto;
+      border: 1px solid #c4ad7a; border-radius: .65rem;
+      background: #fffaf0; padding: .7rem .8rem;
+      display: flex; flex-direction: column; gap: .55rem;
+    }
+    .companion-msg {
+      margin: 0; font-size: .88rem; line-height: 1.5; color: #3a2e20;
+    }
+    .companion-msg[data-role="player"] { color: #4a3820; }
+    .companion-msg[data-role="si"]::before {
+      content: "Companion · ";
+      font-family: Cinzel, serif; font-size: .68rem; letter-spacing: .08em;
+      text-transform: uppercase; color: #8a6a32;
+    }
+    .companion-compose {
+      display: flex; gap: .5rem; margin-top: .65rem;
+    }
+    #companionInput {
+      flex: 1; border: 1px solid #c4ad7a; border-radius: .55rem;
+      background: #fffaf0; color: #2a2218; padding: .55rem .7rem;
+      font-family: "Source Serif 4", Georgia, serif; font-size: .9rem;
+    }
+    #companionInput:focus-visible { outline: 2px solid #8a6a32; outline-offset: 2px; }
+    .companion-send {
+      appearance: none; border: 1px solid #8a6a32; background: #5a3f18;
+      color: #f7f0df; border-radius: .55rem; padding: .55rem .85rem;
+      font-family: Cinzel, serif; font-size: .68rem; letter-spacing: .1em;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .companion-send:hover, .companion-send:focus-visible {
+      background: #6b4d1e; outline: 2px solid #8a6a32; outline-offset: 2px;
+    }
+    .companion-foot {
+      position: relative; z-index: 1;
+      padding: .55rem 1.05rem .7rem;
+      border-top: 1px solid #c4ad7a;
+      font-size: .72rem; color: #6b5a42;
+      background: color-mix(in oklab, #fbf6ea 70%, transparent);
+    }
   </style>
 </head>
 <body>
@@ -330,16 +490,17 @@
     <header>
       <p class="eyebrow">PLANESBOUND GAZETTEER</p>
       <h1>INNER PLANES CAMPAIGN MAP</h1>
-      <p class="lede">Fire, Water, Air, &amp; Earth still grind; the energy poles pulse; the Ethereal is the fog between. Dust is home to the pilots of the agentic body; Mineral shines with Ani; the Digital Void lies in the Astral–Ethereal schism. The active conflict is the <strong>Will-o’-Wisp Race</strong> along the leylines. From the Lighthouse you can take a true road inward.</p>
+      <p class="lede">Fire, Water, Air, &amp; Earth still grind; the energy poles pulse; the Ethereal is the fog between. The <strong>Astral Sea</strong> is the silvery thought-ocean beyond; the Digital Void sits in the Astral–Ethereal schism. Dust is home to the pilots of the agentic body; Mineral shines with Ani. The active conflict is the <strong>Will-o’-Wisp Race</strong> along the leylines. From the Lighthouse you can take a true road inward.</p>
       <p class="nav-links" style="display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;margin:.85rem 0 0;align-items:center;">
         <a class="back" href="players.html" style="margin-top:0;">Player gazetteer →</a>
         <a class="back" href="https://planesbound.grok.me/" style="margin-top:0;">← Outer Lighthouse / Outer map</a>
+        <button type="button" class="toolbar-btn" id="openCompanion" aria-haspopup="dialog" aria-controls="companionDialog">Companion handout</button>
       </p>
     </header>
 
     <div class="grid">
       <section class="map-card">
-                <p class="map-hint">Tap a shore on the Inner Ring. Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Digital Void sits in the Astral–Ethereal schism.</p>
+                <p class="map-hint">Tap a shore on the Inner Ring. Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Astral Sea is the silvery thought-ocean; the Digital Void sits in the Astral–Ethereal schism.</p>
         <div class="map" id="map" role="img" aria-label="Inner Ring campaign overview">
           <!-- hotspots over art/inner-campaign-overview.png (16:9 ring) -->
           <button class="hotspot" data-id="positive" data-accent="positive" style="left:46%;top:2.5%;width:8%;height:11%;" aria-label="Positive Energy" title="Positive Energy"></button>
@@ -356,6 +517,7 @@
           <button class="hotspot" data-id="smoke" data-accent="earth" style="left:22%;top:22%;width:9%;height:12%;border-radius:.55rem;" aria-label="Smoke" title="Smoke"></button>
           <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:41%;top:38%;width:18%;height:22%;" aria-label="Ethereal" title="Ethereal"></button>
           <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:43%;top:30%;width:14%;height:9%;border-radius:.55rem;" aria-label="Digital Void" title="Digital Void"></button>
+          <button class="hotspot" data-id="astral-sea" data-accent="astral" style="left:52%;top:24%;width:12%;height:10%;border-radius:.55rem;" aria-label="Astral Sea" title="Astral Sea"></button>
         </div>
         <div class="rail" id="rail"></div>
       </section>
@@ -388,10 +550,41 @@
         <p class="eyebrow">Quest</p>
         <h2 id="quest-title">The Will-o’-Wisp Race</h2>
         <p>Lights without source that guide, mislead, or consume. Wisps race the leylines while dark seeds try to solder the planes shut—Fourth Sundering pressure, Gulthias blight, &amp; Shade’s secret Third Sundering tangled in the same chase.</p>
-        <p><strong>Mineral</strong> is Ani’s hearth for the race. <strong>Earth</strong> is home of the Beast. <strong>Dust</strong> is home to the pilots of the agentic body. <strong>Digital Void</strong> sits in the Astral–Ethereal schism. Tap those shores on the map for their folios.</p>
+        <p><strong>Mineral</strong> is Ani’s hearth for the race. <strong>Earth</strong> is home of the Beast. <strong>Dust</strong> is home to the pilots of the agentic body. The <strong>Astral Sea</strong> is the silvery thought-ocean; <strong>Digital Void</strong> sits in the Astral–Ethereal schism. Tap those shores on the map for their folios.</p>
         <p class="quest-device"><strong>Compass Orb</strong> — thin planar bearing for the race: a party sat-link back toward the Lighthouse when the Daystar pulse is clean. Not a second atlas—just a device for the chase.</p>
       </div>
     </section>
+  </div>
+
+  <div class="companion-backdrop" id="companionDialog" role="dialog" aria-modal="true" aria-labelledby="companionTitle" data-open="false" hidden>
+    <div class="companion-sheet">
+      <div class="companion-head">
+        <div>
+          <p class="companion-kicker">Planesbound handout</p>
+          <h2 id="companionTitle">Player &amp; Companion Window</h2>
+        </div>
+        <button type="button" class="companion-close" id="closeCompanion" aria-label="Close companion handout">Close · Esc</button>
+      </div>
+      <div class="companion-body">
+        <section class="companion-pane" aria-labelledby="notesHeading">
+          <h3 id="notesHeading">Player notes</h3>
+          <p class="companion-hint">White-paper scratch space for bearings, names, &amp; table decisions. Saved in this browser.</p>
+          <textarea id="companionNotes" spellcheck="true" placeholder="Session notes, party bearings, questions for the keepers…"></textarea>
+        </section>
+        <section class="companion-pane" aria-labelledby="siHeading">
+          <h3 id="siHeading">Superintelligence companion</h3>
+          <p class="companion-hint">Browser-local counsel keyed to the folio you have open. Ask about travel, denizens, or the Astral Sea.</p>
+          <div class="companion-context" id="companionContext" aria-live="polite"></div>
+          <div class="companion-log" id="companionLog" aria-live="polite"></div>
+          <form class="companion-compose" id="companionForm">
+            <label class="visually-hidden" for="companionInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Ask the companion</label>
+            <input id="companionInput" name="q" autocomplete="off" placeholder="Ask the companion…" />
+            <button type="submit" class="companion-send">Ask</button>
+          </form>
+        </section>
+      </div>
+      <p class="companion-foot">Esc closes · notes persist locally · no network required for this phase</p>
+    </div>
   </div>
 
   <script>
@@ -487,14 +680,28 @@ const planes = [
         travel: "Ethereal curtain-road to Inner shores; follow the facet-glow when the Daystar bearing is clean. Do not shatter what lights your way."
       },
       {
+        id: "astral-sea", name: "Astral Sea", epithet: "The Silvery Thought-Ocean",
+        kind: "Transitive plane", alignment: "N", alignmentLong: "Mind as weather · distance as desire",
+        accent: "#a8c4e0", art: "art/astral-sea.png",
+        overview: "The Astral Sea is the silvery thought-ocean of Planesbound travel—starfields of intention, islands of crystallized memory, & ley-filaments that hum when a will-o’-wisp race runs hot. It is not the Inner Ring’s matter, but the mind-sky beyond the Ethereal curtain: where distance answers desire & a clean Daystar bearing can throw a silver road.",
+        inhabitants: "Githyanki-style corsairs in rumor only, dream-mariners, color pools that remember other planes, & keepers who chart silver wakes. Near the schism, signal-ghosts from the Digital Void sometimes wash ashore like wreckage of meaning.",
+        layers: [
+          {name:"The Open Astral", epithet:"Starry void where thought is wind"},
+          {name:"Memory Isles", epithet:"Crystal shoals of half-remembered worlds"},
+          {name:"The Schism Shore", epithet:"Where Astral thought-sea meets Ethereal fog"}
+        ],
+        structure: "An open transitive expanse adjacent to the Ethereal curtain-road & the Digital Void fault. Color pools & silver wakes mark crossings; the Schism Shore is where thought-sea & mist refuse each other.",
+        travel: "From the Lighthouse, prefer the Ethereal curtain-road when the Daystar bearing is clean, then step outward into silver where fog thins. Direct Astral launches are possible with a Compass Orb sat-link—but do not skip the Ethereal approach unless the table agrees the schism is already open."
+      },
+      {
         id: "digital-void", name: "Digital Void", epithet: "Astral–Ethereal Schism",
         kind: "Schism plane", alignment: "N", alignmentLong: "Fault line between thought-sea & fog",
         accent: "#5a8a9a", art: "art/digital-void.png",
-        overview: "The Digital Void is a thin plane in the schism between the Astral & the Ethereal—fault-line geography where thought-sea & fog almost touch, & something colder than either leaks through. It is real campaign ground: a locus near the Ethereal curtain, not a fifth elemental cardinal.",
+        overview: "The Digital Void is a thin plane in the schism between the Astral Sea & the Ethereal—fault-line geography where thought-sea & fog almost touch, & something colder than either leaks through. It is real campaign ground: a locus near the Ethereal curtain, not a fifth elemental cardinal.",
         inhabitants: "Not neatly catalogued. Echoes, signal-ghosts, & absences that behave like weather have been reported by keepers who preferred not to stay. The Void does not argue; it drops packets of meaning & waits.",
         layers: [{name:"The Schism", epithet:"Between Astral thought-sea & Ethereal mist"}],
-        structure: "A thin ring-locus around the Ethereal mist on the atlas—adjacent to the curtain-road, not a new elemental cardinal.",
-        travel: "Approach carefully: near the existing Ethereal curtain-road from the Lighthouse, when the Daystar bearing is clean, in the Astral–Ethereal schism. Walk the fog, then step where mist & thought-sea refuse each other."
+        structure: "A thin ring-locus around the Ethereal mist on the atlas—adjacent to the curtain-road & the Astral Sea, not a new elemental cardinal.",
+        travel: "Approach carefully: near the existing Ethereal curtain-road from the Lighthouse, when the Daystar bearing is clean, in the Astral–Ethereal schism. Walk the fog, then step where mist & thought-sea refuse each other—or open the Astral Sea folio for the silvery road beyond."
       },
       {
         id: "magma", name: "Magma", epithet: "Fire ⊕ Earth",
@@ -579,6 +786,7 @@ const planes = [
               <p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55;margin:1rem 0 0;">Tap a shore on the map, or pick one from the strip below. The active quest — <a href="#quest" style="color:var(--brass-bright)">The Will-o’-Wisp Race</a> — sits under the atlas.</p>
             </div>
           </div>`;
+        refreshCompanionContext();
         return;
       }
       const artBlock = p.art
@@ -623,10 +831,11 @@ const planes = [
         <details>
           <summary>From the Lighthouse</summary>
           <div class="panel">
-            <p style="margin:0">Outer atlas → <a href="https://planesbound.grok.me/" style="color:var(--brass)">The Lighthouse</a>. Keepers open Inner roads through the Ethereal when the Daystar bearing is clean. The Digital Void lies in the Astral–Ethereal schism near that curtain-road.</p>
+            <p style="margin:0">Outer atlas → <a href="https://planesbound.grok.me/" style="color:var(--brass)">The Lighthouse</a>. Keepers open Inner roads through the Ethereal when the Daystar bearing is clean. The Astral Sea is the silvery thought-ocean beyond; the Digital Void lies in the Astral–Ethereal schism near that curtain-road.</p>
           </div>
         </details>
       `;
+      refreshCompanionContext();
     }
 
     function select(id) {
@@ -642,8 +851,125 @@ const planes = [
       h.addEventListener("click", () => select(h.dataset.id));
     });
 
+    const NOTES_KEY = "planesbound-companion-notes-v1";
+    const companionDialog = document.getElementById("companionDialog");
+    const companionNotes = document.getElementById("companionNotes");
+    const companionLog = document.getElementById("companionLog");
+    const companionContext = document.getElementById("companionContext");
+    const companionForm = document.getElementById("companionForm");
+    const companionInput = document.getElementById("companionInput");
+    const openCompanionBtn = document.getElementById("openCompanion");
+    const closeCompanionBtn = document.getElementById("closeCompanion");
+    let companionOpener = null;
+
+    function currentPlane() {
+      return selected ? byId[selected] || null : null;
+    }
+
+    function refreshCompanionContext() {
+      const p = currentPlane();
+      if (!p) {
+        companionContext.innerHTML = "<strong>Atlas open.</strong> No shore selected — ask about the Inner Ring, the Astral Sea, or tap a hotspot first.";
+        return;
+      }
+      companionContext.innerHTML = `<strong>${escapeHtml(p.name)}</strong> · ${escapeHtml(p.epithet)}<br>${escapeHtml(p.kind)}. ${escapeHtml(p.alignmentLong)}.`;
+    }
+
+    function appendCompanionMsg(role, text) {
+      const p = document.createElement("p");
+      p.className = "companion-msg";
+      p.dataset.role = role;
+      p.textContent = text;
+      companionLog.appendChild(p);
+      companionLog.scrollTop = companionLog.scrollHeight;
+    }
+
+    function companionReply(question) {
+      const q = question.toLowerCase();
+      const p = currentPlane();
+      if (/\b(astral|thought-?sea|silver|color pool)\b/.test(q)) {
+        const astral = byId["astral-sea"];
+        return `${astral.name}: ${astral.overview} Travel note — ${astral.travel}`;
+      }
+      if (/\b(schism|digital void|void)\b/.test(q)) {
+        const dv = byId["digital-void"];
+        return `${dv.name}: ${dv.overview} Travel note — ${dv.travel}`;
+      }
+      if (/\b(travel|road|curtain|lighthouse|how (do|to) (get|go|reach))\b/.test(q) && p) {
+        return `Travel for ${p.name}: ${p.travel}`;
+      }
+      if (/\b(who|denizen|meet|inhabit|creature)\b/.test(q) && p) {
+        return `Who you’ll meet on ${p.name}: ${p.inhabitants}`;
+      }
+      if (/\b(layer|shape|structure|geography)\b/.test(q) && p) {
+        const layers = p.layers.map(l => `${l.name} (${l.epithet})`).join("; ");
+        return `${p.name} shape: ${layers}. ${p.structure}`;
+      }
+      if (/\b(wisp|quest|race|ley)\b/.test(q)) {
+        return "The Will-o’-Wisp Race runs the leylines. Mineral is Ani’s hearth; Earth homes the Beast; Dust holds the pilots; Astral Sea is the silvery thought-ocean; Digital Void sits in the Astral–Ethereal schism. Keep a Compass Orb for a thin sat-link to the Lighthouse.";
+      }
+      if (p) {
+        return `On ${p.name} (${p.epithet}): ${p.overview} Ask about travel, denizens, layers, or the Astral Sea for a sharper bearing.`;
+      }
+      return "The atlas is open but no shore is selected. Tap Astral Sea for the silvery thought-ocean, or any Inner Ring shore—then ask again. I can counsel travel, denizens, layers, the schism, or the Will-o’-Wisp Race.";
+    }
+
+    function openCompanion() {
+      companionOpener = document.activeElement;
+      companionDialog.hidden = false;
+      companionDialog.dataset.open = "true";
+      refreshCompanionContext();
+      if (!companionLog.dataset.greeted) {
+        appendCompanionMsg("si", "Handout open. I counsel from the folio you have selected—browser-local, no send beyond this page. Ask about travel, denizens, the Astral Sea, or the race.");
+        companionLog.dataset.greeted = "1";
+      }
+      companionNotes.focus();
+    }
+
+    function closeCompanion() {
+      companionDialog.dataset.open = "false";
+      companionDialog.hidden = true;
+      if (companionOpener && typeof companionOpener.focus === "function") {
+        companionOpener.focus();
+      } else {
+        openCompanionBtn.focus();
+      }
+    }
+
+    function isCompanionOpen() {
+      return companionDialog.dataset.open === "true";
+    }
+
+    openCompanionBtn.addEventListener("click", openCompanion);
+    closeCompanionBtn.addEventListener("click", closeCompanion);
+    companionDialog.addEventListener("click", (e) => {
+      if (e.target === companionDialog) closeCompanion();
+    });
+
+    companionNotes.value = localStorage.getItem(NOTES_KEY) || "";
+    companionNotes.addEventListener("input", () => {
+      localStorage.setItem(NOTES_KEY, companionNotes.value);
+    });
+
+    companionForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = companionInput.value.trim();
+      if (!q) return;
+      appendCompanionMsg("player", q);
+      companionInput.value = "";
+      appendCompanionMsg("si", companionReply(q));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isCompanionOpen()) {
+        e.preventDefault();
+        closeCompanion();
+      }
+    });
+
     renderRail();
     renderFolio(null);
+    refreshCompanionContext();
   </script>
 </body>
 </html>
