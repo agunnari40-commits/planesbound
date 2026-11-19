@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PLANESBOUND · Inner Planes Campaign Map</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
@@ -1137,6 +1145,14 @@
       </header>
       <div class="game-stage">
         <section class="game-scene" id="gameScene" data-loc="hub" aria-live="polite">
+          <div class="game-scene-viewport" id="gameSceneViewport" data-active="false" aria-hidden="true">
+            <canvas class="game-scene-canvas" id="gameSceneCanvas" tabindex="-1" aria-label="Encounter stage"></canvas>
+            <div class="game-scene-target" id="gameSceneTarget" hidden>
+              <strong id="gameSceneTargetName"></strong>
+              <span id="gameSceneTargetMeta"></span>
+            </div>
+            <p class="game-scene-hint" id="gameSceneHint"></p>
+          </div>
           <div class="game-scene-copy">
             <p class="eyebrow">Travel</p>
             <h2 id="gameSceneTitle">Lighthouse Hub</h2>
@@ -1713,6 +1729,7 @@ const planes = [
   <script src="art-motion.js" defer></script>
   <script src="races-menu.js" defer></script>
   <script src="character-sheets.js" defer></script>
+  <script src="wow-actors.js" defer></script>
   <script src="white-room.js" defer></script>
   <script src="game.js" defer></script>
 </body>
