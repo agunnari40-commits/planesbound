@@ -325,9 +325,7 @@
   background-image: url("art/astral-sea.png");
 }
 .game-scene[data-loc="memory-isle"] {
-  background-image: url("art/memory-isle.jpg"), url("art/ethereal.png");
-  background-blend-mode: soft-light, normal;
-  background-size: cover, cover;
+  background-image: url("art/memory-isle.jpg");
 }
 .game-scene[data-loc="lighthouse-bearing"] {
   background-image: url("art/lighthouse-bearing.jpg");
@@ -336,14 +334,10 @@
   background-image: url("art/color-pool.jpg");
 }
 .game-scene[data-loc="dust-lane"] {
-  background-image: url("art/dust-lane.jpg"), url("art/dust-pilots.png");
-  background-blend-mode: soft-light, normal;
-  background-size: cover, cover;
+  background-image: url("art/dust-lane.jpg");
 }
 .game-scene[data-loc="mineral-shore"] {
-  background-image: url("art/mineral-shore.jpg"), url("art/mineral-progenitor.png");
-  background-blend-mode: soft-light, normal;
-  background-size: cover, cover;
+  background-image: url("art/mineral-shore.jpg");
 }
 .game-scene-viewport {
   position: absolute;
