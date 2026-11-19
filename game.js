@@ -676,6 +676,7 @@
       panel.dataset.active = panel.dataset.panel === activeTab ? "true" : "false";
     });
 
+    window.PlanesboundArtMotion?.refresh?.();
     window.PlanesboundGame = api();
   }
 

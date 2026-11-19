@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="game.css" />
   <link rel="stylesheet" href="character-sheets.css" />
   <link rel="stylesheet" href="white-room.css" />
+  <link rel="stylesheet" href="art-motion.css" />
   <style>
     :root {
       --parchment: #0c0a09;
@@ -1405,6 +1406,7 @@ const planes = [
             </div>
           </div>`;
         refreshCompanionContext();
+        window.PlanesboundArtMotion?.refresh?.();
         return;
       }
       const artBlock = p.art
@@ -1454,6 +1456,7 @@ const planes = [
         </details>
       `;
       refreshCompanionContext();
+      window.PlanesboundArtMotion?.refresh?.();
     }
 
     function select(id) {
@@ -1688,6 +1691,7 @@ const planes = [
     renderFolio(null);
     refreshCompanionContext();
   </script>
+  <script src="art-motion.js" defer></script>
   <script src="races-menu.js" defer></script>
   <script src="character-sheets.js" defer></script>
   <script src="white-room.js" defer></script>
