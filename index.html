@@ -1169,6 +1169,7 @@
         <p>Embarked, discovered a memory isle, and locked a Lighthouse bearing. Next: seek a color pool toward the Mineral shore — or keep exploring the Sea and ask the companion.</p>
         <div class="game-start-actions">
           <button type="button" class="game-btn game-btn--astral" id="gameContinueExplore">Continue exploring</button>
+          <button type="button" class="game-btn" id="gameNewVoyage" hidden>New voyage</button>
         </div>
       </div>
     </div>
@@ -1519,23 +1520,41 @@ const planes = [
       const gameCtx = game?.isPlayOpen?.() ? game.counselContext() : null;
 
       if (gameCtx) {
+        const rollNote = gameCtx.lastRoll ? ` Last roll: ${gameCtx.lastRoll}.` : "";
+        const vitals = `HP ${gameCtx.hp}/${gameCtx.hpMax}, fatigue ${gameCtx.fatigue}, level ${gameCtx.level}.`;
+        const questLine = gameCtx.chapterComplete
+          ? "Chapter First Crossing is closed — explore or start a New voyage."
+          : gameCtx.shoreQuestComplete
+            ? "Inner Ring shore secured. Chapter can close when you acknowledge the win."
+            : gameCtx.questComplete
+              ? "First crossing done. Dust Lane → color pool → Mineral shore closes the chapter."
+              : "Quest: embark, memory isle, Lighthouse bearing — then the shore chain.";
         if (/\b(where am i|location|where are we)\b/.test(q)) {
-          return `You stand in ${gameCtx.locationTitle}. ${gameCtx.blurb}`;
+          return `You stand in ${gameCtx.locationTitle}. ${gameCtx.blurb} ${gameCtx.companionHint || ""}${rollNote}`;
         }
-        if (/\b(quest|objective|cross the astral)\b/.test(q)) {
+        if (/\b(quest|objective|cross the astral|chapter|shore)\b/.test(q)) {
           const done = Object.entries(gameCtx.objectives)
             .map(([k, v]) => `${k}:${v ? "done" : "open"}`)
             .join(", ");
-          return gameCtx.questComplete
-            ? `Cross the Astral Sea is complete. Keep exploring from ${gameCtx.locationTitle}, ${gameCtx.playerName}.`
-            : `Quest Cross the Astral Sea — status [${done}]. Embark, discover a memory isle, then take a Lighthouse bearing.`;
+          return `${questLine} Objectives [${done}]. You are at ${gameCtx.locationTitle}.${rollNote}`;
         }
-        if (/\b(who am i|party|my name)\b/.test(q)) {
-          return `${gameCtx.playerName} (${gameCtx.playerBeing}) travels with companion ${gameCtx.companionBeing}. Location: ${gameCtx.locationTitle}.`;
+        if (/\b(who am i|party|my name|hp|fatigue|level|rest)\b/.test(q)) {
+          return `${gameCtx.playerName} (${gameCtx.playerBeing}) with ${gameCtx.companionBeing} at ${gameCtx.locationTitle}. ${vitals}${gameCtx.equipped ? ` Equipped: ${gameCtx.equipped}.` : ""}${rollNote}`;
         }
-        if (/\b(travel|astral|sea|isle|bearing|hub)\b/.test(q)) {
-          return `Counsel for ${gameCtx.locationTitle}: ${gameCtx.blurb} Use Travel actions in Play mode — cast off, seek a memory isle, or lock a Lighthouse bearing.`;
+        if (/\b(dust|lane|salt|wisp|scrap)\b/.test(q)) {
+          const hasSalt = (gameCtx.inventoryIds || []).includes("star-salt");
+          const hasScrap = (gameCtx.inventoryIds || []).includes("wisp-scrap");
+          return `Dust Lane wants grit or scrap. You ${hasSalt ? "carry Star Salt" : "lack Star Salt"}; ${hasScrap ? "hold a Wisp Scrap" : "no Wisp Scrap yet"}. ${gameCtx.companionHint || ""} Athletics holds the rail; Insight buys kinder pilots.${rollNote}`;
         }
+        if (/\b(travel|astral|sea|isle|bearing|hub|pool|mineral)\b/.test(q)) {
+          return `Counsel for ${gameCtx.locationTitle}: ${gameCtx.companionHint || gameCtx.blurb} ${questLine}${rollNote}`;
+        }
+        if (/\b(inventory|equip|item|shard|compass)\b/.test(q)) {
+          const ids = (gameCtx.inventoryIds || []).join(", ") || "empty";
+          return `Pack: ${ids}.${gameCtx.equipped ? ` Equipped ${gameCtx.equipped}.` : " Nothing equipped."} Use items from Inventory — salt and lines change checks.${rollNote}`;
+        }
+        // Default in-play counsel: location + quest + last roll (not generic fluff)
+        return `${gameCtx.companionHint || gameCtx.blurb} ${questLine} ${vitals}${rollNote} Ask about travel, Dust Lane, quest, or inventory for a sharper bearing.`;
       }
 
       // Roster only when clearly asking about selected beings / the Beings Roster

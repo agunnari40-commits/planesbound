@@ -494,6 +494,15 @@
       open: openSheet,
       close,
       get: (role) => sheets[role] || load(role),
+      /** Merge fields into a role sheet and update in-memory cache + localStorage. */
+      patch: (role, fields) => {
+        if (role !== "player" && role !== "companion") return null;
+        if (!fields || typeof fields !== "object") return null;
+        const s = sheets[role] || load(role) || blankSheet(role, "human", role === "player" ? "Traveler" : "Companion");
+        Object.assign(s, fields);
+        save(role, s);
+        return s;
+      },
       bothComplete,
       isComplete,
     };
