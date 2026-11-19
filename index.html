@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PLANESBOUND GAZETTEER · Inner Planes Campaign Map</title>
+  <title>PLANESBOUND · Inner Planes Campaign Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="game.css" />
   <style>
     :root {
       --parchment: #0c0a09;
@@ -1019,6 +1020,7 @@
       <h1>INNER PLANES CAMPAIGN MAP</h1>
       <p class="lede">Fire, Water, Air, &amp; Earth still grind; the energy poles pulse; the Ethereal is the fog between. The <strong>Astral Sea</strong> is the silvery thought-ocean beyond; the Digital Void sits in the Astral–Ethereal schism. Dust is home to the pilots of the agentic body; Mineral shines with Ani. The active conflict is the <strong>Will-o’-Wisp Race</strong> along the leylines. From the Lighthouse you can take a true road inward.</p>
       <p class="nav-links" style="display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;margin:.85rem 0 0;align-items:center;">
+        <button type="button" class="game-play-cta" id="openPlay" aria-haspopup="dialog" aria-controls="gameLayer">Play · Cross the Astral Sea</button>
         <a class="back" href="players.html" style="margin-top:0;">Player gazetteer →</a>
         <a class="back" href="https://planesbound.grok.me/" style="margin-top:0;">← Outer Lighthouse / Outer map</a>
         <button type="button" class="toolbar-btn" id="openCompanion" aria-haspopup="dialog" aria-controls="companionDialog">Companion handout</button>
@@ -1083,6 +1085,77 @@
     </section>
   </div>
   </div><!-- /.app-shell -->
+
+  <div class="game-layer" id="gameLayer" role="dialog" aria-modal="true" aria-labelledby="gameStartTitle" data-open="false" hidden>
+    <div class="game-start" id="gameStart" data-open="true">
+      <form class="game-start-card" id="gameStartForm">
+        <p class="eyebrow" style="color:#8a6a32;">Character start</p>
+        <h2 id="gameStartTitle">Cross the Astral Sea</h2>
+        <p class="lede">Name your traveler, keep Human (or pick another being), choose a companion being, then cast off. Progress saves in this browser.</p>
+        <div class="game-field">
+          <label for="gamePlayerName">Player name</label>
+          <input id="gamePlayerName" name="name" maxlength="40" autocomplete="nickname" required placeholder="e.g. Ani of Mineral" />
+        </div>
+        <div class="game-field">
+          <label for="gamePlayerBeing">Player being</label>
+          <select id="gamePlayerBeing" name="playerBeing"></select>
+        </div>
+        <div class="game-field">
+          <label for="gameCompanionBeing">Companion being</label>
+          <select id="gameCompanionBeing" name="companionBeing"></select>
+        </div>
+        <div class="game-start-actions">
+          <button type="submit" class="game-btn game-btn--astral">Begin voyage</button>
+          <button type="button" class="game-btn game-btn--ghost" id="gameCancelStart">Back to atlas</button>
+        </div>
+      </form>
+    </div>
+    <div class="game-shell" id="gameShell" data-open="false" hidden>
+      <header class="game-hud" id="gameHud" data-theme="parchment">
+        <div class="game-hud-party" id="gameHudParty"></div>
+        <div class="game-hud-actions">
+          <button type="button" class="game-btn" id="openCompanionFromGame" onclick="document.getElementById('openCompanion')?.click()">Companion</button>
+          <button type="button" class="game-btn game-btn--ghost" id="gameExit">Exit play · Esc</button>
+        </div>
+      </header>
+      <div class="game-stage">
+        <section class="game-scene" id="gameScene" data-loc="hub" aria-live="polite">
+          <div class="game-scene-copy">
+            <p class="eyebrow">Travel</p>
+            <h2 id="gameSceneTitle">Lighthouse Hub</h2>
+            <p id="gameSceneBlurb">Prepare, then cast off into the Astral Sea.</p>
+            <div class="game-scene-actions" id="gameSceneActions"></div>
+          </div>
+        </section>
+        <aside class="game-side" id="gameSide" data-theme="parchment">
+          <div class="game-tabs" id="gameTabs" role="tablist" aria-label="Party panels">
+            <button type="button" class="game-tab" role="tab" data-tab="status" aria-selected="true">Status</button>
+            <button type="button" class="game-tab" role="tab" data-tab="inventory" aria-selected="false">Inventory</button>
+            <button type="button" class="game-tab" role="tab" data-tab="journal" aria-selected="false">Journal</button>
+            <button type="button" class="game-tab" role="tab" data-tab="quest" aria-selected="false">Quest</button>
+          </div>
+          <div class="game-panel" id="gamePanelStatus" data-panel="status" data-active="true"></div>
+          <div class="game-panel" id="gamePanelInventory" data-panel="inventory" data-active="false"></div>
+          <div class="game-panel" id="gamePanelJournal" data-panel="journal" data-active="false"></div>
+          <div class="game-panel" id="gamePanelQuest" data-panel="quest" data-active="false"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-complete" id="gameComplete" role="dialog" aria-modal="true" aria-labelledby="gameCompleteTitle" data-open="false" hidden>
+    <div class="game-complete-card">
+      <div class="game-complete-art" role="img" aria-label="Astral Sea crossing complete"></div>
+      <div class="game-complete-body">
+        <p class="eyebrow" style="color:#8a6a32;">Quest complete</p>
+        <h2 id="gameCompleteTitle">You crossed the Astral Sea</h2>
+        <p>Embarked, discovered a memory isle, and locked a Lighthouse bearing. Keep exploring the Sea, ask the companion, or return to the hub atlas.</p>
+        <div class="game-start-actions">
+          <button type="button" class="game-btn game-btn--astral" id="gameContinueExplore">Continue exploring</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="companion-backdrop" id="companionDialog" role="dialog" aria-modal="true" aria-labelledby="companionTitle" data-open="false" hidden>
     <div class="companion-sheet" tabindex="-1">
@@ -1396,6 +1469,12 @@ const planes = [
     }
 
     function refreshCompanionContext() {
+      const game = window.PlanesboundGame;
+      if (game?.isPlayOpen?.()) {
+        const ctx = game.counselContext();
+        companionContext.innerHTML = `<strong>${escapeHtml(ctx.locationTitle)}</strong> · party ${escapeHtml(ctx.playerName)} (${escapeHtml(ctx.playerBeing)}) with ${escapeHtml(ctx.companionBeing)}<br>${escapeHtml(ctx.blurb)}`;
+        return;
+      }
       const p = currentPlane();
       if (!p) {
         companionContext.innerHTML = "<strong>Atlas open.</strong> No shore selected — ask about the Inner Ring, the Astral Sea, or tap a hotspot first.";
@@ -1417,6 +1496,29 @@ const planes = [
       const q = question.toLowerCase();
       const p = currentPlane();
       const beingsApi = window.PlanesboundBeings;
+      const game = window.PlanesboundGame;
+      const gameCtx = game?.isPlayOpen?.() ? game.counselContext() : null;
+
+      if (gameCtx) {
+        if (/\b(where am i|location|where are we)\b/.test(q)) {
+          return `You stand in ${gameCtx.locationTitle}. ${gameCtx.blurb}`;
+        }
+        if (/\b(quest|objective|cross the astral)\b/.test(q)) {
+          const done = Object.entries(gameCtx.objectives)
+            .map(([k, v]) => `${k}:${v ? "done" : "open"}`)
+            .join(", ");
+          return gameCtx.questComplete
+            ? `Cross the Astral Sea is complete. Keep exploring from ${gameCtx.locationTitle}, ${gameCtx.playerName}.`
+            : `Quest Cross the Astral Sea — status [${done}]. Embark, discover a memory isle, then take a Lighthouse bearing.`;
+        }
+        if (/\b(who am i|party|my name)\b/.test(q)) {
+          return `${gameCtx.playerName} (${gameCtx.playerBeing}) travels with companion ${gameCtx.companionBeing}. Location: ${gameCtx.locationTitle}.`;
+        }
+        if (/\b(travel|astral|sea|isle|bearing|hub)\b/.test(q)) {
+          return `Counsel for ${gameCtx.locationTitle}: ${gameCtx.blurb} Use Travel actions in Play mode — cast off, seek a memory isle, or lock a Lighthouse bearing.`;
+        }
+      }
+
       // Roster only when clearly asking about selected beings / the Beings Roster
       // (not "Will-o’-Wisp Race", plane "companion", or generic race keywords)
       const rosterAsk =
@@ -1569,5 +1671,6 @@ const planes = [
     refreshCompanionContext();
   </script>
   <script src="races-menu.js" defer></script>
+  <script src="game.js" defer></script>
 </body>
 </html>

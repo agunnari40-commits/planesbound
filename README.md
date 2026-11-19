@@ -23,6 +23,18 @@ Then open `http://localhost:5173/` (hub: `index.html`, players gazetteer: `playe
 - Catalog: `data/beings.json` (Human first; hundreds of entries). Legal sourcing — folklore/myth names, SRD-safe staples, original coinages; original blurbs only.
 - Virtualized wheel/drag lists in `races-menu.js`.
 
+### Play mode (PAS-6)
+
+Single-player browser slice — no network AI required:
+
+1. Open the hub and tap **Play · Cross the Astral Sea**.
+2. Name your traveler, keep/pick a player being (Human default), pick a companion being → **Begin voyage**.
+3. From the hub scene, **Cast off into the Astral Sea**.
+4. **Seek a memory isle**, then **Follow Lighthouse pulse** / take a bearing (quest completes; keep exploring).
+5. Ask the **Companion** anytime — counsel uses your location + party (Esc exits play / closes dialogs).
+
+Save key: `localStorage` `planesbound-game-v1`. Files: `game.js`, `game.css`.
+
 ## Grok Build / planesbound.grok.me
 
 This tree is Grok-ready as multi-file static HTML:

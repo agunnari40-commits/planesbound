@@ -1,0 +1,439 @@
+/* Planesbound PAS-6 — single-player browser game chrome */
+.game-play-cta {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, var(--brass-bright) 70%, #fff);
+  background:
+    linear-gradient(160deg, #f3e8cf, #e7d6a8 55%, color-mix(in oklab, #cfe0f4 28%, #e7d6a8));
+  color: #5a3f18;
+  border-radius: .55rem;
+  padding: .45rem .85rem;
+  font-family: Cinzel, serif;
+  font-size: .72rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #d7ecff 22%, transparent),
+    0 8px 20px color-mix(in oklab, #000 28%, transparent);
+}
+.game-play-cta:hover,
+.game-play-cta:focus-visible {
+  outline: 2px solid #8a6a32;
+  outline-offset: 2px;
+  filter: brightness(1.05);
+}
+
+.game-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  background: #07080c;
+  color: var(--ink);
+}
+.game-layer[data-open="true"] {
+  display: flex;
+}
+
+.game-start {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background:
+    linear-gradient(120deg, color-mix(in oklab, #1a1208 72%, transparent), color-mix(in oklab, #0b1224 78%, transparent)),
+    url("art/player-screen.png") left center / cover no-repeat,
+    url("art/companion-screen.png") right center / cover no-repeat;
+}
+.game-start[hidden],
+.game-start[data-open="false"] {
+  display: none !important;
+}
+.game-shell[hidden],
+.game-shell[data-open="false"] {
+  display: none !important;
+}
+.game-complete[hidden],
+.game-complete[data-open="false"] {
+  display: none !important;
+}
+.game-start-card {
+  width: min(560px, 100%);
+  border-radius: .85rem;
+  border: 1px solid color-mix(in oklab, #c4ad7a 65%, #9ec4e8);
+  background:
+    linear-gradient(180deg, #fbf6ea 0%, #efe4c8 48%, #e8dcc0 100%);
+  color: #2a2218;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #d7ecff 25%, transparent),
+    0 24px 60px color-mix(in oklab, #000 45%, transparent);
+  padding: 1.15rem 1.2rem 1.25rem;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.game-start-card h2 {
+  font-family: Cinzel, serif;
+  margin: .15rem 0 .35rem;
+  font-size: 1.25rem;
+  letter-spacing: .04em;
+  color: #5a3f18;
+}
+.game-start-card .lede {
+  margin: 0 0 1rem;
+  font-size: .92rem;
+  line-height: 1.45;
+  color: #5c4a32;
+}
+.game-field {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-bottom: .75rem;
+}
+.game-field label {
+  font-family: Cinzel, serif;
+  font-size: .62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a6a32;
+}
+.game-field input,
+.game-field select {
+  border: 1px solid #c4ad7a;
+  border-radius: .4rem;
+  padding: .55rem .65rem;
+  font: inherit;
+  font-size: .95rem;
+  background: #fffaf0;
+  color: #2a2218;
+}
+.game-field input:focus-visible,
+.game-field select:focus-visible {
+  outline: 2px solid #8a6a32;
+  outline-offset: 1px;
+}
+.game-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin-top: .35rem;
+}
+.game-btn {
+  appearance: none;
+  border-radius: .45rem;
+  border: 1px solid color-mix(in oklab, #b89a58 70%, #9ec4e8);
+  background: linear-gradient(160deg, #f3e8cf, #e7d6a8);
+  color: #5a3f18;
+  font-family: Cinzel, serif;
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .5rem .8rem;
+  cursor: pointer;
+}
+.game-btn--astral {
+  border-color: color-mix(in oklab, #9ec4e8 55%, transparent);
+  background: linear-gradient(160deg, #1a2740, #0f1a30);
+  color: #d7ecff;
+}
+.game-btn--ghost {
+  background: transparent;
+  border-color: color-mix(in oklab, #8a6a32 45%, transparent);
+  color: #5c4a32;
+}
+.game-btn:hover,
+.game-btn:focus-visible {
+  outline: 2px solid #8a6a32;
+  outline-offset: 2px;
+}
+.game-btn--astral:hover,
+.game-btn--astral:focus-visible {
+  outline-color: #9ec4e8;
+}
+
+.game-shell {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+.game-shell[data-open="true"] {
+  display: flex;
+}
+
+.game-hud {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem .65rem;
+  padding: .55rem .75rem;
+  border-bottom: 1px solid color-mix(in oklab, #c4ad7a 40%, #9ec4e8);
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #fbf6ea 88%, transparent) 0 46%, color-mix(in oklab, #0d1528 88%, transparent) 46% 100%);
+}
+.game-hud-party {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+.game-hud-party strong {
+  font-family: Cinzel, serif;
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: #5a3f18;
+}
+.game-hud-party span {
+  font-size: .72rem;
+  color: #6b5a42;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-hud[data-theme="astral"] .game-hud-party strong { color: #d7ecff; }
+.game-hud[data-theme="astral"] .game-hud-party span { color: #9ec4e8; }
+.game-hud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+.game-hud-actions .game-btn { padding: .4rem .65rem; }
+
+.game-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .game-stage {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .75fr);
+  }
+}
+
+.game-scene {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  background: #0b1224 center / cover no-repeat;
+}
+.game-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, color-mix(in oklab, #07080c 88%, transparent), transparent 42%),
+    linear-gradient(90deg, color-mix(in oklab, #07080c 35%, transparent), transparent 30%);
+}
+.game-scene[data-loc="hub"] {
+  background-image: url("art/inner-campaign-overview.png");
+}
+.game-scene[data-loc="astral-sea"],
+.game-scene[data-loc="memory-isle"],
+.game-scene[data-loc="lighthouse-bearing"] {
+  background-image: url("art/astral-sea.png");
+}
+.game-scene[data-loc="memory-isle"] {
+  background-image: url("art/ethereal.png"), url("art/astral-sea.png");
+  background-blend-mode: soft-light, normal;
+}
+.game-scene[data-loc="lighthouse-bearing"] {
+  background-image: url("art/positive.png"), url("art/astral-sea.png");
+  background-blend-mode: screen, normal;
+}
+.game-scene-copy {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 1;
+  padding: 1rem 1.1rem 1.15rem;
+  max-width: 42rem;
+}
+.game-scene-copy .eyebrow { color: #c9dff5; }
+.game-scene[data-loc="hub"] .game-scene-copy .eyebrow { color: var(--brass-bright); }
+.game-scene-copy h2 {
+  font-family: Cinzel, serif;
+  margin: .2rem 0 .35rem;
+  font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+  color: #f0f6ff;
+  text-shadow: 0 2px 18px color-mix(in oklab, #000 55%, transparent);
+}
+.game-scene[data-loc="hub"] .game-scene-copy h2 { color: var(--bone); }
+.game-scene-copy p {
+  margin: 0 0 .85rem;
+  font-size: .92rem;
+  line-height: 1.5;
+  color: #d7e4f5;
+  text-shadow: 0 1px 10px color-mix(in oklab, #000 50%, transparent);
+}
+.game-scene[data-loc="hub"] .game-scene-copy p { color: var(--ink-soft); }
+.game-scene-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.game-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid color-mix(in oklab, #c4ad7a 35%, #9ec4e8);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #fbf6ea 92%, transparent), #efe4c8);
+  color: #2a2218;
+  overflow: auto;
+}
+@media (min-width: 900px) {
+  .game-side {
+    border-top: 0;
+    border-left: 1px solid color-mix(in oklab, #c4ad7a 40%, #9ec4e8);
+  }
+}
+.game-side[data-theme="astral"] {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #0b1224 88%, transparent), #152038),
+    url("art/companion-astral-panel.png") center / cover no-repeat;
+  color: #e8eef8;
+}
+.game-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  padding: .55rem .55rem .35rem;
+  border-bottom: 1px solid color-mix(in oklab, #c4ad7a 40%, transparent);
+}
+.game-side[data-theme="astral"] .game-tabs {
+  border-bottom-color: color-mix(in oklab, #9ec4e8 25%, transparent);
+}
+.game-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-family: Cinzel, serif;
+  font-size: .62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .35rem .55rem;
+  border-radius: .35rem;
+  cursor: pointer;
+}
+.game-tab[aria-selected="true"] {
+  border-color: color-mix(in oklab, #8a6a32 55%, transparent);
+  background: color-mix(in oklab, #c5a059 18%, transparent);
+}
+.game-side[data-theme="astral"] .game-tab[aria-selected="true"] {
+  border-color: color-mix(in oklab, #9ec4e8 45%, transparent);
+  background: color-mix(in oklab, #9ec4e8 16%, transparent);
+}
+.game-panel {
+  display: none;
+  padding: .75rem .85rem 1rem;
+  font-size: .88rem;
+  line-height: 1.45;
+}
+.game-panel[data-active="true"] { display: block; }
+.game-panel h3 {
+  font-family: Cinzel, serif;
+  margin: 0 0 .55rem;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #6b4d1e;
+}
+.game-side[data-theme="astral"] .game-panel h3 { color: #c9dff5; }
+.game-panel ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.game-panel li { margin: 0 0 .4rem; }
+.game-obj[data-done="true"] {
+  text-decoration: line-through;
+  opacity: .72;
+}
+.game-obj[data-done="true"]::marker { content: "✓ "; }
+.game-meta-line {
+  margin: 0 0 .55rem;
+  font-size: .8rem;
+  color: #6b5a42;
+}
+.game-side[data-theme="astral"] .game-meta-line { color: #9eb4cc; }
+
+.game-complete {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(ellipse at 50% 30%, color-mix(in oklab, #9ec4e8 22%, transparent), transparent 50%),
+    color-mix(in oklab, #04060c 78%, transparent);
+}
+.game-complete[data-open="true"] { display: flex; }
+.game-complete-card {
+  width: min(480px, 100%);
+  border-radius: .85rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, #c4ad7a 50%, #9ec4e8);
+  box-shadow: 0 28px 70px color-mix(in oklab, #000 55%, transparent);
+  background: #0b1224;
+}
+.game-complete-art {
+  min-height: 140px;
+  background: #0b1224 url("art/astral-sea.png") center / cover no-repeat;
+  position: relative;
+}
+.game-complete-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #0b1224, transparent 55%);
+}
+.game-complete-body {
+  padding: 1rem 1.1rem 1.15rem;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #fbf6ea 94%, transparent), #efe4c8);
+  color: #2a2218;
+}
+.game-complete-body h2 {
+  font-family: Cinzel, serif;
+  margin: 0 0 .35rem;
+  color: #5a3f18;
+}
+.game-complete-body p {
+  margin: 0 0 .85rem;
+  font-size: .92rem;
+  line-height: 1.45;
+  color: #5c4a32;
+}
+
+body.game-active .app-shell,
+body.game-active #pageVeil {
+  visibility: hidden;
+  pointer-events: none;
+}
+body.game-active #companionDialog[data-open="true"] {
+  z-index: 60;
+}
+
+@media (max-width: 640px) {
+  .game-hud { padding: .45rem .55rem; }
+  .game-scene { min-height: 280px; }
+  .game-start-card { padding: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-layer,
+  .game-complete,
+  .game-scene::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
