@@ -133,7 +133,7 @@
       if (!raw) return defaultState();
       const parsed = JSON.parse(raw);
       const base = defaultState();
-      return {
+      const merged = {
         ...base,
         ...parsed,
         objectives: { ...base.objectives, ...(parsed.objectives || {}) },
@@ -141,6 +141,20 @@
         journal: Array.isArray(parsed.journal) ? parsed.journal : base.journal,
         flags: { ...(parsed.flags || {}) },
       };
+      // v1 saves finished quest 1 without shoreQuestActive — activate Inner Ring shore chase
+      if (merged.questComplete && !merged.shoreQuestComplete && !merged.shoreQuestActive) {
+        merged.shoreQuestActive = true;
+      }
+      // If they already visited pool+shore in a broken migrate, finish the second quest
+      if (
+        merged.shoreQuestActive &&
+        !merged.shoreQuestComplete &&
+        merged.objectives?.pool &&
+        merged.objectives?.shore
+      ) {
+        merged.shoreQuestComplete = true;
+      }
+      return merged;
     } catch (_) {
       return defaultState();
     }
@@ -268,11 +282,15 @@
   }
 
   function skillMod() {
-    // Prefer sheet proficiency if present; else being tradition heuristic
+    // Sheets store skills as { Perception: true, ... }; also accept arrays
     const sheet = window.PlanesboundSheets?.get?.("player");
-    const skills = sheet?.skills || sheet?.skillProficiencies || [];
-    if (Array.isArray(skills) && skills.length) {
-      const hit = skills.find((s) => /perception|investigation|insight|survival/i.test(String(s)));
+    const skills = sheet?.skills || sheet?.skillProficiencies;
+    const relevant = /perception|investigation|insight|survival/i;
+    if (skills && typeof skills === "object" && !Array.isArray(skills)) {
+      const hit = Object.entries(skills).some(([name, on]) => on && relevant.test(name));
+      if (hit) return 3;
+    } else if (Array.isArray(skills) && skills.length) {
+      const hit = skills.find((s) => relevant.test(String(s)));
       if (hit) return 3;
     }
     const id = state.playerBeingId || "human";
@@ -412,12 +430,11 @@
     save();
     render();
 
-    if (loc === "memory-isle" && !state.isleChecked) {
+    // Prefer isle encounter over quest-complete modal — never stack both
+    const wantsIsle = loc === "memory-isle" && !state.isleChecked;
+    if (wantsIsle) {
       openIsleEncounter();
-    }
-
-    if (state.questComplete && !state.completeAcked && !state.shoreQuestComplete) {
-      // Only show first-quest modal once
+    } else if (state.questComplete && !state.completeAcked && !state.shoreQuestComplete) {
       if (state.objectives.bearing && from !== "hub") showComplete(true);
     }
     if (state.shoreQuestComplete && !state.flags.shoreAcked) {
@@ -719,10 +736,11 @@
       setPlayOpen(true);
       showStart(true);
       const pref = prefillFromCreation();
-      fillBeingSelect(el("gamePlayerBeing"), state.playerBeingId || pref.playerBeingId);
-      fillBeingSelect(el("gameCompanionBeing"), state.companionBeingId || pref.companionBeingId);
+      // Unstarted defaults are always "human" — prefer live creation roster/sheet picks
+      fillBeingSelect(el("gamePlayerBeing"), pref.playerBeingId || "human");
+      fillBeingSelect(el("gameCompanionBeing"), pref.companionBeingId || "human");
       const nameInput = el("gamePlayerName");
-      if (nameInput && !nameInput.value) nameInput.value = state.playerName || pref.name || "";
+      if (nameInput && !nameInput.value) nameInput.value = pref.name || state.playerName || "";
       nameInput?.focus();
       return;
     }
@@ -867,16 +885,17 @@
       if (e.defaultPrevented) return;
       const companionOpen = document.getElementById("companionDialog")?.dataset.open === "true";
       if (companionOpen) return;
-      if (encounter) {
-        e.preventDefault();
-        resolveEncounter("skip");
-        return;
-      }
+      // Topmost modal first: quest-complete sits above encounter when both exist
       if (el("gameComplete")?.dataset.open === "true") {
         e.preventDefault();
         state.completeAcked = true;
         save();
         showComplete(false);
+        return;
+      }
+      if (encounter) {
+        e.preventDefault();
+        resolveEncounter("skip");
         return;
       }
       e.preventDefault();
