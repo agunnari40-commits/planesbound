@@ -115,6 +115,7 @@
   function setListOpen(role, open) {
     const panel = document.getElementById(`${role}BeingList`);
     const btn = document.getElementById(`${role}BeingToggle`);
+    const card = panel?.closest(".being-card");
     if (!panel || !btn) return;
     if (open) {
       if (openList && openList !== role) setListOpen(openList, false);
@@ -122,6 +123,7 @@
       panel.hidden = false;
       panel.dataset.open = "true";
       btn.setAttribute("aria-expanded", "true");
+      card?.classList.add("is-list-open");
       applyFilter(role);
       requestAnimationFrame(() => {
         const viewport = document.getElementById(`${role}BeingViewport`);
@@ -138,6 +140,7 @@
       panel.hidden = true;
       panel.dataset.open = "false";
       btn.setAttribute("aria-expanded", "false");
+      card?.classList.remove("is-list-open");
     }
   }
 
