@@ -20,7 +20,8 @@
 
   const BG_RULES = [
     // Single-layer photo art — position drift is safe
-    { sel: ".map", cls: "art-live-bg art-live-bg--photo art-live-bg--map art-live-host art-live-host--map" },
+    // Map: overlay-only motion — never pan/zoom bg (hotspots are % of the box)
+    { sel: ".map", cls: "art-live-bg art-live-bg--map art-live-host art-live-host--map" },
     { sel: ".quest-art", cls: "art-live-bg art-live-bg--photo art-live-bg--quest art-live-host art-live-host--hero" },
     { sel: ".game-scene", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
     { sel: ".white-room-fallback", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
