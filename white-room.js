@@ -259,13 +259,16 @@
     const plateUrl =
       role === "companion" ? "art/figure-companion.png" : "art/figure-player.png";
 
+    // depthWrite on plate so nearer standees occlude farther ones (no global renderOrder)
     const plateMat = new T.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.55,
       metalness: 0.08,
       transparent: true,
+      alphaTest: 0.08,
       side: T.DoubleSide,
-      depthWrite: false,
+      depthWrite: true,
+      depthTest: true,
     });
     loadTex(T, plateUrl, (tex) => {
       plateMat.map = tex;
@@ -274,7 +277,6 @@
     const plate = new T.Mesh(new T.PlaneGeometry(2.2, 3.3), plateMat);
     plate.position.set(0, 0, 0);
     plate.castShadow = true;
-    plate.renderOrder = 1;
     billboard.add(plate);
 
     const emblemMat = new T.MeshStandardMaterial({
@@ -282,8 +284,10 @@
       roughness: 0.45,
       metalness: 0.12,
       transparent: true,
+      alphaTest: 0.08,
       side: T.DoubleSide,
-      depthWrite: false,
+      depthWrite: true,
+      depthTest: true,
       polygonOffset: true,
       polygonOffsetFactor: -1,
       polygonOffsetUnits: -1,
@@ -292,11 +296,10 @@
       emblemMat.map = tex;
       emblemMat.needsUpdate = true;
     });
-    // Local to plate: slightly above center, tiny z so it sits on the painted standee
+    // Local to this standee's plate only — depth buffer handles cross-standee occlusion
     const emblem = new T.Mesh(new T.CircleGeometry(0.42, 48), emblemMat);
     emblem.position.set(0, 0.7, 0.02);
     emblem.castShadow = true;
-    emblem.renderOrder = 2;
     billboard.add(emblem);
 
     const ring = new T.Mesh(
@@ -307,14 +310,14 @@
         metalness: 0.5,
         emissive: tint || 0xc5a059,
         emissiveIntensity: 0.4,
-        depthWrite: false,
+        depthWrite: true,
+        depthTest: true,
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,
       })
     );
     ring.position.set(0, 0.7, 0.025);
-    ring.renderOrder = 3;
     billboard.add(ring);
 
     const base = new T.Mesh(
