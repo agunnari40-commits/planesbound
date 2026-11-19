@@ -381,7 +381,10 @@
     layer.setAttribute("data-open", "true");
     document.body.style.overflow = "hidden";
     const focusEl = layer.querySelector("#sheetName");
-    requestAnimationFrame(() => focusEl?.focus());
+    requestAnimationFrame(() => {
+      focusEl?.focus();
+      window.PlanesboundArtMotion?.refresh?.();
+    });
   }
 
   function close() {

@@ -1,0 +1,239 @@
+/* PAS-14 — dreamy still-art motion (old generative / GIF-loop vibe) */
+
+:root {
+  --art-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+
+/* ---- Image / element live art ---- */
+.art-live {
+  --art-dur: 14s;
+  --art-drift: 2.4%;
+  --art-scale: 1.08;
+  transform-origin: center center;
+  will-change: transform, filter;
+  animation:
+    art-kenburns var(--art-dur) ease-in-out infinite alternate,
+    art-flicker calc(var(--art-dur) * 0.55) ease-in-out infinite;
+}
+
+.art-live--portrait {
+  --art-dur: 11s;
+  --art-drift: 3.2%;
+  --art-scale: 1.12;
+  animation:
+    art-kenburns var(--art-dur) ease-in-out infinite alternate,
+    art-morph-soft calc(var(--art-dur) * 0.7) ease-in-out infinite,
+    art-flicker 7s ease-in-out infinite;
+}
+
+.art-live--hero {
+  --art-dur: 18s;
+  --art-drift: 2.8%;
+  --art-scale: 1.1;
+  animation:
+    art-kenburns var(--art-dur) ease-in-out infinite alternate,
+    art-chromatic 9s ease-in-out infinite,
+    art-flicker 8s ease-in-out infinite;
+}
+
+.art-live--thumb {
+  --art-dur: 10s;
+  --art-drift: 4%;
+  --art-scale: 1.14;
+  animation:
+    art-kenburns var(--art-dur) ease-in-out infinite alternate,
+    art-flicker 6.5s ease-in-out infinite;
+}
+
+.art-live--panel {
+  --art-dur: 16s;
+  --art-drift: 1.8%;
+  --art-scale: 1.06;
+}
+
+.art-live--standee {
+  --art-dur: 13s;
+  --art-drift: 1.5%;
+  --art-scale: 1.05;
+  animation:
+    art-kenburns var(--art-dur) ease-in-out infinite alternate,
+    art-vhs-soft 5.5s ease-in-out infinite;
+}
+
+/* Grain / dream overlay host */
+.art-live-host {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.art-live-host::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+  background-image: var(--art-grain);
+  background-size: 160px 160px;
+  animation: art-grain-drift 1.8s steps(2) infinite;
+}
+.art-live-host--portrait::after {
+  opacity: 0.28;
+  mix-blend-mode: overlay;
+  border-radius: inherit;
+}
+.art-live-host--hero::after {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(120deg, transparent 40%, color-mix(in oklab, #9ec4e8 8%, transparent) 50%, transparent 60%),
+    var(--art-grain);
+  animation: art-grain-drift 2.2s steps(3) infinite, art-shimmer-sweep 7s ease-in-out infinite;
+}
+.art-live-host--map::after {
+  opacity: 0.2;
+  mix-blend-mode: soft-light;
+}
+
+/* Background-image surfaces (map, quest, game scene, hud, dock) */
+.art-live-bg {
+  background-size: 112% auto !important;
+  animation:
+    art-bg-drift 16s ease-in-out infinite alternate,
+    art-bg-flicker 9s ease-in-out infinite;
+}
+.art-live-bg--map {
+  animation:
+    art-bg-drift 22s ease-in-out infinite alternate,
+    art-bg-flicker 11s ease-in-out infinite;
+}
+.art-live-bg--quest {
+  animation:
+    art-bg-drift 14s ease-in-out infinite alternate,
+    art-bg-pulse 8s ease-in-out infinite;
+}
+.art-live-bg--scene {
+  animation:
+    art-bg-drift 15s ease-in-out infinite alternate,
+    art-bg-flicker 7.5s ease-in-out infinite;
+}
+.art-live-bg--hud {
+  animation: art-bg-drift 20s ease-in-out infinite alternate;
+}
+.art-live-bg--dock {
+  animation: art-bg-drift 18s ease-in-out infinite alternate;
+}
+
+/* Soft CRT / dream veil on full panels */
+.art-live-veil {
+  position: relative;
+}
+.art-live-veil::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in oklab, #000 18%, transparent) 2px,
+      color-mix(in oklab, #000 18%, transparent) 3px
+    ),
+    var(--art-grain);
+  background-size: auto, 140px 140px;
+  animation: art-grain-drift 2.4s steps(2) infinite;
+}
+
+/* Pause when offscreen / reduced */
+.art-live[data-art-paused="true"],
+.art-live-bg[data-art-paused="true"],
+.art-live-host[data-art-paused="true"]::after,
+.art-live-veil[data-art-paused="true"]::before {
+  animation-play-state: paused !important;
+}
+
+@keyframes art-kenburns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  33% {
+    transform: scale(var(--art-scale)) translate(calc(var(--art-drift) * -1), calc(var(--art-drift) * 0.4));
+  }
+  66% {
+    transform: scale(calc((1 + var(--art-scale)) / 2)) translate(var(--art-drift), calc(var(--art-drift) * -0.6));
+  }
+  100% {
+    transform: scale(var(--art-scale)) translate(calc(var(--art-drift) * 0.35), var(--art-drift));
+  }
+}
+
+@keyframes art-flicker {
+  0%, 100% { filter: brightness(1) contrast(1) saturate(1.02); }
+  40% { filter: brightness(1.04) contrast(1.03) saturate(1.08); }
+  55% { filter: brightness(0.97) contrast(1.06) saturate(0.96); }
+  70% { filter: brightness(1.02) contrast(1.01) saturate(1.05); }
+}
+
+@keyframes art-morph-soft {
+  0%, 100% { filter: brightness(1) contrast(1.02) hue-rotate(0deg); }
+  50% { filter: brightness(1.05) contrast(1.06) hue-rotate(4deg); }
+}
+
+@keyframes art-chromatic {
+  0%, 100% { filter: brightness(1) contrast(1.02) saturate(1.05); }
+  50% { filter: brightness(1.06) contrast(1.08) saturate(1.12); }
+}
+
+@keyframes art-vhs-soft {
+  0%, 100% { filter: brightness(1) contrast(1.04) blur(0px); }
+  48% { filter: brightness(1.03) contrast(1.08) blur(0.2px); }
+  52% { filter: brightness(0.98) contrast(1.1) blur(0px); }
+}
+
+@keyframes art-grain-drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-1.5%, 1%); }
+  100% { transform: translate(1%, -1%); }
+}
+
+@keyframes art-shimmer-sweep {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: 0.28; }
+}
+
+@keyframes art-bg-drift {
+  0% { background-position: 46% 48%; background-size: 108% 108%; }
+  50% { background-position: 54% 44%; background-size: 118% 118%; }
+  100% { background-position: 48% 52%; background-size: 112% 112%; }
+}
+
+@keyframes art-bg-flicker {
+  0%, 100% { filter: brightness(1) saturate(1.02); }
+  45% { filter: brightness(1.05) saturate(1.1); }
+  60% { filter: brightness(0.96) saturate(0.95); }
+}
+
+@keyframes art-bg-pulse {
+  0%, 100% { filter: brightness(1) contrast(1.02) hue-rotate(0deg); }
+  50% { filter: brightness(1.08) contrast(1.08) hue-rotate(6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-live,
+  .art-live-bg,
+  .art-live-host::after,
+  .art-live-veil::before {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  .art-live-bg {
+    background-size: cover !important;
+    background-position: center !important;
+  }
+}

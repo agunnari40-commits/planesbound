@@ -644,6 +644,8 @@
       depthTest: true,
     });
     loadTex(T, plateUrl, (tex) => {
+      tex.wrapS = tex.wrapT = T.RepeatWrapping;
+      tex.center.set(0.5, 0.5);
       plateMat.map = tex;
       plateMat.needsUpdate = true;
     });
@@ -666,6 +668,8 @@
       polygonOffsetUnits: -1,
     });
     loadTex(T, url, (tex) => {
+      tex.wrapS = tex.wrapT = T.RepeatWrapping;
+      tex.center.set(0.5, 0.5);
       emblemMat.map = tex;
       emblemMat.needsUpdate = true;
     });
@@ -747,11 +751,20 @@
     scene.background = new T.Color(0x05060a);
     scene.fog = null;
 
+    /** Dreamy sky dome — art loops via slow spin; camera stays still. */
+    let skyDome = null;
     loadSpaceSky(T, (tex) => {
       if (!isBootCurrent(gen) || !scene) return;
       if (tex) {
-        scene.background = tex;
         scene.environment = tex;
+        scene.background = new T.Color(0x05060a);
+        const geo = new T.SphereGeometry(160, 48, 32);
+        geo.scale(-1, 1, 1);
+        const mat = new T.MeshBasicMaterial({ map: tex, depthWrite: false });
+        skyDome = new T.Mesh(geo, mat);
+        skyDome.renderOrder = -10;
+        scene.add(skyDome);
+        scene.userData.skyDome = skyDome;
       }
     });
 
@@ -793,13 +806,37 @@
     const coveGlow = new T.PointLight(0xe8f0ff, 0.35, 22, 2);
     coveGlow.position.set(0, 4.6, -1.5);
     scene.add(coveGlow);
+    // Base intensities for soft dream pulse (art motion — not camera)
+    roomFill.userData.baseIntensity = 0.85;
+    coveGlow.userData.baseIntensity = 0.35;
+    key.userData.baseIntensity = 1.15;
 
     const chamber = buildChamber(T);
     scene.add(chamber.group);
     roomPickables = chamber.pickables.slice();
+    // Collect materials for luminance flicker / grain pulse
+    const artMats = [];
+    chamber.group.traverse((obj) => {
+      if (obj.isMesh && obj.material && "emissiveIntensity" in obj.material) {
+        obj.material.userData.baseEmissive = obj.material.emissiveIntensity ?? 0;
+        artMats.push(obj.material);
+      }
+    });
 
     const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player");
     const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion");
+    [playerFig, companionFig].forEach((fig) => {
+      fig.traverse((obj) => {
+        if (obj.isMesh && obj.material && "emissiveIntensity" in obj.material) {
+          obj.material.userData.baseEmissive = obj.material.emissiveIntensity ?? 0;
+          artMats.push(obj.material);
+        }
+        if (obj.isMesh && obj.material?.map) {
+          obj.material.userData.artMapPulse = true;
+          artMats.push(obj.material);
+        }
+      });
+    });
     playerFig.visible = false;
     companionFig.visible = false;
     playerFig.position.z = -0.6;
@@ -1012,8 +1049,34 @@
         });
       }
 
-      // Static presentation — no chamber bob, figure float, or idle orbit
+      // Static camera/chamber pose — motion lives in the ART only
       chamber.group.position.y = 0.02;
+
+      if (!reduced) {
+        const t = now * 0.001;
+        const dome = skyDome || scene.userData.skyDome;
+        if (dome) {
+          dome.rotation.y = t * 0.012;
+          dome.rotation.x = Math.sin(t * 0.07) * 0.01;
+        }
+        // Soft light / emissive dream flicker (VHS-ish luminance)
+        const pulse = 1 + Math.sin(t * 0.9) * 0.045 + Math.sin(t * 2.3) * 0.02;
+        const flicker = 1 + (Math.sin(t * 11.0) * 0.012 + Math.sin(t * 17.0) * 0.008);
+        roomFill.intensity = roomFill.userData.baseIntensity * pulse * flicker;
+        coveGlow.intensity = coveGlow.userData.baseIntensity * (1.05 + Math.sin(t * 0.65) * 0.08);
+        key.intensity = key.userData.baseIntensity * (0.98 + Math.sin(t * 0.5) * 0.04);
+        for (const mat of artMats) {
+          if (mat.userData.baseEmissive != null) {
+            mat.emissiveIntensity = mat.userData.baseEmissive * (0.92 + Math.sin(t * 1.1 + (mat.uuid?.charCodeAt?.(0) || 0)) * 0.12);
+          }
+          if (mat.userData.artMapPulse && mat.map) {
+            // Subtle UV drift on standee plates/emblems
+            mat.map.offset.x = Math.sin(t * 0.35) * 0.008;
+            mat.map.offset.y = Math.cos(t * 0.28) * 0.006;
+            mat.map.needsUpdate = true;
+          }
+        }
+      }
 
       controls.update();
       renderer.render(scene, camera);
