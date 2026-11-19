@@ -125,6 +125,11 @@
     selected[role] = id;
     persist();
     renderVirtual(role);
+    document.dispatchEvent(
+      new CustomEvent("planesbound-race-picked", {
+        detail: { role, being: byId(id) },
+      })
+    );
   }
 
   function setListOpen(role, open) {
