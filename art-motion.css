@@ -107,7 +107,8 @@
   /* Decorative dream veil only — map bg + .spot geometry stay locked together */
   opacity: 0.22;
   mix-blend-mode: soft-light;
-  inset: 0;
+  /* Match base host: overspill so art-grain-drift translate does not flash map edges */
+  inset: -2%;
   background-image:
     radial-gradient(ellipse 85% 70% at 50% 45%, transparent 45%, color-mix(in oklab, #0a0806 28%, transparent) 100%),
     linear-gradient(115deg, transparent 38%, color-mix(in oklab, #9ec4e8 10%, transparent) 50%, transparent 62%),
