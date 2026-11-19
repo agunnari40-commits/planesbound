@@ -1,4 +1,4 @@
-/* PAS-9/11 — white room stage (space exterior → interior creation display) */
+/* PAS-9/12 — white room stage (static space exterior → interior creation display) */
 .white-room-layer {
   position: fixed;
   inset: 0;
@@ -153,9 +153,10 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 50% 42%, color-mix(in oklab, #1a2240 55%, transparent), transparent 42%),
+    radial-gradient(ellipse 70% 50% at 50% 45%, color-mix(in oklab, #1e2a48 40%, transparent), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 50% 50%, transparent 35%, color-mix(in oklab, #02040a 72%, transparent) 100%),
     url("art/space-sky.png") center / cover no-repeat,
-    #05060a;
+    #03050c;
 }
 .white-room-fallback[data-on="true"] { display: flex; }
 .white-room-fallback-stage {
@@ -175,9 +176,13 @@
   justify-content: space-evenly;
   padding-bottom: 2rem;
   background:
-    radial-gradient(circle at 50% 40%, #fff 0%, #f0f0f0 45%, #e4e4e4 100%);
+    linear-gradient(180deg, rgba(255, 252, 248, 0.35) 0%, transparent 18%),
+    radial-gradient(ellipse 80% 55% at 50% 38%, #ffffff 0%, #f4f1ec 42%, #e6e2db 78%, #d8d3ca 100%);
   border-radius: 0.75rem;
-  box-shadow: 0 24px 60px color-mix(in oklab, #000 45%, transparent);
+  box-shadow:
+    0 0 80px color-mix(in oklab, #fff 22%, transparent),
+    0 24px 60px color-mix(in oklab, #000 45%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, #c5a059 28%, transparent);
 }
 .white-room-fallback-interior[hidden] { display: none !important; }
 
@@ -217,10 +222,12 @@
   height: 160px;
   border-radius: 0.35rem;
   background:
-    linear-gradient(180deg, #ffffff 0%, #f0f0f0 55%, #e2e2e2 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 22%),
+    linear-gradient(180deg, #ffffff 0%, #f3f0ea 50%, #e0dbd2 100%);
   box-shadow:
-    0 0 40px color-mix(in oklab, #fff 35%, transparent),
-    inset 0 0 0 1px color-mix(in oklab, #c5a059 35%, transparent);
+    0 0 48px color-mix(in oklab, #fff 42%, transparent),
+    0 0 12px color-mix(in oklab, #c5a059 18%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, #c5a059 40%, transparent);
   position: relative;
 }
 .white-room-space-card-room::after {
