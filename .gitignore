@@ -5,4 +5,6 @@ art/lore/muse-private/
 .playwright-mcp/
 planesbound-*.png
 astral-*.png
+races-*.png
 !art/astral-sea.png
+!art/companion-*.png
