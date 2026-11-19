@@ -164,8 +164,28 @@
       box-shadow: none;
       cursor: pointer;
       transform: translate(-50%, -50%);
-      transition: background .18s, border-color .18s, box-shadow .18s;
+      transition: background .18s, border-color .18s, box-shadow .18s, transform .18s;
       padding: 0;
+      overflow: hidden;
+    }
+    .hotspot::before {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 0.55rem;
+      background-image: var(--hotspot-art);
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transform: scale(1.05);
+      transition: opacity .2s ease;
+      pointer-events: none;
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .hotspot:hover::before,
+    .hotspot:focus-visible::before,
+    .hotspot[data-active="true"]::before {
+      opacity: 0.55;
     }
     .hotspot:hover, .hotspot:focus-visible {
       background: color-mix(in oklab, var(--brass) 18%, transparent);
@@ -1041,8 +1061,8 @@
     <div class="races-stack">
       <div class="being-card being-card--player">
         <div class="being-screen" aria-hidden="true">
-          <img class="being-screen-art" src="art/roster-hud-panel.png" alt="" width="540" height="720" decoding="async" />
-          <div class="being-portrait">
+          <img class="being-screen-art" src="art/player-screen.png" alt="" width="540" height="720" decoding="async" />
+            <div class="being-portrait">
             <img id="playerBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>
           <div class="being-screen-fade"></div>
@@ -1065,7 +1085,7 @@
       </div>
       <div class="being-card being-card--companion">
         <div class="being-screen" aria-hidden="true">
-          <img class="being-screen-art" src="art/roster-hud-panel.png" alt="" width="540" height="720" decoding="async" />
+          <img class="being-screen-art" src="art/companion-screen.png" alt="" width="540" height="720" decoding="async" />
           <div class="being-portrait">
             <img id="companionBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>
@@ -1108,20 +1128,20 @@
                 <p class="map-hint">Tap a shore on the Inner Ring (synced to the live Grok atlas). Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Digital Void sits in the Astral–Ethereal schism. Open the Astral Sea from the strip or folio.</p>
         <div class="map" id="map" role="img" aria-label="Inner Ring campaign overview">
           <!-- Synced from planesbound.grok.me/?f=inner — left/top are centers (translate -50%) -->
-          <button class="hotspot" data-id="fire" data-accent="fire" style="left:50%;top:21%;width:12%;height:14%;" aria-label="Fire" title="Fire"></button>
-          <button class="hotspot" data-id="water" data-accent="water" style="left:50%;top:73%;width:12%;height:14%;" aria-label="Water" title="Water"></button>
-          <button class="hotspot" data-id="air" data-accent="air" style="left:13%;top:48%;width:12%;height:16%;" aria-label="Air" title="Air"></button>
-          <button class="hotspot" data-id="earth" data-accent="earth" style="left:86%;top:50%;width:12%;height:16%;" aria-label="Earth" title="Earth"></button>
-          <button class="hotspot" data-id="positive" data-accent="positive" style="left:50%;top:8%;width:8%;height:11%;" aria-label="Positive Energy" title="Positive Energy"></button>
-          <button class="hotspot" data-id="negative" data-accent="negative" style="left:50%;top:90%;width:8%;height:12%;" aria-label="Negative Energy" title="Negative Energy"></button>
-          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:50%;top:52%;width:16%;height:16%;" aria-label="Ethereal" title="Ethereal"></button>
-          <button class="hotspot" data-id="magma" data-accent="fire" style="left:67.5%;top:28%;width:9%;height:12%;" aria-label="Magma" title="Magma"></button>
-          <button class="hotspot" data-id="ooze" data-accent="water" style="left:70%;top:59.5%;width:8%;height:9.5%;" aria-label="Ooze" title="Ooze"></button>
-          <button class="hotspot" data-id="ice" data-accent="air" style="left:62%;top:74%;width:8%;height:9.5%;" aria-label="Ice" title="Ice"></button>
-          <button class="hotspot" data-id="smoke" data-accent="earth" style="left:26.5%;top:28%;width:9%;height:12%;" aria-label="Smoke" title="Smoke"></button>
-          <button class="hotspot" data-id="dust" data-accent="dust" style="left:18.5%;top:62.5%;width:9%;height:13%;" aria-label="Dust" title="Dust"></button>
-          <button class="hotspot" data-id="mineral" data-accent="mineral" style="left:82.5%;top:34.5%;width:9%;height:13%;" aria-label="Mineral" title="Mineral"></button>
-          <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:50%;top:34%;width:13%;height:7%;" aria-label="Digital Void" title="Digital Void"></button>
+          <button class="hotspot" data-id="fire" data-accent="fire" style="left:50%;top:21%;width:12%;height:14%;--hotspot-art:url('art/fire.png')" aria-label="Fire" title="Fire"></button>
+          <button class="hotspot" data-id="water" data-accent="water" style="left:50%;top:73%;width:12%;height:14%;--hotspot-art:url('art/water.png')" aria-label="Water" title="Water"></button>
+          <button class="hotspot" data-id="air" data-accent="air" style="left:13%;top:48%;width:12%;height:16%;--hotspot-art:url('art/air.png')" aria-label="Air" title="Air"></button>
+          <button class="hotspot" data-id="earth" data-accent="earth" style="left:86%;top:50%;width:12%;height:16%;--hotspot-art:url('art/earth-beast.png')" aria-label="Earth" title="Earth"></button>
+          <button class="hotspot" data-id="positive" data-accent="positive" style="left:50%;top:8%;width:8%;height:11%;--hotspot-art:url('art/positive.png')" aria-label="Positive Energy" title="Positive Energy"></button>
+          <button class="hotspot" data-id="negative" data-accent="negative" style="left:50%;top:90%;width:8%;height:12%;--hotspot-art:url('art/negative-docks.jpg')" aria-label="Negative Energy" title="Negative Energy"></button>
+          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:50%;top:52%;width:16%;height:16%;--hotspot-art:url('art/ethereal.png')" aria-label="Ethereal" title="Ethereal"></button>
+          <button class="hotspot" data-id="magma" data-accent="fire" style="left:67.5%;top:28%;width:9%;height:12%;--hotspot-art:url('art/magma.png')" aria-label="Magma" title="Magma"></button>
+          <button class="hotspot" data-id="ooze" data-accent="water" style="left:70%;top:59.5%;width:8%;height:9.5%;--hotspot-art:url('art/ooze.png')" aria-label="Ooze" title="Ooze"></button>
+          <button class="hotspot" data-id="ice" data-accent="air" style="left:62%;top:74%;width:8%;height:9.5%;--hotspot-art:url('art/ice.png')" aria-label="Ice" title="Ice"></button>
+          <button class="hotspot" data-id="smoke" data-accent="earth" style="left:26.5%;top:28%;width:9%;height:12%;--hotspot-art:url('art/smoke.png')" aria-label="Smoke" title="Smoke"></button>
+          <button class="hotspot" data-id="dust" data-accent="dust" style="left:18.5%;top:62.5%;width:9%;height:13%;--hotspot-art:url('art/dust-pilots.png')" aria-label="Dust" title="Dust"></button>
+          <button class="hotspot" data-id="mineral" data-accent="mineral" style="left:82.5%;top:34.5%;width:9%;height:13%;--hotspot-art:url('art/mineral-progenitor.png')" aria-label="Mineral" title="Mineral"></button>
+          <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:50%;top:34%;width:13%;height:7%;--hotspot-art:url('art/digital-void.png')" aria-label="Digital Void" title="Digital Void"></button>
         </div>
         <div class="rail" id="rail"></div>
       </section>
@@ -1208,6 +1228,16 @@
             <div class="game-scene-target" id="gameSceneTarget" hidden>
               <strong id="gameSceneTargetName"></strong>
               <span id="gameSceneTargetMeta"></span>
+              <div class="game-scene-target-bars" id="gameSceneTargetBars" hidden>
+                <div class="game-scene-target-bar" aria-hidden="true">
+                  <em>HP</em>
+                  <i><b id="gameSceneTargetHpBar"></b></i>
+                </div>
+                <div class="game-scene-target-bar game-scene-target-bar--threat" aria-hidden="true">
+                  <em>Threat</em>
+                  <i><b id="gameSceneTargetThreatBar"></b></i>
+                </div>
+              </div>
             </div>
             <p class="game-scene-beat" id="gameSceneBeat" hidden></p>
             <p class="game-scene-hint" id="gameSceneHint"></p>
@@ -1337,9 +1367,9 @@ const planes = [
       {
         id: "negative", name: "Negative Energy", epithet: "The Void That Feeds",
         kind: "Energy plane", alignment: "N", alignmentLong: "Absence with appetite",
-        accent: "#4a3a55", art: "art/negative-shade.png",
-        overview: "Cold that eats warmth, then memory, then outline. Undead thrive. The living become drafts. This is the night under every night—an energy pole of absence with appetite.",
-        inhabitants: "Undead courts, shadows, & things that never had names. Near the umbra, travelers sometimes glimpse city-of-shade imagery—skyline, street, & docks of darkness—as a visual of how close Negative hangs to hollowed places.",
+        accent: "#4a3a55", art: "art/negative-docks.jpg",
+        overview: "Cold that eats warmth, then memory, then outline. Undead thrive. The living become drafts. This is the night under every night—an energy pole of absence with appetite. Atlas docks of Shade show how close the umbra hangs to hollowed places.",
+        inhabitants: "Undead courts, shadows, & things that never had names. Near the umbra, travelers glimpse city-of-shade imagery—skyline, street, & docks of darkness—as presentation of how Negative hangs to hollowed places.",
         layers: [{name:"The Empty Night", epithet:"Where names thin out"}],
         structure: "Fortresses of bone & silence. Ruins of things that used to cast shadows. Distance is measured in how much of you is missing.",
         travel: "Only with death wards stacked like prayers. A stutter of the Lighthouse can spit you here by accident—do not stay to study it. Prefer the Ethereal curtain-road when the Daystar bearing is clean."

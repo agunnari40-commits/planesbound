@@ -1,4 +1,4 @@
-/* Planesbound PAS-6/13/15/18/19 — voyage + live combat + video mode */
+/* Planesbound PAS-6/13/15/18/19/23/24 — voyage + live combat + video mode + art/AAA polish */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
@@ -12,39 +12,39 @@
       theme: "parchment",
       fatigue: 0,
       blurb:
-        "The Inner Ring atlas waits below. Stock your bearings, rest if weary, ask the companion, then cast off into the silvery thought-ocean.",
-      companion: "The hub is honest stone. I will follow when you cast off — say the word.",
+        "Atlas light holds the Inner Ring steady. Rest, counsel the companion, then cast off into the silvery thought-ocean.",
+      companion: "Stone underfoot. When you cast off, I cast with you.",
     },
     "astral-sea": {
       title: "Astral Sea",
       theme: "astral",
       fatigue: 1,
       blurb:
-        "Thought-currents silver the void. Color pools shimmer like doors. A Dust Lane whispers Mineral-ward; a memory isle and Lighthouse pulse wait ahead.",
-      companion: "Currents pull three ways: isle for memory, pulse for home, dust for shore-rumor.",
+        "Silver thought-currents braid the void. Color pools wait like doors; a Dust Lane runs Mineral-ward; Memory Isle and the Lighthouse pulse keep their own weather.",
+      companion: "Three pulls: isle for memory, pulse for home, dust for shore-rumor.",
     },
     "memory-isle": {
       title: "Memory Isle",
       theme: "astral",
       fatigue: 1,
       blurb:
-        "Crystallized recollection rises from the Sea. Ani-thread scars glitter underfoot — a place that wants to be read.",
-      companion: "Read the scars carefully. Perception is the honest skill here.",
+        "Crystal shoals of half-remembered worlds. Ani-thread scars glitter underfoot — a place that wants to be read, not rushed.",
+      companion: "Read the scars. Perception is the honest skill here.",
     },
     "dust-lane": {
       title: "Dust Lane",
       theme: "astral",
       fatigue: 2,
       blurb:
-        "A grit-road of dead color-pool ash. Dust pilots trade bearings mid-void. Athletics keeps the keel true; Insight buys a kinder price.",
-      companion: "Hold the rail. If you have Star Salt, the lane sings softer.",
+        "Grit-road of spent color-pool ash. Pilots trade bearings mid-void. Athletics keeps the keel; Insight buys a kinder toll.",
+      companion: "Hold the rail. Star Salt softens the lane’s bite.",
     },
     "lighthouse-bearing": {
       title: "Lighthouse Bearing",
       theme: "astral",
       fatigue: 1,
       blurb:
-        "A clean Daystar pulse locks your Compass Orb. The hub road opens — Cross the Astral Sea is within reach.",
+        "A clean Daystar pulse locks the Compass Orb. The hub road opens — Cross the Astral Sea is within reach.",
       companion: "Bearing locked. Home is a straight thought away.",
     },
     "color-pool": {
@@ -52,16 +52,16 @@
       theme: "astral",
       fatigue: 1,
       blurb:
-        "A prismatic curtain hangs in the void. Something in the light tests travelers before Mineral grit.",
-      companion: "Pools have teeth. Ready a blade-thought or a soft word.",
+        "A prismatic curtain hangs in the void. The light tests travelers before Mineral grit answers.",
+      companion: "Pools have teeth. Blade-thought or soft word — choose cleanly.",
     },
     "mineral-shore": {
       title: "Mineral Shore",
       theme: "parchment",
       fatigue: 1,
       blurb:
-        "First landfall past the Sea: stone that remembers fire. Ani’s hush hangs in the facets — chapter’s edge.",
-      companion: "Shore. Token. Rest. The chapter can close here if you will it.",
+        "Landfall: living crystal and facet-glow. Ani’s hush hangs in the ore — the chapter’s edge if you claim it.",
+      companion: "Shore. Token. Rest. Close the chapter when you will.",
     },
   };
 
@@ -675,10 +675,16 @@
     let renderer = null;
     let actors = [];
     let animId = 0;
+    let flashTimer = 0;
 
     const abortCleanup = () => {
       if (animId) cancelAnimationFrame(animId);
       animId = 0;
+      if (flashTimer) {
+        clearTimeout(flashTimer);
+        flashTimer = 0;
+      }
+      if (vp) delete vp.dataset.flash;
       actors.forEach((a) => {
         try {
           a.dispose?.();
@@ -861,6 +867,9 @@
         const box = el("gameSceneTarget");
         const nameEl = el("gameSceneTargetName");
         const meta = el("gameSceneTargetMeta");
+        const bars = el("gameSceneTargetBars");
+        const hpBar = el("gameSceneTargetHpBar");
+        const threatBar = el("gameSceneTargetThreatBar");
         if (!box) return;
         if (!actor || actor.role !== "foe") {
           box.hidden = true;
@@ -868,14 +877,20 @@
         }
         if (nameEl) nameEl.textContent = foeLabel;
         const threat = encounter?.live ? encounter.threat : 0;
-        const threatMax = encounter?.live ? encounter.threatMax : 0;
+        const threatMax = encounter?.live ? encounter.threatMax || 1 : 1;
+        const hp = foeHpNow();
         if (meta) {
           meta.textContent = encounter?.live
-            ? `Hostile · HP ${foeHpNow()}/${foeHpMax} · Threat ${threat}/${threatMax}`
-            : "Hostile · mesh hitbox";
+            ? `Hostile · HP ${hp}/${foeHpMax} · Threat ${threat}/${threatMax}`
+            : "Hostile · mesh hitbox locked";
+        }
+        if (bars) bars.hidden = !encounter?.live;
+        if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, (hp / Math.max(1, foeHpMax)) * 100))}%`;
+        if (threatBar) {
+          threatBar.style.width = `${Math.max(0, Math.min(100, (threat / Math.max(1, threatMax)) * 100))}%`;
         }
         box.hidden = false;
-        actor.setLabel?.(foeLabel, foeHpNow(), foeHpMax);
+        actor.setLabel?.(foeLabel, hp, foeHpMax);
       }
 
       function clearSel() {
@@ -975,6 +990,16 @@
         return;
       }
 
+      function flashStage(kind) {
+        if (!vp || reduced) return;
+        vp.dataset.flash = kind || "hit";
+        if (flashTimer) clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => {
+          if (vp.dataset.flash === kind) delete vp.dataset.flash;
+          flashTimer = 0;
+        }, 220);
+      }
+
       stage = {
         gen,
         flourishing: false,
@@ -999,15 +1024,18 @@
           if (assist) companionActor.play("attack", { once: true });
           if (kill) foeActor.play("death", { once: true });
           else if (hit) foeActor.play("hit", { once: true });
+          flashStage(hit ? "hit" : "miss");
         },
         playFoeStrike() {
           if (reduced) return;
           foeActor.play("attack", { once: true });
           playerActor.play("hit", { once: true });
+          flashStage("hurt");
         },
         playSoft() {
           if (reduced) return;
           companionActor.play("attack", { once: true });
+          flashStage("soft");
           foeActor.play("hit", { once: true });
         },
         playResolve(won) {
@@ -1620,7 +1648,16 @@
     if (vitals) {
       if (encounter.live) {
         vitals.hidden = false;
-        vitals.innerHTML = `<span>HP ${state.hp}/${state.hpMax}</span><span>Foe ${encounter.foeHp}/${encounter.foeHpMax}</span><span>Threat ${encounter.threat}/${encounter.threatMax}</span>`;
+        const hpPct = Math.max(0, Math.min(100, (state.hp / Math.max(1, state.hpMax)) * 100));
+        const foePct = Math.max(
+          0,
+          Math.min(100, (encounter.foeHp / Math.max(1, encounter.foeHpMax)) * 100)
+        );
+        const threatPct = Math.max(
+          0,
+          Math.min(100, (encounter.threat / Math.max(1, encounter.threatMax)) * 100)
+        );
+        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>`;
       } else {
         vitals.hidden = true;
       }
