@@ -8,3 +8,4 @@ astral-*.png
 races-*.png
 !art/astral-sea.png
 !art/companion-*.png
+!art/player-*.png

@@ -46,9 +46,15 @@
       const nameEl = document.getElementById(`${role}BeingName`);
       const lineEl = document.getElementById(`${role}BeingLine`);
       const tagEl = document.getElementById(`${role}BeingTag`);
+      const portrait = document.getElementById(`${role}BeingPortrait`);
       if (nameEl) nameEl.textContent = b.name;
       if (lineEl) lineEl.textContent = b.line;
       if (tagEl) tagEl.textContent = b.tradition;
+      if (portrait) {
+        portrait.alt = `${b.name} portrait plate`;
+        portrait.dataset.being = b.id;
+        portrait.dataset.tradition = b.tradition;
+      }
     });
   }
 
@@ -154,39 +160,63 @@
       { passive: true }
     );
 
-    // Drag-to-scroll feel
+    // Drag-to-scroll only after movement; never capture on plain tap (keeps row clicks)
+    const DRAG_THRESHOLD = 6;
+    let pointerActive = false;
     let dragging = false;
     let startY = 0;
     let startScroll = 0;
+    let pointerId = null;
+
     viewport?.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
-      dragging = true;
+      pointerActive = true;
+      dragging = false;
       startY = e.clientY;
       startScroll = viewport.scrollTop;
-      viewport.setPointerCapture(e.pointerId);
-      viewport.classList.add("is-dragging");
+      pointerId = e.pointerId;
     });
     viewport?.addEventListener("pointermove", (e) => {
-      if (!dragging) return;
-      viewport.scrollTop = startScroll - (e.clientY - startY);
+      if (!pointerActive || e.pointerId !== pointerId) return;
+      const dy = e.clientY - startY;
+      if (!dragging && Math.abs(dy) >= DRAG_THRESHOLD) {
+        dragging = true;
+        viewport.setPointerCapture(e.pointerId);
+        viewport.classList.add("is-dragging");
+      }
+      if (dragging) {
+        viewport.scrollTop = startScroll - dy;
+      }
     });
+    let suppressClick = false;
     const endDrag = (e) => {
-      if (!dragging) return;
+      if (!pointerActive || (pointerId != null && e.pointerId !== pointerId)) return;
+      const wasDragging = dragging;
+      pointerActive = false;
       dragging = false;
+      pointerId = null;
       viewport.classList.remove("is-dragging");
-      try {
-        viewport.releasePointerCapture(e.pointerId);
-      } catch (_) {
-        /* ignore */
+      if (wasDragging) {
+        suppressClick = true;
+        try {
+          viewport.releasePointerCapture(e.pointerId);
+        } catch (_) {
+          /* ignore */
+        }
       }
     };
     viewport?.addEventListener("pointerup", endDrag);
     viewport?.addEventListener("pointercancel", endDrag);
 
     list?.addEventListener("click", (e) => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
       const row = e.target.closest(".being-row");
       if (!row) return;
       pick(row.dataset.role, row.dataset.id);
+      setListOpen(row.dataset.role || role, false);
     });
   }
 

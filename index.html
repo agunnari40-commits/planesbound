@@ -458,14 +458,14 @@
     }
     .companion-pane--notes {
       background:
-        linear-gradient(180deg, color-mix(in oklab, #fffaf0 55%, transparent), color-mix(in oklab, #f3e8cf 35%, transparent)),
-        url("art/companion-parchment.png") center / cover no-repeat;
+        linear-gradient(180deg, color-mix(in oklab, #fffaf0 72%, transparent) 0%, color-mix(in oklab, #f3e8cf 58%, transparent) 45%, color-mix(in oklab, #efe4c8 70%, transparent)),
+        url("art/player-screen.png") center top / cover no-repeat;
       color: #2a2218;
     }
     .companion-pane--si {
       background:
-        linear-gradient(180deg, color-mix(in oklab, #0b1224 55%, transparent), color-mix(in oklab, #152038 42%, transparent)),
-        url("art/companion-astral-panel.png") center / cover no-repeat;
+        linear-gradient(180deg, color-mix(in oklab, #0b1224 68%, transparent) 0%, color-mix(in oklab, #152038 55%, transparent) 50%, color-mix(in oklab, #0b1224 72%, transparent)),
+        url("art/companion-screen.png") center top / cover no-repeat;
       color: #e8eef8;
     }
     .companion-pane + .companion-pane {
@@ -655,21 +655,92 @@
       border-radius: .55rem;
       overflow: visible;
       position: relative;
+      isolation: isolate;
       box-shadow:
         inset 0 0 0 1px color-mix(in oklab, #000 35%, transparent),
         0 0 0 1px color-mix(in oklab, var(--astral) 12%, transparent);
     }
     .being-card--player {
+      border-color: color-mix(in oklab, #c5a059 55%, #8a6a32);
       background:
-        linear-gradient(160deg, color-mix(in oklab, #f3e8cf 18%, transparent), transparent 55%),
+        linear-gradient(180deg, color-mix(in oklab, #f7f0df 22%, transparent), color-mix(in oklab, #1a1510 78%, #3a2a12) 58%),
         color-mix(in oklab, #1a1510 92%, #3a2a12);
     }
     .being-card--companion {
+      border-color: color-mix(in oklab, #9ec4e8 45%, #5a7a9a);
       background:
-        linear-gradient(160deg, color-mix(in oklab, var(--astral) 16%, transparent), transparent 55%),
+        linear-gradient(180deg, color-mix(in oklab, #9ec4e8 14%, transparent), color-mix(in oklab, #0b1224 88%, #152038) 58%),
         color-mix(in oklab, #0b1224 92%, #152038);
     }
+    .being-screen {
+      position: relative;
+      margin: .35rem .35rem 0;
+      border-radius: .4rem;
+      overflow: hidden;
+      aspect-ratio: 3 / 2.15;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #fff 12%, transparent),
+        0 0 0 1px color-mix(in oklab, #000 40%, transparent);
+    }
+    .being-screen-art {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      filter: saturate(1.05) contrast(1.04);
+    }
+    .being-card--player .being-screen {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #c5a059 35%, transparent),
+        0 0 18px color-mix(in oklab, #c5a059 12%, transparent);
+    }
+    .being-card--companion .being-screen {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #9ec4e8 40%, transparent),
+        0 0 22px color-mix(in oklab, #7eb0c8 18%, transparent);
+    }
+    .being-portrait {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      translate: -50% -50%;
+      width: min(46%, 7.2rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
+      pointer-events: none;
+      border: 2px solid color-mix(in oklab, #c5a059 70%, #fff);
+      box-shadow:
+        0 0 0 2px color-mix(in oklab, #1a1510 70%, transparent),
+        0 8px 18px color-mix(in oklab, #000 45%, transparent);
+    }
+    .being-card--companion .being-portrait {
+      border-color: color-mix(in oklab, #d7ecff 75%, #9ec4e8);
+      box-shadow:
+        0 0 0 2px color-mix(in oklab, #0b1224 75%, transparent),
+        0 0 18px color-mix(in oklab, #9ec4e8 35%, transparent);
+    }
+    .being-portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .being-screen-fade {
+      position: absolute;
+      inset: auto 0 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent, color-mix(in oklab, #1a1510 88%, transparent));
+      pointer-events: none;
+    }
+    .being-card--companion .being-screen-fade {
+      background: linear-gradient(180deg, transparent, color-mix(in oklab, #0b1224 90%, transparent));
+    }
     .being-card .card-label {
+      position: relative;
+      z-index: 1;
       display: flex; align-items: center; justify-content: space-between;
       padding: .45rem .55rem .2rem;
       font-family: Cinzel, serif;
@@ -755,6 +826,10 @@
       max-height: min(52vh, 420px);
       display: flex;
       flex-direction: column;
+    }
+    .being-list[hidden],
+    .being-list[data-open="false"] {
+      display: none !important;
     }
     .being-card--companion .being-list {
       background:
@@ -884,6 +959,13 @@
     </div>
     <div class="races-stack">
       <div class="being-card being-card--player">
+        <div class="being-screen" aria-hidden="true">
+          <img class="being-screen-art" src="art/player-screen.png" alt="" width="540" height="720" decoding="async" />
+          <div class="being-portrait">
+            <img id="playerBeingPortrait" src="art/player-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+          </div>
+          <div class="being-screen-fade"></div>
+        </div>
         <div class="card-label"><span>Player</span><span>Parchment</span></div>
         <button type="button" class="being-toggle" id="playerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="playerBeingList">
           <span class="pick-name" id="playerBeingName">Human</span>
@@ -901,6 +983,13 @@
         </div>
       </div>
       <div class="being-card being-card--companion">
+        <div class="being-screen" aria-hidden="true">
+          <img class="being-screen-art" src="art/companion-screen.png" alt="" width="540" height="720" decoding="async" />
+          <div class="being-portrait">
+            <img id="companionBeingPortrait" src="art/companion-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+          </div>
+          <div class="being-screen-fade"></div>
+        </div>
         <div class="card-label"><span>Companion</span><span>Astral</span></div>
         <button type="button" class="being-toggle" id="companionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="companionBeingList">
           <span class="pick-name" id="companionBeingName">Human</span>
@@ -1324,7 +1413,15 @@ const planes = [
       const q = question.toLowerCase();
       const p = currentPlane();
       const beingsApi = window.PlanesboundBeings;
-      if (/\b(race|being|player|companion|who am i|what am i)\b/.test(q) && beingsApi) {
+      // Roster only when clearly asking about selected beings / the Beings Roster
+      // (not "Will-o’-Wisp Race", plane "companion", or generic race keywords)
+      const rosterAsk =
+        /\b(who am i|what am i)\b/.test(q) ||
+        /\b(my|selected|current)\s+(player\s+|companion\s+)?(being|race|species)\b/.test(q) ||
+        /\b(player|companion)\s+being\b/.test(q) ||
+        /\bbeings?\s+roster\b/.test(q) ||
+        /\bwhat\s+(being|race|species)\s+(am i|did i|have i|is selected)\b/.test(q);
+      if (beingsApi && rosterAsk) {
         const pl = beingsApi.getPlayer();
         const co = beingsApi.getCompanion();
         return `Player being: ${pl.name} (${pl.tradition}) — ${pl.line} Companion being: ${co.name} (${co.tradition}) — ${co.line} Change either from the left Beings Roster.`;
