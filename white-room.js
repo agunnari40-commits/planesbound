@@ -1190,18 +1190,30 @@
       canvas.style.cursor = hit ? "pointer" : "";
     }
 
+    // Ignore the native `click` that follows an enterInterior pointerup so the
+    // same gesture cannot also select a newly-visible actor during enterAnim.
+    let ignoreSelectUntil = 0;
+    function markEnterGesture() {
+      ignoreSelectUntil = performance.now() + 450;
+    }
+
     // Interior selection: orbit onClick when enabled; canvas click only while
     // orbit is disabled (camera ease) — XOR so selectActor / attack never double-fire.
     controls.setOnClick((e) => {
-      if (viewMode === "exterior") tryEnterFromPointer(e);
-      else trySelectFromPointer(e);
+      if (viewMode === "exterior") {
+        if (tryEnterFromPointer(e)) markEnterGesture();
+      } else {
+        trySelectFromPointer(e);
+      }
     });
 
     const onCanvasClick = (e) => {
       if (viewMode === "exterior") {
-        tryEnterFromPointer(e);
+        if (tryEnterFromPointer(e)) markEnterGesture();
         return;
       }
+      // Drop the enter-gesture click; later clicks during ease may still target
+      if (performance.now() < ignoreSelectUntil) return;
       // During enter ease controls are disabled; allow picks without waiting for orbit
       if (viewMode === "interior" && enterAnim) {
         trySelectFromPointer(e);

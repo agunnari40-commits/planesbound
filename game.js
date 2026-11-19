@@ -1048,6 +1048,7 @@
       node.hidden = true;
       node.dataset.open = "false";
     }
+    syncEncounterChromeLock(false);
     render();
     if (hadStage && stage) {
       clearStageFlourishTimer();
@@ -1272,12 +1273,20 @@
     return node;
   }
 
+  function syncEncounterChromeLock(open) {
+    const shell = el("gameShell");
+    if (!shell) return;
+    if (open) shell.setAttribute("data-encounter", "true");
+    else shell.removeAttribute("data-encounter");
+  }
+
   function renderEncounter() {
     const node = ensureEncounterDom();
     if (!node) return;
     const open = !!encounter;
     node.hidden = !open;
     node.dataset.open = open ? "true" : "false";
+    syncEncounterChromeLock(open);
     if (!open) {
       // Keep stage alive during post-resolve flourish; Esc/timer tear it down
       if (!stage?.flourishing) teardownEncounterStage();

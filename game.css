@@ -360,8 +360,6 @@
 .game-scene-viewport[data-active="true"] {
   display: block;
   pointer-events: auto;
-  /* Above .game-encounter (z:6) so stage canvas stays pickable while modal blocks HUD/side */
-  z-index: 7;
 }
 .game-scene-canvas {
   position: absolute;
@@ -569,8 +567,8 @@
   justify-content: center;
   padding: 1rem;
   background: color-mix(in oklab, #04060c 72%, transparent);
-  /* Block HUD / side / travel; stage canvas sits above via viewport z-index:7 */
-  pointer-events: auto;
+  /* Pass through empty dim to stage canvas; card alone captures modal clicks */
+  pointer-events: none;
 }
 .game-encounter[data-open="true"] { display: flex; }
 .game-encounter-card {
@@ -582,6 +580,18 @@
     linear-gradient(165deg, color-mix(in oklab, #fbf6ea 94%, transparent), #efe4c8 55%, color-mix(in oklab, #d7e8f8 22%, #efe4c8));
   color: #2a2218;
   box-shadow: 0 24px 50px color-mix(in oklab, #000 45%, transparent);
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+/* While modal is open, freeze play chrome so dim pass-through cannot travel/rest/exit */
+.game-shell[data-encounter="true"] .game-hud,
+.game-shell[data-encounter="true"] .game-side,
+.game-shell[data-encounter="true"] .game-scene-copy {
+  pointer-events: none;
+}
+.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"] {
+  pointer-events: auto;
 }
 .game-encounter-card h3 {
   font-family: Cinzel, serif;
