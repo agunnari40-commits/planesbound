@@ -241,7 +241,17 @@
       hud.dataset.theme = loc.theme;
       const party = el("gameHudParty");
       if (party) {
-        party.innerHTML = `<strong>${escapeHtml(state.playerName || "Traveler")}</strong><span>${escapeHtml(beingName(state.playerBeingId))} · companion ${escapeHtml(beingName(state.companionBeingId))} · ${escapeHtml(loc.title)}</span>`;
+        const pArt = `art/races/${escapeHtml(state.playerBeingId || "human")}.png`;
+        const cArt = `art/races/${escapeHtml(state.companionBeingId || "human")}.png`;
+        party.innerHTML = `
+          <div class="game-hud-portraits" aria-hidden="true">
+            <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" onerror="this.src='art/races/human.png'" />
+            <img class="game-hud-portrait game-hud-portrait--companion" src="${cArt}" alt="" width="42" height="42" onerror="this.src='art/races/human.png'" />
+          </div>
+          <div class="game-hud-party-copy">
+            <strong>${escapeHtml(state.playerName || "Traveler")}</strong>
+            <span>${escapeHtml(beingName(state.playerBeingId))} · companion ${escapeHtml(beingName(state.companionBeingId))} · ${escapeHtml(loc.title)}</span>
+          </div>`;
       }
     }
     if (scene) {
