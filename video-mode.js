@@ -172,6 +172,7 @@
    * Mini 3D stage inside player/companion roster screens.
    * Falls back to static race art when Performance mode or WebGL fails.
    * Uses a mount generation token so overlapping async boots dispose orphans.
+   * Still art stays visible until the new WebGL stage is ready (no blank remount).
    */
   async function mountPortrait(role) {
     const screen = document.querySelector(`.being-card--${role} .being-screen`);
@@ -189,29 +190,22 @@
       portraits.delete(role);
     }
 
+    // Remount: always show race art while async 3D boots (Bugbot remount blank).
+    // Dispose may have already restored still; do it again so leftover canvases
+    // cannot leave an empty circle after mountGen advanced past the old handle.
+    screen.querySelectorAll(".being-portrait-stage").forEach((node) => node.remove());
+    img.hidden = false;
+    screen.dataset.videoPath = "still";
+
     const mode = getMode();
-    let canvas = screen.querySelector(".being-portrait-stage");
-    if (!mode.portrait3d) {
-      fallbackStill(screen, img, canvas);
-      return null;
-    }
+    if (!mode.portrait3d) return null;
 
     const Wow = window.PlanesboundWowActors;
-    if (!Wow?.createActor) {
-      fallbackStill(screen, img, canvas);
-      return null;
-    }
-
-    if (!canvas) {
-      canvas = document.createElement("canvas");
-      canvas.className = "being-portrait-stage";
-      canvas.setAttribute("aria-hidden", "true");
-      const wrap = img.closest(".being-portrait") || screen;
-      wrap.appendChild(canvas);
-    }
+    if (!Wow?.createActor) return null;
 
     let renderer = null;
     let actor = null;
+    let canvas = null;
     const abortOrphan = () => {
       try {
         actor?.dispose?.();
@@ -225,6 +219,8 @@
       }
       actor = null;
       renderer = null;
+      if (canvas?.parentElement) canvas.remove();
+      canvas = null;
     };
 
     try {
@@ -233,6 +229,34 @@
         abortOrphan();
         return null;
       }
+
+      const modelUrl = role === "companion" ? Wow.MODEL.companion : Wow.MODEL.player;
+      const being =
+        role === "companion"
+          ? window.PlanesboundBeings?.getCompanion?.()
+          : window.PlanesboundBeings?.getPlayer?.();
+      // Load actor before allocating a WebGL context so remount keeps the still.
+      actor = await Wow.createActor({
+        id: `portrait-${role}`,
+        role,
+        url: modelUrl,
+        label: being?.name || role,
+        tint: role === "companion" ? 0x7eb0c8 : 0xc5a059,
+        x: 0,
+        z: 0,
+        scale: 1.05,
+      });
+      if (gen !== mountGen[role]) {
+        abortOrphan();
+        return null;
+      }
+
+      canvas = document.createElement("canvas");
+      canvas.className = "being-portrait-stage";
+      canvas.setAttribute("aria-hidden", "true");
+      const wrap = img.closest(".being-portrait") || screen;
+      wrap.appendChild(canvas);
+
       const opts = rendererOpts();
       renderer = new T.WebGLRenderer({
         canvas,
@@ -258,25 +282,6 @@
       fill.position.set(-2.5, 2, -1);
       scene.add(fill);
 
-      const modelUrl = role === "companion" ? Wow.MODEL.companion : Wow.MODEL.player;
-      const being =
-        role === "companion"
-          ? window.PlanesboundBeings?.getCompanion?.()
-          : window.PlanesboundBeings?.getPlayer?.();
-      actor = await Wow.createActor({
-        id: `portrait-${role}`,
-        role,
-        url: modelUrl,
-        label: being?.name || role,
-        tint: role === "companion" ? 0x7eb0c8 : 0xc5a059,
-        x: 0,
-        z: 0,
-        scale: 1.05,
-      });
-      if (gen !== mountGen[role]) {
-        abortOrphan();
-        return null;
-      }
       actor.root.rotation.y = role === "companion" ? -0.2 : 0.2;
       scene.add(actor.root);
       actor.play("idle");
@@ -315,7 +320,7 @@
         if (disposed || gen !== mountGen[role]) return;
         animId = requestAnimationFrame(tick);
         handle.animId = animId;
-        // Read handle.paused — not a detached closure (Bugbot #2)
+        // Read handle.paused — not a detached closure
         if (handle.paused) return;
         const dt = Math.min(0.05, (now - handle.last) / 1000);
         handle.last = now;
@@ -349,11 +354,12 @@
         actor = null;
         renderer = null;
         if (canvas?.parentElement) canvas.remove();
+        canvas = null;
         if (portraits.get(role) === handle) portraits.delete(role);
-        if (gen === mountGen[role]) {
-          img.hidden = false;
-          screen.dataset.videoPath = "still";
-        }
+        // Always restore still after tearing down this stage. A newer mount
+        // that already bumped mountGen keeps this still until its WebGL is ready.
+        img.hidden = false;
+        screen.dataset.videoPath = "still";
       };
 
       if (gen !== mountGen[role]) {
@@ -369,7 +375,10 @@
     } catch (err) {
       console.warn("Portrait stage unavailable", err);
       abortOrphan();
-      if (gen === mountGen[role]) fallbackStill(screen, img, canvas);
+      if (gen === mountGen[role]) {
+        img.hidden = false;
+        screen.dataset.videoPath = "still";
+      }
       return null;
     }
   }
