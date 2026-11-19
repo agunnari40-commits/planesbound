@@ -321,32 +321,27 @@
 .game-scene[data-loc="hub"] {
   background-image: url("art/inner-campaign-overview.jpeg");
 }
-.game-scene[data-loc="astral-sea"],
-.game-scene[data-loc="memory-isle"],
-.game-scene[data-loc="lighthouse-bearing"],
-.game-scene[data-loc="color-pool"],
-.game-scene[data-loc="dust-lane"] {
+.game-scene[data-loc="astral-sea"] {
   background-image: url("art/astral-sea.png");
 }
 .game-scene[data-loc="memory-isle"] {
-  background-image: url("art/ethereal.png"), url("art/astral-sea.png");
+  background-image: url("art/memory-isle.jpg"), url("art/ethereal.png");
   background-blend-mode: soft-light, normal;
+  background-size: cover, cover;
 }
 .game-scene[data-loc="lighthouse-bearing"] {
-  background-image: url("art/positive.png"), url("art/astral-sea.png");
-  background-blend-mode: screen, normal;
+  background-image: url("art/lighthouse-bearing.jpg");
 }
 .game-scene[data-loc="color-pool"] {
-  background-image: url("art/positive.png"), url("art/astral-sea.png");
-  background-blend-mode: soft-light, normal;
+  background-image: url("art/color-pool.jpg");
 }
 .game-scene[data-loc="dust-lane"] {
-  background-image: url("art/dust-pilots.png"), url("art/astral-sea.png");
+  background-image: url("art/dust-lane.jpg"), url("art/dust-pilots.png");
   background-blend-mode: soft-light, normal;
   background-size: cover, cover;
 }
 .game-scene[data-loc="mineral-shore"] {
-  background-image: url("art/mineral-progenitor.png"), url("art/inner-campaign-overview.jpeg");
+  background-image: url("art/mineral-shore.jpg"), url("art/mineral-progenitor.png");
   background-blend-mode: soft-light, normal;
   background-size: cover, cover;
 }
@@ -360,6 +355,30 @@
 .game-scene-viewport[data-active="true"] {
   display: block;
   pointer-events: auto;
+}
+.game-scene-viewport[data-flash]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: soft-light;
+}
+.game-scene-viewport[data-flash="hit"]::after {
+  background: radial-gradient(circle at 70% 45%, #f0c070, transparent 55%);
+}
+.game-scene-viewport[data-flash="miss"]::after {
+  background: radial-gradient(circle at 50% 50%, #6a7a90, transparent 60%);
+}
+.game-scene-viewport[data-flash="hurt"]::after {
+  background: radial-gradient(circle at 30% 55%, #c05040, transparent 58%);
+}
+.game-scene-viewport[data-flash="soft"]::after {
+  background: radial-gradient(circle at 55% 40%, #9ec4e8, transparent 55%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-scene-viewport[data-flash]::after { display: none; }
 }
 /* Dim parchment/map art so skinned party + foe read clearly (video-path stage) */
 .game-scene[data-stage="true"]::before {
@@ -386,31 +405,79 @@
 .game-scene-canvas:active { cursor: grabbing; }
 .game-scene-target {
   position: absolute;
-  top: 10%;
+  top: 8%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
-  min-width: 10rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: 0.4rem;
+  min-width: 12.5rem;
+  max-width: min(18rem, 92%);
+  padding: 0.5rem 0.8rem 0.55rem;
+  border-radius: 0.45rem;
   text-align: center;
-  background: color-mix(in oklab, #0c0a09 75%, transparent);
-  border: 1px solid color-mix(in oklab, #c5a059 55%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #1a1008 55%, transparent), color-mix(in oklab, #0c0a09 88%, transparent)),
+    color-mix(in oklab, #0c0a09 80%, transparent);
+  border: 1px solid color-mix(in oklab, #c5a059 62%, transparent);
+  box-shadow:
+    0 10px 28px color-mix(in oklab, #000 45%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, #fff 6%, transparent);
   color: #e7dcc6;
   pointer-events: none;
   font-family: Cinzel, serif;
 }
 .game-scene-target strong {
   display: block;
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 8px color-mix(in oklab, #000 55%, transparent);
 }
 .game-scene-target span {
   display: block;
-  margin-top: 0.12rem;
+  margin-top: 0.14rem;
   font-family: "Source Serif 4", Georgia, serif;
-  font-size: 0.75rem;
-  opacity: 0.75;
+  font-size: 0.74rem;
+  opacity: 0.82;
+}
+.game-scene-target-bars {
+  display: grid;
+  gap: 0.28rem;
+  margin-top: 0.45rem;
+  text-align: left;
+}
+.game-scene-target-bar {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  align-items: center;
+  gap: 0.35rem;
+}
+.game-scene-target-bar em {
+  font-style: normal;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #c9dff5;
+  opacity: 0.85;
+}
+.game-scene-target-bar i {
+  display: block;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, #fff 10%, transparent);
+  border: 1px solid color-mix(in oklab, #fff 14%, transparent);
+  overflow: hidden;
+}
+.game-scene-target-bar i > b {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a2f28, #d45a45);
+  box-shadow: 0 0 8px color-mix(in oklab, #d45a45 40%, transparent);
+}
+.game-scene-target-bar--threat i > b {
+  background: linear-gradient(90deg, #7a5a18, #e0b24a);
+  box-shadow: 0 0 8px color-mix(in oklab, #e0b24a 35%, transparent);
 }
 .game-scene-hint {
   position: absolute;
@@ -665,11 +732,34 @@
   text-transform: uppercase;
   color: #c9dff5;
 }
-.game-encounter-vitals span {
-  padding: 0.15rem 0.4rem;
+.game-encounter-vitals span,
+.game-encounter-vitals .game-vital {
+  padding: 0.18rem 0.42rem 0.28rem;
   border-radius: 0.3rem;
   border: 1px solid color-mix(in oklab, #9ec4e8 30%, transparent);
   background: color-mix(in oklab, #0b1224 45%, transparent);
+  display: inline-grid;
+  gap: 0.18rem;
+  min-width: 5.5rem;
+}
+.game-encounter-vitals .game-vital i {
+  display: block;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, #fff 10%, transparent);
+  overflow: hidden;
+}
+.game-encounter-vitals .game-vital i > b {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3d7a9a, #9ec4e8);
+}
+.game-encounter-vitals .game-vital--foe i > b {
+  background: linear-gradient(90deg, #8a2f28, #d45a45);
+}
+.game-encounter-vitals .game-vital--threat i > b {
+  background: linear-gradient(90deg, #7a5a18, #e0b24a);
 }
 /* Travel locked during encounters; live combat keeps inventory/status interactive */
 .game-shell[data-encounter] .game-scene-copy .game-scene-actions,
