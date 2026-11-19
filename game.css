@@ -232,7 +232,7 @@
     linear-gradient(90deg, color-mix(in oklab, #07080c 35%, transparent), transparent 30%);
 }
 .game-scene[data-loc="hub"] {
-  background-image: url("art/inner-campaign-overview.png");
+  background-image: url("art/inner-campaign-overview.jpeg");
 }
 .game-scene[data-loc="astral-sea"],
 .game-scene[data-loc="memory-isle"],

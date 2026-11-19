@@ -131,38 +131,11 @@
       min-width: 560px;
       aspect-ratio: 16 / 9;
       border-radius: 1rem;
-      /* 100% 100% keeps hotspot % locked to painted ring (cover crops when dock narrows) */
+      /* Synced from planesbound.grok.me/?f=inner (inner-map.jpeg) — no decorative ring overlays */
       background:
-        #04040a url("art/inner-campaign-overview.png") center / 100% 100% no-repeat;
+        #04040a url("art/inner-campaign-overview.jpeg") center / 100% 100% no-repeat;
       overflow: hidden;
-      box-shadow:
-        inset 0 0 0 1px color-mix(in oklab, var(--brass) 35%, transparent),
-        inset 0 0 40px color-mix(in oklab, var(--void) 55%, transparent);
-    }
-    .hotspot[data-id="ethereal"] { z-index: 2; }
-    .hotspot[data-id="positive"],
-    .hotspot[data-id="negative"],
-    .hotspot[data-id="dust"],
-    .hotspot[data-id="mineral"] { z-index: 3; }
-    .hotspot[data-id="fire"],
-    .hotspot[data-id="water"],
-    .hotspot[data-id="air"],
-    .hotspot[data-id="earth"],
-    .hotspot[data-id="magma"],
-    .hotspot[data-id="ooze"],
-    .hotspot[data-id="ice"],
-    .hotspot[data-id="smoke"] { z-index: 4; }
-    .hotspot[data-id="digital-void"] { z-index: 5; }
-    .hotspot[data-id="astral-sea"] { z-index: 6; }
-    .map::before {
-      content: "";
-      position: absolute; inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse at 50% 8%, color-mix(in oklab, var(--positive) 14%, transparent), transparent 28%),
-        radial-gradient(ellipse at 50% 92%, color-mix(in oklab, var(--negative) 18%, transparent), transparent 30%),
-        linear-gradient(to bottom, transparent 70%, color-mix(in oklab, var(--void) 38%, transparent));
-      z-index: 1;
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brass) 22%, transparent);
     }
     .map-art-fallback {
       position: absolute; inset: 0;
@@ -170,23 +143,33 @@
       object-fit: cover;
       display: none;
     }
+    /* Grok-style: left/top are centers; invisible until hover/focus/active */
     .hotspot {
       position: absolute;
       z-index: 2;
-      border: 1.5px solid color-mix(in oklab, var(--brass) 35%, transparent);
-      border-radius: 999px;
-      background: color-mix(in oklab, var(--brass) 8%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in oklab, var(--void) 40%, transparent);
+      border: 1.5px solid transparent;
+      border-radius: 0.85rem;
+      background: transparent;
+      box-shadow: none;
       cursor: pointer;
-      transition: background .15s, border-color .15s, transform .15s, box-shadow .15s;
+      transform: translate(-50%, -50%);
+      transition: background .18s, border-color .18s, box-shadow .18s;
+      padding: 0;
     }
-    .hotspot:hover, .hotspot[data-active="true"] {
-      background: color-mix(in oklab, var(--brass) 24%, transparent);
+    .hotspot:hover, .hotspot:focus-visible {
+      background: color-mix(in oklab, var(--brass) 18%, transparent);
+      border-color: color-mix(in oklab, var(--brass) 90%, var(--ink));
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--brass) 22%, transparent);
+      z-index: 3;
+      outline: none;
+    }
+    .hotspot[data-active="true"] {
       border-color: var(--brass-bright);
+      background: color-mix(in oklab, var(--brass) 24%, transparent);
       box-shadow:
         0 0 0 3px color-mix(in oklab, var(--brass) 32%, transparent),
         0 0 26px color-mix(in oklab, var(--brass) 28%, transparent);
-      transform: scale(1.06);
+      z-index: 4;
     }
     .hotspot[data-accent="fire"][data-active="true"] { border-color: var(--fire); background: color-mix(in oklab, var(--fire) 30%, transparent); }
     .hotspot[data-accent="water"][data-active="true"] { border-color: var(--water); background: color-mix(in oklab, var(--water) 30%, transparent); }
@@ -196,6 +179,9 @@
     .hotspot[data-accent="mineral"][data-active="true"] { border-color: var(--mineral); background: color-mix(in oklab, var(--mineral) 30%, transparent); }
     .hotspot[data-accent="digital"][data-active="true"] { border-color: var(--digital); background: color-mix(in oklab, var(--digital) 30%, transparent); }
     .hotspot[data-accent="astral"][data-active="true"] { border-color: var(--astral); background: color-mix(in oklab, var(--astral) 30%, transparent); }
+    .hotspot[data-accent="positive"][data-active="true"] { border-color: var(--positive); background: color-mix(in oklab, var(--positive) 28%, transparent); }
+    .hotspot[data-accent="negative"][data-active="true"] { border-color: var(--negative); background: color-mix(in oklab, var(--negative) 28%, transparent); }
+    .hotspot[data-accent="ethereal"][data-active="true"] { border-color: var(--brass); background: color-mix(in oklab, var(--brass) 20%, transparent); }
     .folio {
       min-height: 420px; overflow: hidden; display: flex; flex-direction: column;
       background:
@@ -890,8 +876,8 @@
     .being-row {
       width: 100%;
       display: grid;
-      grid-template-columns: 10px 1fr auto;
-      gap: .4rem;
+      grid-template-columns: 28px 1fr auto;
+      gap: .45rem;
       align-items: center;
       appearance: none;
       border: 0;
@@ -902,6 +888,18 @@
       text-align: left;
       padding: 0 .55rem;
       cursor: pointer;
+    }
+    .being-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid color-mix(in oklab, #c5a059 55%, transparent);
+      background: #1a1510;
+      display: block;
+    }
+    .being-card--companion .being-thumb {
+      border-color: color-mix(in oklab, #9ec4e8 55%, transparent);
     }
     .being-card--companion .being-row {
       border-bottom-color: color-mix(in oklab, #9ec4e8 14%, transparent);
@@ -983,7 +981,7 @@
         <div class="being-screen" aria-hidden="true">
           <img class="being-screen-art" src="art/player-screen.png" alt="" width="540" height="720" decoding="async" />
           <div class="being-portrait">
-            <img id="playerBeingPortrait" src="art/player-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+            <img id="playerBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>
           <div class="being-screen-fade"></div>
         </div>
@@ -1007,7 +1005,7 @@
         <div class="being-screen" aria-hidden="true">
           <img class="being-screen-art" src="art/companion-screen.png" alt="" width="540" height="720" decoding="async" />
           <div class="being-portrait">
-            <img id="companionBeingPortrait" src="art/companion-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+            <img id="companionBeingPortrait" src="art/races/human.png" alt="" width="256" height="256" decoding="async" />
           </div>
           <div class="being-screen-fade"></div>
         </div>
@@ -1045,24 +1043,23 @@
 
     <div class="grid">
       <section class="map-card">
-                <p class="map-hint">Tap a shore on the Inner Ring. Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Astral Sea is the silvery thought-ocean; the Digital Void sits in the Astral–Ethereal schism.</p>
+                <p class="map-hint">Tap a shore on the Inner Ring (synced to the live Grok atlas). Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Digital Void sits in the Astral–Ethereal schism. Open the Astral Sea from the strip or folio.</p>
         <div class="map" id="map" role="img" aria-label="Inner Ring campaign overview">
-          <!-- Seed geometry (Fire-N, Water-S, Air-W, Earth-E). Astral Sea tucked in schism — does not cover cardinals. -->
-          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:41%;top:38%;width:18%;height:22%;" aria-label="Ethereal" title="Ethereal"></button>
-          <button class="hotspot" data-id="positive" data-accent="positive" style="left:46%;top:2.5%;width:8%;height:11%;" aria-label="Positive Energy" title="Positive Energy"></button>
-          <button class="hotspot" data-id="fire" data-accent="fire" style="left:44%;top:14%;width:12%;height:14%;" aria-label="Fire" title="Fire"></button>
-          <button class="hotspot" data-id="magma" data-accent="fire" style="left:63%;top:22%;width:9%;height:12%;border-radius:.55rem;" aria-label="Magma" title="Magma"></button>
-          <button class="hotspot" data-id="mineral" data-accent="mineral" style="left:78%;top:28%;width:9%;height:13%;" aria-label="Mineral" title="Mineral"></button>
-          <button class="hotspot" data-id="earth" data-accent="earth" style="left:80%;top:42%;width:12%;height:16%;" aria-label="Earth" title="Earth"></button>
-          <button class="hotspot" data-id="ooze" data-accent="water" style="left:64%;top:56%;width:9%;height:12%;border-radius:.55rem;" aria-label="Ooze" title="Ooze"></button>
-          <button class="hotspot" data-id="ice" data-accent="air" style="left:58%;top:64%;width:9%;height:12%;border-radius:.55rem;" aria-label="Ice" title="Ice"></button>
-          <button class="hotspot" data-id="water" data-accent="water" style="left:44%;top:66%;width:12%;height:14%;" aria-label="Water" title="Water"></button>
-          <button class="hotspot" data-id="negative" data-accent="negative" style="left:46%;top:84%;width:8%;height:12%;" aria-label="Negative Energy" title="Negative Energy"></button>
-          <button class="hotspot" data-id="dust" data-accent="dust" style="left:14%;top:56%;width:9%;height:13%;" aria-label="Dust" title="Dust"></button>
-          <button class="hotspot" data-id="air" data-accent="air" style="left:7%;top:40%;width:12%;height:16%;" aria-label="Air" title="Air"></button>
-          <button class="hotspot" data-id="smoke" data-accent="earth" style="left:22%;top:22%;width:9%;height:12%;border-radius:.55rem;" aria-label="Smoke" title="Smoke"></button>
-          <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:43%;top:30%;width:14%;height:9%;border-radius:.55rem;" aria-label="Digital Void" title="Digital Void"></button>
-          <button class="hotspot" data-id="astral-sea" data-accent="astral" style="left:58%;top:33%;width:9%;height:7%;border-radius:.55rem;" aria-label="Astral Sea" title="Astral Sea"></button>
+          <!-- Synced from planesbound.grok.me/?f=inner — left/top are centers (translate -50%) -->
+          <button class="hotspot" data-id="fire" data-accent="fire" style="left:50%;top:21%;width:12%;height:14%;" aria-label="Fire" title="Fire"></button>
+          <button class="hotspot" data-id="water" data-accent="water" style="left:50%;top:73%;width:12%;height:14%;" aria-label="Water" title="Water"></button>
+          <button class="hotspot" data-id="air" data-accent="air" style="left:13%;top:48%;width:12%;height:16%;" aria-label="Air" title="Air"></button>
+          <button class="hotspot" data-id="earth" data-accent="earth" style="left:86%;top:50%;width:12%;height:16%;" aria-label="Earth" title="Earth"></button>
+          <button class="hotspot" data-id="positive" data-accent="positive" style="left:50%;top:8%;width:8%;height:11%;" aria-label="Positive Energy" title="Positive Energy"></button>
+          <button class="hotspot" data-id="negative" data-accent="negative" style="left:50%;top:90%;width:8%;height:12%;" aria-label="Negative Energy" title="Negative Energy"></button>
+          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:50%;top:52%;width:16%;height:16%;" aria-label="Ethereal" title="Ethereal"></button>
+          <button class="hotspot" data-id="magma" data-accent="fire" style="left:67.5%;top:28%;width:9%;height:12%;" aria-label="Magma" title="Magma"></button>
+          <button class="hotspot" data-id="ooze" data-accent="water" style="left:70%;top:59.5%;width:8%;height:9.5%;" aria-label="Ooze" title="Ooze"></button>
+          <button class="hotspot" data-id="ice" data-accent="air" style="left:62%;top:74%;width:8%;height:9.5%;" aria-label="Ice" title="Ice"></button>
+          <button class="hotspot" data-id="smoke" data-accent="earth" style="left:26.5%;top:28%;width:9%;height:12%;" aria-label="Smoke" title="Smoke"></button>
+          <button class="hotspot" data-id="dust" data-accent="dust" style="left:18.5%;top:62.5%;width:9%;height:13%;" aria-label="Dust" title="Dust"></button>
+          <button class="hotspot" data-id="mineral" data-accent="mineral" style="left:82.5%;top:34.5%;width:9%;height:13%;" aria-label="Mineral" title="Mineral"></button>
+          <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:50%;top:34%;width:13%;height:7%;" aria-label="Digital Void" title="Digital Void"></button>
         </div>
         <div class="rail" id="rail"></div>
       </section>
@@ -1071,7 +1068,7 @@
         <div class="folio-scroll" id="folioBody">
           <div class="empty">
             <div class="hero">
-              <img class="hero-art" src="art/inner-campaign-overview.png" alt="Inner Ring campaign overview" />
+              <img class="hero-art" src="art/inner-campaign-overview.jpeg" alt="Inner Ring campaign overview" />
               <div class="hero-fade">
                 <p class="hero-kicker">Campaign</p>
                 <h2>The Inner Ring</h2>
@@ -1390,7 +1387,7 @@ const planes = [
         folioBody.innerHTML = `
           <div class="empty">
             <div class="hero">
-              <img class="hero-art" src="art/inner-campaign-overview.png" alt="Inner Ring campaign overview" />
+              <img class="hero-art" src="art/inner-campaign-overview.jpeg" alt="Inner Ring campaign overview" />
               <div class="hero-fade">
                 <p class="hero-kicker">Campaign</p>
                 <h2>The Inner Ring</h2>
