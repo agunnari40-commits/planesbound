@@ -76,7 +76,10 @@
             <h2 class="white-room-title">The White Room</h2>
             <p class="white-room-sub">A luminous chamber hangs in the Astral void. Click it to step inside the creation display.</p>
           </div>
-          <button type="button" class="white-room-exit" id="whiteRoomExit">Leave · Esc</button>
+          <div class="white-room-top-actions">
+            <button type="button" class="white-room-cast-off" id="whiteRoomCastOff">Cast off · Play</button>
+            <button type="button" class="white-room-exit" id="whiteRoomExit">Leave · Esc</button>
+          </div>
         </div>
         <p class="white-room-help" id="whiteRoomHelp">Drag to look · Click the white room to enter · Esc to leave</p>
         <div class="white-room-labels" id="whiteRoomLabels" aria-hidden="true" style="opacity:0"></div>
@@ -85,6 +88,9 @@
     canvas = document.getElementById("whiteRoomCanvas");
     fallback = document.getElementById("whiteRoomFallback");
     document.getElementById("whiteRoomExit").addEventListener("click", close);
+    document.getElementById("whiteRoomCastOff").addEventListener("click", () => {
+      document.dispatchEvent(new CustomEvent("planesbound-cast-off"));
+    });
   }
 
   function party() {
@@ -769,7 +775,8 @@
     const key = new T.DirectionalLight(0xfff6ea, 1.15);
     key.position.set(8, 14, 10);
     key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
+    const reducedGfx = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    key.shadow.mapSize.set(reducedGfx ? 1024 : 2048, reducedGfx ? 1024 : 2048);
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 60;
     key.shadow.camera.left = -16;
@@ -963,6 +970,11 @@
 
     function tick(now) {
       if (!isBootCurrent(gen) || !renderer || !camera) return;
+      // Pause when tab hidden or layer closed — avoid burning GPU off-screen
+      if (document.hidden || layer?.getAttribute("data-open") !== "true") {
+        animId = 0;
+        return;
+      }
       animId = requestAnimationFrame(tick);
       const dt = Math.min(0.05, (now - clock.last) / 1000);
       clock.last = now;
@@ -1010,6 +1022,15 @@
       teardownGl();
       return false;
     }
+    const onVis = () => {
+      if (!isBootCurrent(gen) || !renderer || !camera) return;
+      if (!document.hidden && layer?.getAttribute("data-open") === "true" && !animId) {
+        clock.last = performance.now();
+        animId = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    scene.userData.removeVis = () => document.removeEventListener("visibilitychange", onVis);
     animId = requestAnimationFrame(tick);
     return true;
   }
@@ -1097,6 +1118,13 @@
     if (scene?.userData?.removeClick) {
       try {
         scene.userData.removeClick();
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    if (scene?.userData?.removeVis) {
+      try {
+        scene.userData.removeVis();
       } catch (_) {
         /* ignore */
       }
