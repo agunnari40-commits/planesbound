@@ -162,12 +162,6 @@
     });
   }
 
-  function fallbackStill(screen, img, canvas) {
-    if (canvas && canvas.parentElement) canvas.remove();
-    if (img) img.hidden = false;
-    if (screen) screen.dataset.videoPath = "still";
-  }
-
   /**
    * Mini 3D stage inside player/companion roster screens.
    * Falls back to static race art when Performance mode or WebGL fails.
