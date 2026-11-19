@@ -769,6 +769,7 @@
       const foeHpMax = enc.live ? enc.foeHpMax || 16 : 12;
       const foeHp = enc.live ? enc.foeHp ?? foeHpMax : foeHpMax;
 
+      // Push into `actors` as each create succeeds so abortCleanup / catch dispose orphans
       const playerActor = await Wow.createActor({
         id: "stage-player",
         role: "player",
@@ -781,12 +782,8 @@
         hp: state.hp,
         hpMax: state.hpMax,
       });
+      actors.push(playerActor);
       if (gen !== stageBootGen || !encounter) {
-        try {
-          playerActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
         abortCleanup();
         return;
       }
@@ -801,17 +798,8 @@
         z: 1.05,
         scale: 0.98,
       });
+      actors.push(companionActor);
       if (gen !== stageBootGen || !encounter) {
-        try {
-          playerActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
-        try {
-          companionActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
         abortCleanup();
         return;
       }
@@ -828,22 +816,8 @@
         hp: foeHp,
         hpMax: foeHpMax,
       });
+      actors.push(foeActor);
       if (gen !== stageBootGen || !encounter) {
-        try {
-          playerActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
-        try {
-          companionActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
-        try {
-          foeActor.dispose();
-        } catch (_) {
-          /* ignore */
-        }
         abortCleanup();
         return;
       }
@@ -851,7 +825,6 @@
       companionActor.root.rotation.y = Math.PI * 0.42;
       foeActor.root.rotation.y = -Math.PI * 0.45;
       scene.add(playerActor.root, companionActor.root, foeActor.root);
-      actors = [playerActor, companionActor, foeActor];
 
       let selected = null;
       let hovered = null;

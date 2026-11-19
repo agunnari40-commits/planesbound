@@ -42,7 +42,10 @@
   let current = "balanced";
   /** @type {Map<string, any>} */
   const portraits = new Map();
+  /** Per-role mount generation — invalidate overlapping async boots */
+  const mountGen = { player: 0, companion: 0 };
   let listenersWired = false;
+  let bootArmed = false;
 
   function prefersReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -152,39 +155,50 @@
 
   function resumePortraits() {
     portraits.forEach((p) => {
+      const wasPaused = !!p.paused;
       p.paused = false;
-      if (!p.animId) p.tick?.(performance.now());
+      // Loop keeps scheduling while paused; reset dt baseline on resume
+      if (wasPaused) p.last = performance.now();
     });
+  }
+
+  function fallbackStill(screen, img, canvas) {
+    if (canvas && canvas.parentElement) canvas.remove();
+    if (img) img.hidden = false;
+    if (screen) screen.dataset.videoPath = "still";
   }
 
   /**
    * Mini 3D stage inside player/companion roster screens.
    * Falls back to static race art when Performance mode or WebGL fails.
+   * Uses a mount generation token so overlapping async boots dispose orphans.
    */
   async function mountPortrait(role) {
     const screen = document.querySelector(`.being-card--${role} .being-screen`);
     const img = document.getElementById(`${role}BeingPortrait`);
     if (!screen || !img) return null;
 
+    const gen = ++mountGen[role];
     const existing = portraits.get(role);
     if (existing) {
-      existing.dispose();
+      try {
+        existing.dispose();
+      } catch (_) {
+        /* ignore */
+      }
       portraits.delete(role);
     }
 
     const mode = getMode();
     let canvas = screen.querySelector(".being-portrait-stage");
     if (!mode.portrait3d) {
-      if (canvas) canvas.remove();
-      img.hidden = false;
-      screen.dataset.videoPath = "still";
+      fallbackStill(screen, img, canvas);
       return null;
     }
 
     const Wow = window.PlanesboundWowActors;
     if (!Wow?.createActor) {
-      img.hidden = false;
-      screen.dataset.videoPath = "still";
+      fallbackStill(screen, img, canvas);
       return null;
     }
 
@@ -196,10 +210,31 @@
       wrap.appendChild(canvas);
     }
 
+    let renderer = null;
+    let actor = null;
+    const abortOrphan = () => {
+      try {
+        actor?.dispose?.();
+      } catch (_) {
+        /* ignore */
+      }
+      try {
+        renderer?.dispose?.();
+      } catch (_) {
+        /* ignore */
+      }
+      actor = null;
+      renderer = null;
+    };
+
     try {
       const T = await Wow.loadThree();
+      if (gen !== mountGen[role]) {
+        abortOrphan();
+        return null;
+      }
       const opts = rendererOpts();
-      const renderer = new T.WebGLRenderer({
+      renderer = new T.WebGLRenderer({
         canvas,
         antialias: opts.antialias,
         alpha: true,
@@ -228,7 +263,7 @@
         role === "companion"
           ? window.PlanesboundBeings?.getCompanion?.()
           : window.PlanesboundBeings?.getPlayer?.();
-      const actor = await Wow.createActor({
+      actor = await Wow.createActor({
         id: `portrait-${role}`,
         role,
         url: modelUrl,
@@ -238,17 +273,27 @@
         z: 0,
         scale: 1.05,
       });
+      if (gen !== mountGen[role]) {
+        abortOrphan();
+        return null;
+      }
       actor.root.rotation.y = role === "companion" ? -0.2 : 0.2;
       scene.add(actor.root);
       actor.play("idle");
 
       let disposed = false;
-      let paused = document.hidden;
       let animId = 0;
-      let last = performance.now();
+      const handle = {
+        paused: document.hidden,
+        last: performance.now(),
+        animId: 0,
+        tick: null,
+        dispose: null,
+        resize: null,
+      };
 
       function resize() {
-        if (disposed) return;
+        if (disposed || gen !== mountGen[role]) return;
         const parent = canvas.parentElement;
         const r = parent?.getBoundingClientRect?.() || canvas.getBoundingClientRect();
         const w = Math.max(64, r.width || 128);
@@ -263,62 +308,68 @@
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h, false);
       }
+      handle.resize = resize;
       resize();
 
       function tick(now) {
-        if (disposed) return;
+        if (disposed || gen !== mountGen[role]) return;
         animId = requestAnimationFrame(tick);
-        if (paused) return;
-        const dt = Math.min(0.05, (now - last) / 1000);
-        last = now;
+        handle.animId = animId;
+        // Read handle.paused — not a detached closure (Bugbot #2)
+        if (handle.paused) return;
+        const dt = Math.min(0.05, (now - handle.last) / 1000);
+        handle.last = now;
         actor.update(dt);
-        // Subtle idle presence without camera motion
         if (!prefersReducedMotion()) {
           actor.root.rotation.y = (role === "companion" ? -0.2 : 0.2) + Math.sin(now * 0.0006) * 0.04;
         }
         renderer.render(scene, camera);
       }
+      handle.tick = tick;
       animId = requestAnimationFrame(tick);
+      handle.animId = animId;
 
-      const handle = {
-        paused,
-        animId,
-        tick,
-        dispose() {
-          disposed = true;
-          if (animId) cancelAnimationFrame(animId);
-          animId = 0;
-          try {
-            actor.dispose();
-          } catch (_) {
-            /* ignore */
-          }
-          try {
-            renderer.dispose();
-          } catch (_) {
-            /* ignore */
-          }
-          canvas.remove();
+      handle.dispose = () => {
+        if (disposed) return;
+        disposed = true;
+        window.removeEventListener("resize", resize);
+        if (animId) cancelAnimationFrame(animId);
+        animId = 0;
+        handle.animId = 0;
+        try {
+          actor?.dispose?.();
+        } catch (_) {
+          /* ignore */
+        }
+        try {
+          renderer?.dispose?.();
+        } catch (_) {
+          /* ignore */
+        }
+        actor = null;
+        renderer = null;
+        if (canvas?.parentElement) canvas.remove();
+        if (portraits.get(role) === handle) portraits.delete(role);
+        if (gen === mountGen[role]) {
           img.hidden = false;
           screen.dataset.videoPath = "still";
-        },
-        resize,
+        }
       };
+
+      if (gen !== mountGen[role]) {
+        handle.dispose();
+        return null;
+      }
+
       portraits.set(role, handle);
       img.hidden = true;
       screen.dataset.videoPath = "stage3d";
       window.addEventListener("resize", resize);
-      const prevDispose = handle.dispose;
-      handle.dispose = () => {
-        window.removeEventListener("resize", resize);
-        prevDispose();
-      };
       return handle;
     } catch (err) {
       console.warn("Portrait stage unavailable", err);
-      if (canvas) canvas.remove();
-      img.hidden = false;
-      screen.dataset.videoPath = "still";
+      abortOrphan();
+      if (gen === mountGen[role]) fallbackStill(screen, img, canvas);
       return null;
     }
   }
@@ -335,17 +386,21 @@
     wireUi();
     document.querySelectorAll("[data-video-mode-select]").forEach(ensureSelectOptions);
     syncSelects();
-    // Defer portrait boots until actors + beings are ready
+    // Single boot path — avoid event + timeout double-mount race (Bugbot #1)
     const boot = () => {
+      if (bootArmed) return;
+      bootArmed = true;
       ensureSelectOptions(document.querySelector("[data-video-mode-select]"));
       syncSelects();
       refreshPortraitStages();
     };
-    if (window.PlanesboundWowActors && window.PlanesboundBeings) boot();
-    else {
+    if (window.PlanesboundWowActors && window.PlanesboundBeings) {
+      boot();
+    } else {
       document.addEventListener("planesbound-beings-ready", boot, { once: true });
-      // Fallback if beings event already fired
-      setTimeout(boot, 800);
+      setTimeout(() => {
+        if (!bootArmed && window.PlanesboundWowActors) boot();
+      }, 800);
     }
   }
 
