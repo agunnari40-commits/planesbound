@@ -77,8 +77,26 @@
     io.observe(el);
   }
 
+  const HOTSPOT_LIVE_CLS = [
+    "art-live-bg",
+    "art-live-bg--photo",
+    "art-live-host",
+    "art-live-host--thumb",
+  ];
+
+  /** Drop hotspot motion classes when no longer selected (Bugbot sticky active). */
+  function clearInactiveHotspotMotion(scope) {
+    scope.querySelectorAll(".hotspot").forEach((el) => {
+      if (el.getAttribute("data-active") === "true") return;
+      HOTSPOT_LIVE_CLS.forEach((c) => el.classList.remove(c));
+      delete el.dataset.artBg;
+      delete el.dataset.artPaused;
+    });
+  }
+
   function enhance(root) {
     const scope = root && root.querySelectorAll ? root : document;
+    clearInactiveHotspotMotion(scope);
     if (prefersReduced()) return;
 
     for (const rule of IMG_RULES) {
