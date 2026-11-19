@@ -26,7 +26,6 @@
     { sel: ".game-scene", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
     { sel: ".white-room-fallback", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
     { sel: ".companion-banner", cls: "art-live-bg art-live-bg--photo art-live-bg--quest" },
-    { sel: ".hotspot[data-active=\"true\"]", cls: "art-live-bg art-live-bg--photo art-live-host art-live-host--thumb" },
     // Multi-layer chrome — shim under content (never filter the whole panel)
     { sel: ".game-start", cls: "art-live-bg art-live-bg--layered", shim: true },
     { sel: ".game-hud", cls: "art-live-bg art-live-bg--layered", shim: true },
