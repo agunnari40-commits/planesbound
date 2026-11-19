@@ -26,6 +26,18 @@
     art-flicker 7s ease-in-out infinite;
 }
 
+/* Centered emblems: compose translateX(-50%) into every keyframe */
+.art-live--emblem {
+  --art-dur: 11s;
+  --art-drift: 2.2%;
+  --art-scale: 1.08;
+  transform-origin: center center;
+  animation:
+    art-kenburns-cx var(--art-dur) ease-in-out infinite alternate,
+    art-morph-soft calc(var(--art-dur) * 0.7) ease-in-out infinite,
+    art-flicker 7s ease-in-out infinite;
+}
+
 .art-live--hero {
   --art-dur: 18s;
   --art-drift: 2.8%;
@@ -78,7 +90,8 @@
   background-size: 160px 160px;
   animation: art-grain-drift 1.8s steps(2) infinite;
 }
-.art-live-host--portrait::after {
+.art-live-host--portrait::after,
+.art-live-host--emblem::after {
   opacity: 0.28;
   mix-blend-mode: overlay;
   border-radius: inherit;
@@ -95,33 +108,36 @@
   mix-blend-mode: soft-light;
 }
 
-/* Background-image surfaces (map, quest, game scene, hud, dock) */
-.art-live-bg {
-  background-size: 112% auto !important;
+/*
+ * Background surfaces
+ * - photo: single-layer art → gentle position drift (no !important size fights)
+ * - layered: multi-layer left/right cover panels → filter-only (preserve layout)
+ */
+.art-live-bg--photo {
   animation:
-    art-bg-drift 16s ease-in-out infinite alternate,
+    art-bg-photo-drift 16s ease-in-out infinite alternate,
     art-bg-flicker 9s ease-in-out infinite;
 }
 .art-live-bg--map {
   animation:
-    art-bg-drift 22s ease-in-out infinite alternate,
+    art-bg-photo-drift 22s ease-in-out infinite alternate,
     art-bg-flicker 11s ease-in-out infinite;
 }
 .art-live-bg--quest {
   animation:
-    art-bg-drift 14s ease-in-out infinite alternate,
+    art-bg-photo-drift 14s ease-in-out infinite alternate,
     art-bg-pulse 8s ease-in-out infinite;
 }
 .art-live-bg--scene {
   animation:
-    art-bg-drift 15s ease-in-out infinite alternate,
+    art-bg-photo-drift 15s ease-in-out infinite alternate,
     art-bg-flicker 7.5s ease-in-out infinite;
 }
-.art-live-bg--hud {
-  animation: art-bg-drift 20s ease-in-out infinite alternate;
+.art-live-bg--layered {
+  animation: art-bg-flicker 10s ease-in-out infinite;
 }
 .art-live-bg--dock {
-  animation: art-bg-drift 18s ease-in-out infinite alternate;
+  animation: art-bg-flicker 12s ease-in-out infinite;
 }
 
 /* Soft CRT / dream veil on full panels */
@@ -172,6 +188,22 @@
   }
 }
 
+/* Emblem / centered absolute: keep translateX(-50%) for the whole loop */
+@keyframes art-kenburns-cx {
+  0% {
+    transform: translateX(-50%) scale(1) translate(0, 0);
+  }
+  33% {
+    transform: translateX(-50%) scale(var(--art-scale)) translate(calc(var(--art-drift) * -1), calc(var(--art-drift) * 0.4));
+  }
+  66% {
+    transform: translateX(-50%) scale(calc((1 + var(--art-scale)) / 2)) translate(var(--art-drift), calc(var(--art-drift) * -0.6));
+  }
+  100% {
+    transform: translateX(-50%) scale(var(--art-scale)) translate(calc(var(--art-drift) * 0.35), var(--art-drift));
+  }
+}
+
 @keyframes art-flicker {
   0%, 100% { filter: brightness(1) contrast(1) saturate(1.02); }
   40% { filter: brightness(1.04) contrast(1.03) saturate(1.08); }
@@ -206,10 +238,11 @@
   50% { opacity: 0.28; }
 }
 
-@keyframes art-bg-drift {
-  0% { background-position: 46% 48%; background-size: 108% 108%; }
-  50% { background-position: 54% 44%; background-size: 118% 118%; }
-  100% { background-position: 48% 52%; background-size: 112% 112%; }
+/* Single-layer photo backgrounds only — no !important, keep cover-like scale */
+@keyframes art-bg-photo-drift {
+  0% { background-position: 46% 48%; }
+  50% { background-position: 54% 44%; }
+  100% { background-position: 48% 52%; }
 }
 
 @keyframes art-bg-flicker {
@@ -230,10 +263,11 @@
   .art-live-veil::before {
     animation: none !important;
     filter: none !important;
+  }
+  .art-live:not(.art-live--emblem) {
     transform: none !important;
   }
-  .art-live-bg {
-    background-size: cover !important;
-    background-position: center !important;
+  .art-live--emblem {
+    transform: translateX(-50%) !important;
   }
 }

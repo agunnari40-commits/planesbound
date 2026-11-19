@@ -618,8 +618,9 @@
   /**
    * Rich figure standee: painted plate + race medallion (no bare cylinders).
    * @param {"player"|"companion"} role
+   * @param {(mat: object) => void} [onArtMat] called when a textured mat is ready for UV drift
    */
-  function makeFigure(T, url, x, tint, role) {
+  function makeFigure(T, url, x, tint, role, onArtMat) {
     const group = new T.Group();
     group.position.set(x, 0, 0);
 
@@ -647,7 +648,9 @@
       tex.wrapS = tex.wrapT = T.RepeatWrapping;
       tex.center.set(0.5, 0.5);
       plateMat.map = tex;
+      plateMat.userData.artMapPulse = true;
       plateMat.needsUpdate = true;
+      onArtMat?.(plateMat);
     });
     const plate = new T.Mesh(new T.PlaneGeometry(2.2, 3.3), plateMat);
     plate.position.set(0, 0, 0);
@@ -671,7 +674,9 @@
       tex.wrapS = tex.wrapT = T.RepeatWrapping;
       tex.center.set(0.5, 0.5);
       emblemMat.map = tex;
+      emblemMat.userData.artMapPulse = true;
       emblemMat.needsUpdate = true;
+      onArtMat?.(emblemMat);
     });
     // Local to this standee's plate only — depth buffer handles cross-standee occlusion
     const emblem = new T.Mesh(new T.CircleGeometry(0.42, 48), emblemMat);
@@ -823,17 +828,19 @@
       }
     });
 
-    const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player");
-    const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion");
+    const registerArtMat = (mat) => {
+      if (!mat || artMats.includes(mat)) return;
+      if ("emissiveIntensity" in mat && mat.userData.baseEmissive == null) {
+        mat.userData.baseEmissive = mat.emissiveIntensity ?? 0;
+      }
+      artMats.push(mat);
+    };
+    const playerFig = makeFigure(T, p.player.art, -1.85, 0xc5a059, "player", registerArtMat);
+    const companionFig = makeFigure(T, p.companion.art, 1.85, 0x7eb0c8, "companion", registerArtMat);
     [playerFig, companionFig].forEach((fig) => {
       fig.traverse((obj) => {
         if (obj.isMesh && obj.material && "emissiveIntensity" in obj.material) {
-          obj.material.userData.baseEmissive = obj.material.emissiveIntensity ?? 0;
-          artMats.push(obj.material);
-        }
-        if (obj.isMesh && obj.material?.map) {
-          obj.material.userData.artMapPulse = true;
-          artMats.push(obj.material);
+          registerArtMat(obj.material);
         }
       });
     });
@@ -1070,10 +1077,9 @@
             mat.emissiveIntensity = mat.userData.baseEmissive * (0.92 + Math.sin(t * 1.1 + (mat.uuid?.charCodeAt?.(0) || 0)) * 0.12);
           }
           if (mat.userData.artMapPulse && mat.map) {
-            // Subtle UV drift on standee plates/emblems
+            // Subtle UV drift — offset alone is enough (no per-frame GPU re-upload)
             mat.map.offset.x = Math.sin(t * 0.35) * 0.008;
             mat.map.offset.y = Math.cos(t * 0.28) * 0.006;
-            mat.map.needsUpdate = true;
           }
         }
       }

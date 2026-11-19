@@ -14,23 +14,27 @@
     { sel: "img.thumb", kind: "thumb", host: false },
     { sel: "img.being-thumb", kind: "thumb", host: false },
     { sel: ".white-room-standee-plate", kind: "standee", host: true },
-    { sel: ".white-room-standee-emblem", kind: "portrait", host: true },
+    // Emblem uses centered kenburns (keeps translateX(-50%))
+    { sel: ".white-room-standee-emblem", kind: "emblem", host: true },
   ];
 
   const BG_RULES = [
-    { sel: ".map", cls: "art-live-bg art-live-bg--map art-live-host art-live-host--map" },
-    { sel: ".quest-art", cls: "art-live-bg art-live-bg--quest art-live-host art-live-host--hero" },
-    { sel: ".game-scene", cls: "art-live-bg art-live-bg--scene art-live-veil" },
-    { sel: ".game-start", cls: "art-live-bg art-live-bg--hud" },
-    { sel: ".game-hud", cls: "art-live-bg art-live-bg--hud" },
-    { sel: ".game-side[data-theme=\"astral\"]", cls: "art-live-bg art-live-bg--hud" },
-    { sel: ".races-dock", cls: "art-live-bg art-live-bg--dock" },
-    { sel: ".white-room-fallback", cls: "art-live-bg art-live-bg--scene art-live-veil" },
-    { sel: ".companion-sheet", cls: "art-live-bg art-live-bg--hud" },
-    { sel: ".companion-banner", cls: "art-live-bg art-live-bg--quest" },
+    // Single-layer photo art — position drift is safe
+    { sel: ".map", cls: "art-live-bg art-live-bg--photo art-live-bg--map art-live-host art-live-host--map" },
+    { sel: ".quest-art", cls: "art-live-bg art-live-bg--photo art-live-bg--quest art-live-host art-live-host--hero" },
+    { sel: ".game-scene", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
+    { sel: ".white-room-fallback", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
+    { sel: ".companion-banner", cls: "art-live-bg art-live-bg--photo art-live-bg--quest" },
+    // Multi-layer left/right cover panels — filter-only so layouts stay intact
+    { sel: ".game-start", cls: "art-live-bg art-live-bg--layered" },
+    { sel: ".game-hud", cls: "art-live-bg art-live-bg--layered" },
+    { sel: ".game-side[data-theme=\"astral\"]", cls: "art-live-bg art-live-bg--layered" },
+    { sel: ".races-dock", cls: "art-live-bg art-live-bg--layered art-live-bg--dock" },
+    { sel: ".companion-sheet", cls: "art-live-bg art-live-bg--layered" },
     { sel: ".sheet-frame", cls: "art-live-veil" },
   ];
 
+  const LIVE_SEL = ".art-live, .art-live-bg, .art-live-host, .art-live-veil";
   const watched = new WeakSet();
   let io = null;
 
@@ -45,11 +49,11 @@
       parent.classList.add(`art-live-host--${kind}`);
       return;
     }
-    // Prefer existing overflow hosts (portrait circles, hero frames)
     const overflowHost =
       parent.classList.contains("being-portrait") ||
       parent.classList.contains("hero") ||
       parent.classList.contains("white-room-figure-stage") ||
+      parent.classList.contains("white-room-standee") ||
       getComputedStyle(parent).overflow === "hidden";
     if (overflowHost) {
       parent.classList.add("art-live-host", `art-live-host--${kind}`);
@@ -79,7 +83,6 @@
       scope.querySelectorAll(rule.sel).forEach((el) => {
         markLive(el, rule.kind);
         if (rule.host) ensureHost(el, rule.kind);
-        // Also pause host with the image
         const host = el.closest(".art-live-host");
         if (host && !watched.has(host)) observe(host);
       });
@@ -101,10 +104,25 @@
     if (host) host.dataset.artPaused = paused ? "true" : "false";
   }
 
+  function isInViewport(el) {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.right > 0 && r.top < (window.innerHeight || 0) && r.left < (window.innerWidth || 0);
+  }
+
+  /** Recompute pause from tab visibility + reduced-motion + viewport. */
+  function syncPauseState() {
+    const forcePause = document.hidden || prefersReduced();
+    document.querySelectorAll(LIVE_SEL).forEach((el) => {
+      if (forcePause) setPaused(el, true);
+      else setPaused(el, !isInViewport(el));
+    });
+  }
+
   function bootObserver() {
     if (io) return;
     io = new IntersectionObserver(
       (entries) => {
+        if (document.hidden || prefersReduced()) return;
         for (const entry of entries) {
           setPaused(entry.target, !entry.isIntersecting);
         }
@@ -114,21 +132,20 @@
   }
 
   function onVisibility() {
-    const paused = document.hidden || prefersReduced();
-    document.querySelectorAll(".art-live, .art-live-bg, .art-live-host, .art-live-veil").forEach((el) => {
-      if (paused) el.dataset.artPaused = "true";
-      else if (el.dataset.artPaused === "true" && !el.classList.contains("art-live")) {
-        // keep IO-driven pause for offscreen; refresh will re-sync
-      }
-    });
-    if (!paused) enhance(document);
+    if (document.hidden || prefersReduced()) {
+      document.querySelectorAll(LIVE_SEL).forEach((el) => setPaused(el, true));
+      return;
+    }
+    // Tab visible again — clear freeze and re-sync with viewport
+    enhance(document);
+    syncPauseState();
   }
 
   function boot() {
     bootObserver();
     enhance(document);
+    syncPauseState();
 
-    // Dynamic folio / game / sheets / races re-render
     const mo = new MutationObserver((mutations) => {
       if (prefersReduced()) return;
       let needs = false;
@@ -138,17 +155,19 @@
           break;
         }
       }
-      if (needs) enhance(document);
+      if (needs) {
+        enhance(document);
+        syncPauseState();
+      }
     });
     mo.observe(document.body, { childList: true, subtree: true });
 
     REDUCED.addEventListener?.("change", () => {
       if (prefersReduced()) {
-        document.querySelectorAll(".art-live, .art-live-bg").forEach((el) => {
-          el.dataset.artPaused = "true";
-        });
+        document.querySelectorAll(LIVE_SEL).forEach((el) => setPaused(el, true));
       } else {
         enhance(document);
+        syncPauseState();
       }
     });
     document.addEventListener("visibilitychange", onVisibility);
@@ -157,7 +176,10 @@
   window.PlanesboundArtMotion = {
     enhance,
     prefersReduced,
-    refresh: () => enhance(document),
+    refresh: () => {
+      enhance(document);
+      syncPauseState();
+    },
   };
 
   if (document.readyState === "loading") {
