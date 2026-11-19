@@ -218,15 +218,19 @@
         merged.shoreQuestActive = true;
       }
       if (
-        merged.shoreQuestActive &&
         !merged.shoreQuestComplete &&
         merged.objectives?.pool &&
         merged.objectives?.shore
       ) {
+        // v2/v1 finished shore saves may lack shoreQuestComplete / chapter flags.
         merged.shoreQuestComplete = true;
+        merged.shoreQuestActive = true;
       }
-      if (merged.shoreQuestComplete && !merged.chapterComplete && merged.flags?.chapterReady) {
+      if (merged.shoreQuestComplete && !merged.chapterComplete) {
+        // Promote finished shore → chapter without requiring chapterReady
+        // (that flag was only written together with chapterComplete).
         merged.chapterComplete = true;
+        merged.flags.chapterReady = true;
       }
       return syncVitalsFromSheet(merged);
     } catch (_) {
@@ -382,6 +386,7 @@
 
   function maybeChapterWin() {
     if (!state.shoreQuestComplete || state.chapterComplete) return;
+    if (encounter) return; // defer until encounter is cleared
     state.chapterComplete = true;
     state.flags.chapterReady = true;
     pushJournal("Chapter complete: First Crossing of the Astral Sea — shore secured.");
@@ -546,6 +551,7 @@
     encounter = null;
     renderEncounter();
     render();
+    maybeChapterWin();
   }
 
   function resolveEncounter(choiceId) {
@@ -673,6 +679,7 @@
     save();
     renderEncounter();
     render();
+    maybeChapterWin();
   }
 
   function useItem(id) {
@@ -803,7 +810,8 @@
       if (state.objectives.bearing && from !== "hub") showComplete(true);
     }
 
-    if (state.shoreQuestComplete) maybeChapterWin();
+    // Never stack chapter-win on top of a fresh encounter modal.
+    if (state.shoreQuestComplete && !encounter) maybeChapterWin();
   }
 
   function el(id) {
