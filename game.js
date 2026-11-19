@@ -1199,7 +1199,13 @@
     setPlayOpen(true);
     showStart(false);
     render();
-    if (state.chapterComplete && !state.chapterAcked) showChapterComplete(true);
+    resumeChapterWinIfNeeded();
+  }
+
+  /** Show chapter-win after load/cast-off when shore is done but not yet acknowledged. */
+  function resumeChapterWinIfNeeded() {
+    if (!state.chapterComplete || state.chapterAcked || encounter) return;
+    showChapterComplete(true);
   }
 
   function freshVoyageState(name, playerBeingId, companionBeingId) {
@@ -1237,6 +1243,9 @@
     encounter = null;
     renderEncounter();
     render();
+    // Migrated shore-finished saves set chapterComplete in load(); Cast off
+    // must still surface the win modal (beginPlay already did).
+    resumeChapterWinIfNeeded();
   }
 
   function startCharacter(ev) {
