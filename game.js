@@ -101,6 +101,11 @@
   function syncRosterKeys() {
     localStorage.setItem(PLAYER_KEY, state.playerBeingId);
     localStorage.setItem(COMPANION_KEY, state.companionBeingId);
+    const api = window.PlanesboundBeings;
+    if (api && typeof api.setSelection === "function") {
+      api.setSelection(state.playerBeingId, state.companionBeingId);
+      return;
+    }
     document.dispatchEvent(
       new CustomEvent("planesbound-beings-changed", {
         detail: {
@@ -186,9 +191,22 @@
 
   function showComplete(open) {
     const node = el("gameComplete");
+    const shell = el("gameShell");
     if (!node) return;
     node.hidden = !open;
     node.dataset.open = open ? "true" : "false";
+    if (shell) {
+      if (open) shell.setAttribute("inert", "");
+      else shell.removeAttribute("inert");
+    }
+    if (open) {
+      const focusComplete = () => {
+        const btn = el("gameContinueExplore");
+        const card = node.querySelector(".game-complete-card");
+        (btn || card)?.focus?.();
+      };
+      requestAnimationFrame(() => requestAnimationFrame(focusComplete));
+    }
   }
 
   function setPlayOpen(open) {
@@ -418,8 +436,10 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape" || !playOpen) return;
+      // Companion closes first (stopPropagation); never also exit Play on same keypress
+      if (e.defaultPrevented) return;
       const companionOpen = document.getElementById("companionDialog")?.dataset.open === "true";
-      if (companionOpen) return; // companion handler owns Esc
+      if (companionOpen) return;
       if (el("gameComplete")?.dataset.open === "true") {
         e.preventDefault();
         state.completeAcked = true;

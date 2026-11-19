@@ -264,13 +264,43 @@
       }
     });
 
-    // Expose for companion integration
+    // Expose for companion + Play voyage integration
     window.PlanesboundBeings = {
       getPlayer: () => byId(selected.player),
       getCompanion: () => byId(selected.companion),
       all: () => beings.slice(),
       count: () => beings.length,
+      setSelection(playerId, companionId) {
+        if (playerId && byId(playerId)) selected.player = playerId;
+        if (companionId && byId(companionId)) selected.companion = companionId;
+        localStorage.setItem(PLAYER_KEY, selected.player);
+        localStorage.setItem(COMPANION_KEY, selected.companion);
+        renderPicks();
+        document.dispatchEvent(
+          new CustomEvent("planesbound-beings-changed", {
+            detail: {
+              player: byId(selected.player),
+              companion: byId(selected.companion),
+            },
+          })
+        );
+      },
     };
+
+    document.addEventListener("planesbound-beings-changed", (e) => {
+      const p = e.detail?.player?.id;
+      const c = e.detail?.companion?.id;
+      let changed = false;
+      if (p && byId(p) && selected.player !== p) {
+        selected.player = p;
+        changed = true;
+      }
+      if (c && byId(c) && selected.companion !== c) {
+        selected.companion = c;
+        changed = true;
+      }
+      if (changed) renderPicks();
+    });
 
     document.dispatchEvent(
       new CustomEvent("planesbound-beings-ready", {
