@@ -317,6 +317,12 @@
         o.receiveShadow = true;
         o.frustumCulled = false;
         if (o.material) {
+          // Clone materials per actor so tint/glow never leak across instances
+          if (Array.isArray(o.material)) {
+            o.material = o.material.map((m) => (m && m.clone ? m.clone() : m));
+          } else if (o.material.clone) {
+            o.material = o.material.clone();
+          }
           const mats = Array.isArray(o.material) ? o.material : [o.material];
           mats.forEach((m) => {
             if (!m) return;

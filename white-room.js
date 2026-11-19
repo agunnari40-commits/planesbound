@@ -1190,15 +1190,17 @@
       canvas.style.cursor = hit ? "pointer" : "";
     }
 
+    // Interior selection: orbit click only. Canvas `click` would double-fire
+    // selectActor → play("attack") for the same pointer gesture.
     controls.setOnClick((e) => {
       if (viewMode === "exterior") tryEnterFromPointer(e);
       else trySelectFromPointer(e);
     });
 
-    // Backup click path (synthetic / accessibility) when orbit drag gating misses
+    // Exterior backup for synthetic/accessibility clicks (orbit gating can miss);
+    // interior must not use this path (XOR with orbit onClick).
     const onCanvasClick = (e) => {
       if (viewMode === "exterior") tryEnterFromPointer(e);
-      else if (viewMode === "interior") trySelectFromPointer(e);
     };
     const onCanvasMove = (e) => {
       if (viewMode === "interior") tryHoverFromPointer(e);

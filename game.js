@@ -126,6 +126,8 @@
 
   /** Encounter 3D stage (skinned meshes + hitboxes). */
   let stage = null;
+  let stageBootGen = 0;
+  let stageFlourishTimer = 0;
 
   function defaultState() {
     return {
@@ -563,46 +565,118 @@
     return enc.kind === "pool-skirmish" || enc.kind === "isle-check" || enc.kind === "dust-check";
   }
 
-  function teardownEncounterStage() {
-    if (!stage) return;
-    try {
-      stage.dispose?.();
-    } catch (_) {
-      /* ignore */
+  function clearStageFlourishTimer() {
+    if (stageFlourishTimer) {
+      clearTimeout(stageFlourishTimer);
+      stageFlourishTimer = 0;
     }
-    stage = null;
+  }
+
+  function teardownEncounterStage() {
+    clearStageFlourishTimer();
+    stageBootGen += 1; // invalidate any in-flight boot
+    if (stage) {
+      try {
+        stage.dispose?.();
+      } catch (_) {
+        /* ignore */
+      }
+      stage = null;
+    }
     const vp = el("gameSceneViewport");
     if (vp) {
       vp.dataset.active = "false";
       vp.setAttribute("aria-hidden", "true");
     }
+    const sceneEl = el("gameScene");
+    if (sceneEl) sceneEl.removeAttribute("data-stage");
     const tgt = el("gameSceneTarget");
     if (tgt) tgt.hidden = true;
   }
 
   async function bootEncounterStage(enc) {
-    teardownEncounterStage();
-    if (!encounterWantsStage(enc)) return;
+    clearStageFlourishTimer();
+    // Tear down prior live stage without bumping gen twice — capture gen after
+    if (stage) {
+      try {
+        stage.dispose?.();
+      } catch (_) {
+        /* ignore */
+      }
+      stage = null;
+    }
+    if (!encounterWantsStage(enc)) {
+      const vp0 = el("gameSceneViewport");
+      if (vp0) {
+        vp0.dataset.active = "false";
+        vp0.setAttribute("aria-hidden", "true");
+      }
+      el("gameScene")?.removeAttribute("data-stage");
+      return;
+    }
     const Wow = window.PlanesboundWowActors;
     const canvas = el("gameSceneCanvas");
     const vp = el("gameSceneViewport");
     if (!Wow?.createActor || !canvas || !vp) return;
 
+    const gen = ++stageBootGen;
+    // Show viewport before measuring so getBoundingClientRect is real
+    vp.dataset.active = "true";
+    vp.setAttribute("aria-hidden", "false");
+    el("gameScene")?.setAttribute("data-stage", "true");
+
+    let renderer = null;
+    let actors = [];
+    let animId = 0;
+    let disposedEarly = false;
+
+    const abortCleanup = () => {
+      disposedEarly = true;
+      if (animId) cancelAnimationFrame(animId);
+      animId = 0;
+      actors.forEach((a) => {
+        try {
+          a.dispose?.();
+        } catch (_) {
+          /* ignore */
+        }
+      });
+      actors = [];
+      if (renderer) {
+        try {
+          renderer.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        renderer = null;
+      }
+    };
+
     try {
       const T = await Wow.loadThree();
-      const { width, height } = (() => {
-        const r = canvas.getBoundingClientRect();
-        return { width: Math.max(320, r.width || 640), height: Math.max(220, r.height || 360) };
-      })();
+      if (gen !== stageBootGen || !encounter) {
+        abortCleanup();
+        return;
+      }
 
-      const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      const syncSize = () => {
+        const r = canvas.getBoundingClientRect();
+        const width = Math.max(320, r.width || 640);
+        const height = Math.max(220, r.height || 360);
+        return { width, height };
+      };
+      // Force layout after display:block
+      void vp.offsetWidth;
+      let { width, height } = syncSize();
+
+      renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(width, height, false);
       renderer.outputColorSpace = T.SRGBColorSpace;
       renderer.setClearColor(0x000000, 0);
 
       const scene = new T.Scene();
-      const camera = new T.PerspectiveCamera(42, width / height, 0.1, 80);
+      const camera = new T.PerspectiveCamera(42, width / Math.max(1, height), 0.1, 80);
       camera.position.set(0, 1.85, 5.2);
       camera.lookAt(0, 1.1, 0);
 
@@ -646,6 +720,15 @@
         hp: state.hp,
         hpMax: state.hpMax,
       });
+      if (gen !== stageBootGen || !encounter) {
+        try {
+          playerActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        abortCleanup();
+        return;
+      }
       const foeActor = await Wow.createActor({
         id: "stage-foe",
         role: "foe",
@@ -658,23 +741,45 @@
         hp: 12,
         hpMax: 12,
       });
+      if (gen !== stageBootGen || !encounter) {
+        try {
+          playerActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        try {
+          foeActor.dispose();
+        } catch (_) {
+          /* ignore */
+        }
+        abortCleanup();
+        return;
+      }
       playerActor.root.rotation.y = Math.PI * 0.35;
       foeActor.root.rotation.y = -Math.PI * 0.45;
       scene.add(playerActor.root, foeActor.root);
+      actors = [playerActor, foeActor];
 
-      const actors = [playerActor, foeActor];
       let selected = null;
       let hovered = null;
       const raycaster = new T.Raycaster();
       const reduced = Wow.prefersReducedMotion?.() || false;
-      let animId = 0;
       let last = performance.now();
       let disposed = false;
 
       const hint = el("gameSceneHint");
       if (hint) hint.textContent = "Click the foe hitbox to target · Esc clears";
-      vp.dataset.active = "true";
-      vp.setAttribute("aria-hidden", "false");
+
+      function resize() {
+        if (disposed || !renderer || !camera) return;
+        ({ width, height } = syncSize());
+        camera.aspect = width / Math.max(1, height);
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+      }
+      // Resize now that actors are ready and viewport is visible
+      resize();
+      window.addEventListener("resize", resize);
 
       function setTargetHud(actor) {
         const box = el("gameSceneTarget");
@@ -738,7 +843,7 @@
       canvas.addEventListener("click", onClick);
 
       function tick(now) {
-        if (disposed) return;
+        if (disposed || gen !== stageBootGen) return;
         animId = requestAnimationFrame(tick);
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
@@ -756,11 +861,19 @@
         playerActor.play("idle");
         foeActor.play("walk");
         setTimeout(() => {
-          if (!disposed) foeActor.play("idle");
+          if (!disposed && gen === stageBootGen) foeActor.play("idle");
         }, 1800);
       }
 
+      if (gen !== stageBootGen || !encounter) {
+        abortCleanup();
+        window.removeEventListener("resize", resize);
+        return;
+      }
+
       stage = {
+        gen,
+        flourishing: false,
         hasFoeTarget: () => selected?.role === "foe",
         playResolve(won) {
           if (reduced) return;
@@ -775,17 +888,29 @@
         clearSelection: clearSel,
         dispose() {
           disposed = true;
+          window.removeEventListener("resize", resize);
           if (animId) cancelAnimationFrame(animId);
+          animId = 0;
           canvas.removeEventListener("pointermove", onMove);
           canvas.removeEventListener("click", onClick);
           actors.forEach((a) => a.dispose());
-          renderer.dispose();
+          actors = [];
+          if (renderer) {
+            renderer.dispose();
+            renderer = null;
+          }
           canvas.style.cursor = "";
         },
       };
     } catch (err) {
       console.warn("Encounter stage WebGL unavailable", err);
-      teardownEncounterStage();
+      abortCleanup();
+      if (gen === stageBootGen) {
+        stage = null;
+        vp.dataset.active = "false";
+        vp.setAttribute("aria-hidden", "true");
+        el("gameScene")?.removeAttribute("data-stage");
+      }
     }
   }
 
@@ -914,6 +1039,7 @@
     }
 
     const hadStage = !!stage;
+    if (hadStage && stage) stage.flourishing = true;
     encounter = null;
     save();
     // Close modal immediately; keep stage briefly for attack flourish
@@ -923,9 +1049,15 @@
       node.dataset.open = "false";
     }
     render();
-    if (hadStage) {
-      setTimeout(() => {
-        teardownEncounterStage();
+    if (hadStage && stage) {
+      clearStageFlourishTimer();
+      const flourishGen = stage.gen;
+      stageFlourishTimer = setTimeout(() => {
+        stageFlourishTimer = 0;
+        // Only tear down if this is still the same flourish stage
+        if (stage && stage.gen === flourishGen) {
+          teardownEncounterStage();
+        }
         maybeChapterWin();
       }, 700);
     } else {
@@ -1147,7 +1279,8 @@
     node.hidden = !open;
     node.dataset.open = open ? "true" : "false";
     if (!open) {
-      teardownEncounterStage();
+      // Keep stage alive during post-resolve flourish; Esc/timer tear it down
+      if (!stage?.flourishing) teardownEncounterStage();
       return;
     }
     const title = el("gameEncounterTitle");
@@ -1537,6 +1670,8 @@
   function exitPlay() {
     showComplete(false);
     encounter = null;
+    clearStageFlourishTimer();
+    teardownEncounterStage();
     renderEncounter();
     setPlayOpen(false);
   }
@@ -1655,13 +1790,21 @@
         showComplete(false);
         return;
       }
-      if (encounter) {
+      // Stage / flourish is a targeting window — never exitPlay while it lives
+      if (encounter || stage) {
         e.preventDefault();
         if (stage?.hasFoeTarget?.()) {
           stage.clearSelection?.();
           return;
         }
-        dismissEncounter();
+        if (encounter) {
+          dismissEncounter();
+          return;
+        }
+        // Flourish (encounter already resolved): cancel timer + tear down this stage only
+        clearStageFlourishTimer();
+        teardownEncounterStage();
+        maybeChapterWin();
         return;
       }
       e.preventDefault();
