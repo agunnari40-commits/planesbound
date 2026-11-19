@@ -159,6 +159,17 @@
     });
   }
 
+  /** 2.5D: Esc from interior returns to the space card (not full leave). */
+  function returnFallbackToSpace() {
+    const card = document.getElementById("fallbackEnterRoom");
+    const interior = document.getElementById("fallbackInterior");
+    if (interior) interior.hidden = true;
+    if (card) card.hidden = false;
+    setHudMode("exterior");
+    document.getElementById("whiteRoomHelp").textContent =
+      "2.5D · Click the white room to enter · Esc to leave";
+  }
+
   async function loadThree() {
     if (THREE) return THREE;
     const mod = await import("https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js");
@@ -654,7 +665,8 @@
     companionFig.visible = false;
     playerFig.position.z = -0.6;
     companionFig.position.z = -0.6;
-    scene.add(playerFig, companionFig);
+    // Parent under chamber so exterior bob keeps floor + standees together
+    chamber.group.add(playerFig, companionFig);
 
     // Distant star motes outside the chamber
     const moteGeo = new T.BufferGeometry();
@@ -679,10 +691,14 @@
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     enterAnim = null;
 
-    function animateCameraTo(endPos, endTarget, duration, done) {
+    function animateCameraTo(endPos, endTarget, duration, done, opts) {
       if (!camera || !controls) {
         done?.();
         return;
+      }
+      // Widen/narrow orbit limits *before* sync/apply so the end pose is not clamped away
+      if (opts?.limits) {
+        controls.setLimits(opts.limits.minR, opts.limits.maxR);
       }
       if (reduced) {
         camera.position.copy(endPos);
@@ -704,11 +720,15 @@
         camera.position.lerpVectors(startPos, endPos, e);
         controls.target.lerpVectors(startTarget, endTarget, e);
         camera.lookAt(controls.target);
+        // Sync spherical from pose without re-applying (avoids mid-anim clamp jumps)
         controls.syncFromCam?.();
         if (u < 1) requestAnimationFrame(step);
         else {
           enterAnim = null;
-          camera.lookAt(controls.target);
+          camera.position.copy(endPos);
+          controls.target.copy(endTarget);
+          camera.lookAt(endTarget);
+          controls.syncFromCam?.();
           controls.apply?.();
           done?.();
         }
@@ -724,14 +744,17 @@
       // Centered just inside the open front, looking at both standees
       const endPos = new T.Vector3(0, 2.05, 3.8);
       const endTarget = new T.Vector3(0, 1.55, -0.8);
-      animateCameraTo(endPos, endTarget, 1400, () => {
-        if (!isBootCurrent(gen)) return;
-        controls?.setLimits(2.2, 12);
-        controls?.syncFromCam?.();
-        controls?.apply?.();
-        controls?.setEnabled(true);
-        setHudMode("interior");
-      });
+      animateCameraTo(
+        endPos,
+        endTarget,
+        1400,
+        () => {
+          if (!isBootCurrent(gen)) return;
+          controls?.setEnabled(true);
+          setHudMode("interior");
+        },
+        { limits: { minR: 2.2, maxR: 12 } }
+      );
     }
 
     function returnToSpace() {
@@ -740,15 +763,20 @@
       controls?.setEnabled(false);
       const endPos = new T.Vector3(10, 6.5, 18);
       const endTarget = new T.Vector3(0, 2.4, 0);
-      animateCameraTo(endPos, endTarget, 1200, () => {
-        if (!isBootCurrent(gen)) return;
-        playerFig.visible = false;
-        companionFig.visible = false;
-        controls?.setLimits(8, 42);
-        controls?.setSpherical(18, 1.15, 0.45);
-        controls?.setEnabled(true);
-        setHudMode("exterior");
-      });
+      animateCameraTo(
+        endPos,
+        endTarget,
+        1200,
+        () => {
+          if (!isBootCurrent(gen)) return;
+          playerFig.visible = false;
+          companionFig.visible = false;
+          controls?.setSpherical(18, 1.15, 0.45);
+          controls?.setEnabled(true);
+          setHudMode("exterior");
+        },
+        { limits: { minR: 8, maxR: 42 } }
+      );
     }
 
     // Expose for Esc handling / smoke tests while this boot is live
@@ -829,8 +857,11 @@
       }
 
       if (!reduced) {
-        chamber.group.position.y = 0.02 + Math.sin(now * 0.00055) * 0.12;
-        if (playerFig.visible) {
+        // Bob only in exterior — interior stays planted so standees stay on the floor
+        if (viewMode === "exterior") {
+          chamber.group.position.y = 0.02 + Math.sin(now * 0.00055) * 0.12;
+        } else {
+          chamber.group.position.y = 0.02;
           playerFig.position.y = Math.sin(now * 0.0012) * 0.04;
           companionFig.position.y = Math.sin(now * 0.0012 + 1.2) * 0.04;
         }
@@ -869,8 +900,14 @@
     if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
-      if (viewMode === "interior" && scene?.userData?.returnToSpace) {
-        scene.userData.returnToSpace();
+      if (viewMode === "interior") {
+        if (scene?.userData?.returnToSpace) {
+          scene.userData.returnToSpace();
+        } else if (fallback?.dataset?.on === "true") {
+          returnFallbackToSpace();
+        } else {
+          close();
+        }
       } else {
         close();
       }
