@@ -1208,6 +1208,9 @@
     });
     // Start full — never inherit defaultState's 10 HP when the sheet max is higher.
     base.hp = base.hpMax;
+    // Sheet already carries elevated progression from a prior chapter milestone.
+    // Mark it given so New voyage / replay cannot stack another level-up.
+    if ((base.level || 1) > 1) base.milestoneGiven = true;
     return base;
   }
 
