@@ -42,6 +42,36 @@
 }
 .white-room-hud * { pointer-events: auto; }
 
+.white-room-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+.white-room-cast-off {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, #c5a059 55%, #9ec4e8);
+  background: color-mix(in oklab, #0c0a09 55%, transparent);
+  color: #e8e4dc;
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.white-room-cast-off:hover,
+.white-room-cast-off:focus-visible {
+  border-color: #c5a059;
+  outline: none;
+}
+.white-room-layer[data-mode="interior"] .white-room-cast-off {
+  background: color-mix(in oklab, #fff 70%, transparent);
+  color: #2a2218;
+  border-color: color-mix(in oklab, #c5a059 50%, transparent);
+}
 .white-room-top {
   display: flex;
   justify-content: space-between;
