@@ -25,12 +25,12 @@
     { sel: ".game-scene", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
     { sel: ".white-room-fallback", cls: "art-live-bg art-live-bg--photo art-live-bg--scene art-live-veil" },
     { sel: ".companion-banner", cls: "art-live-bg art-live-bg--photo art-live-bg--quest" },
-    // Multi-layer left/right cover panels — filter-only so layouts stay intact
-    { sel: ".game-start", cls: "art-live-bg art-live-bg--layered" },
-    { sel: ".game-hud", cls: "art-live-bg art-live-bg--layered" },
-    { sel: ".game-side[data-theme=\"astral\"]", cls: "art-live-bg art-live-bg--layered" },
-    { sel: ".races-dock", cls: "art-live-bg art-live-bg--layered art-live-bg--dock" },
-    { sel: ".companion-sheet", cls: "art-live-bg art-live-bg--layered" },
+    // Multi-layer chrome — shim under content (never filter the whole panel)
+    { sel: ".game-start", cls: "art-live-bg art-live-bg--layered", shim: true },
+    { sel: ".game-hud", cls: "art-live-bg art-live-bg--layered", shim: true },
+    { sel: ".game-side[data-theme=\"astral\"]", cls: "art-live-bg art-live-bg--layered", shim: true },
+    { sel: ".races-dock", cls: "art-live-bg art-live-bg--layered art-live-bg--dock", shim: true },
+    { sel: ".companion-sheet", cls: "art-live-bg art-live-bg--layered", shim: true },
     { sel: ".sheet-frame", cls: "art-live-veil" },
   ];
 
@@ -90,12 +90,25 @@
 
     for (const rule of BG_RULES) {
       scope.querySelectorAll(rule.sel).forEach((el) => {
-        if (el.dataset.artBg === "1") return;
+        if (el.dataset.artBg === "1") {
+          if (rule.shim) ensureBgShim(el);
+          return;
+        }
         el.dataset.artBg = "1";
         rule.cls.split(/\s+/).forEach((c) => el.classList.add(c));
+        if (rule.shim) ensureBgShim(el);
         observe(el);
       });
     }
+  }
+
+  /** Background-only motion layer — z-index -1 so labels/buttons stay unfiltered. */
+  function ensureBgShim(el) {
+    if (!el || el.querySelector(":scope > .art-live-bg-shim")) return;
+    const shim = document.createElement("span");
+    shim.className = "art-live-bg-shim";
+    shim.setAttribute("aria-hidden", "true");
+    el.insertBefore(shim, el.firstChild);
   }
 
   function setPaused(el, paused) {

@@ -110,34 +110,44 @@
 
 /*
  * Background surfaces
- * - photo: single-layer art → gentle position drift (no !important size fights)
- * - layered: multi-layer left/right cover panels → filter-only (preserve layout)
+ * - map: oversized size + position so Ken Burns actually pans (100% 100% alone is a no-op)
+ * - photo/quest/scene: position drift only — never filter on the container (children stay still)
+ * - layered: shim overlay under content (no filter on chrome labels/buttons)
  */
 .art-live-bg--photo {
-  animation:
-    art-bg-photo-drift 16s ease-in-out infinite alternate,
-    art-bg-flicker 9s ease-in-out infinite;
+  animation: art-bg-photo-drift 16s ease-in-out infinite alternate;
 }
 .art-live-bg--map {
-  animation:
-    art-bg-photo-drift 22s ease-in-out infinite alternate,
-    art-bg-flicker 11s ease-in-out infinite;
+  /* Override map's 100% 100% paint size so %-positions have room to pan */
+  animation: art-bg-map-kenburns 22s ease-in-out infinite alternate;
 }
 .art-live-bg--quest {
+  /* Empty art plate — safe to pulse filter here */
   animation:
     art-bg-photo-drift 14s ease-in-out infinite alternate,
     art-bg-pulse 8s ease-in-out infinite;
 }
 .art-live-bg--scene {
-  animation:
-    art-bg-photo-drift 15s ease-in-out infinite alternate,
-    art-bg-flicker 7.5s ease-in-out infinite;
+  animation: art-bg-photo-drift 15s ease-in-out infinite alternate;
 }
-.art-live-bg--layered {
-  animation: art-bg-flicker 10s ease-in-out infinite;
-}
+.art-live-bg--layered,
 .art-live-bg--dock {
-  animation: art-bg-flicker 12s ease-in-out infinite;
+  position: relative;
+  isolation: isolate;
+}
+/* Background-only dream pulse — sits under UI chrome, does not filter descendants */
+.art-live-bg-shim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, color-mix(in oklab, #fff 14%, transparent), transparent 70%),
+    var(--art-grain);
+  background-size: auto, 160px 160px;
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+  animation: art-shim-pulse 11s ease-in-out infinite, art-grain-drift 2.4s steps(2) infinite;
 }
 
 /* Soft CRT / dream veil on full panels */
@@ -169,7 +179,8 @@
 .art-live[data-art-paused="true"],
 .art-live-bg[data-art-paused="true"],
 .art-live-host[data-art-paused="true"]::after,
-.art-live-veil[data-art-paused="true"]::before {
+.art-live-veil[data-art-paused="true"]::before,
+.art-live-bg[data-art-paused="true"] > .art-live-bg-shim {
   animation-play-state: paused !important;
 }
 
@@ -238,17 +249,33 @@
   50% { opacity: 0.28; }
 }
 
-/* Single-layer photo backgrounds only — no !important, keep cover-like scale */
+/* Cover / auto-sized photo plates — position drift is meaningful */
 @keyframes art-bg-photo-drift {
   0% { background-position: 46% 48%; }
   50% { background-position: 54% 44%; }
   100% { background-position: 48% 52%; }
 }
 
-@keyframes art-bg-flicker {
-  0%, 100% { filter: brightness(1) saturate(1.02); }
-  45% { filter: brightness(1.05) saturate(1.1); }
-  60% { filter: brightness(0.96) saturate(0.95); }
+/* Map starts at 100% 100% — must oversize for %-pan to move pixels */
+@keyframes art-bg-map-kenburns {
+  0% {
+    background-size: 108% 108%;
+    background-position: 42% 48%;
+  }
+  50% {
+    background-size: 118% 118%;
+    background-position: 58% 40%;
+  }
+  100% {
+    background-size: 112% 112%;
+    background-position: 48% 56%;
+  }
+}
+
+@keyframes art-shim-pulse {
+  0%, 100% { opacity: 0.1; }
+  45% { opacity: 0.22; }
+  60% { opacity: 0.12; }
 }
 
 @keyframes art-bg-pulse {
@@ -260,7 +287,8 @@
   .art-live,
   .art-live-bg,
   .art-live-host::after,
-  .art-live-veil::before {
+  .art-live-veil::before,
+  .art-live-bg-shim {
     animation: none !important;
     filter: none !important;
   }
@@ -269,5 +297,9 @@
   }
   .art-live--emblem {
     transform: translateX(-50%) !important;
+  }
+  .art-live-bg--map {
+    background-size: 100% 100% !important;
+    background-position: center !important;
   }
 }
