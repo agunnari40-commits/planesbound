@@ -1,9 +1,15 @@
 /* Planesbound PAS-3 — left races dock + virtualized being pickers */
 (function () {
-  const ROW = 36;
+  const ROW = 40;
   const OVERSCAN = 8;
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
+  const ART_DIR = "art/races";
+
+  function raceArtSrc(being) {
+    if (!being) return `${ART_DIR}/_placeholder.png`;
+    return `${ART_DIR}/${being.id}.png`;
+  }
 
   /** @type {{id:string,name:string,tradition:string,line:string}[]} */
   let beings = [];
@@ -51,9 +57,14 @@
       if (lineEl) lineEl.textContent = b.line;
       if (tagEl) tagEl.textContent = b.tradition;
       if (portrait) {
-        portrait.alt = `${b.name} portrait plate`;
+        portrait.alt = `${b.name} portrait`;
         portrait.dataset.being = b.id;
         portrait.dataset.tradition = b.tradition;
+        portrait.src = raceArtSrc(b);
+        portrait.onerror = () => {
+          portrait.onerror = null;
+          portrait.src = `${ART_DIR}/_placeholder-${b.tradition || "core"}.png`;
+        };
       }
     });
   }
@@ -97,7 +108,11 @@
         `<button type="button" class="being-row" data-role="${role}" data-id="${escapeHtml(
           b.id
         )}" data-active="${active}" style="height:${ROW}px">` +
-          `<span class="being-dot" data-trad="${escapeHtml(b.tradition)}"></span>` +
+          `<img class="being-thumb" src="${escapeHtml(raceArtSrc(b))}" alt="" width="24" height="24" loading="lazy" decoding="async" data-trad="${escapeHtml(
+            b.tradition
+          )}" onerror="this.onerror=null;this.src='${ART_DIR}/_placeholder-${escapeHtml(
+            b.tradition || "core"
+          )}.png'" />` +
           `<span class="being-name">${escapeHtml(b.name)}</span>` +
           `<span class="being-trad">${escapeHtml(b.tradition)}</span>` +
           `</button>`
