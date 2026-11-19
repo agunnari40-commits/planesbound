@@ -1190,17 +1190,22 @@
       canvas.style.cursor = hit ? "pointer" : "";
     }
 
-    // Interior selection: orbit click only. Canvas `click` would double-fire
-    // selectActor → play("attack") for the same pointer gesture.
+    // Interior selection: orbit onClick when enabled; canvas click only while
+    // orbit is disabled (camera ease) — XOR so selectActor / attack never double-fire.
     controls.setOnClick((e) => {
       if (viewMode === "exterior") tryEnterFromPointer(e);
       else trySelectFromPointer(e);
     });
 
-    // Exterior backup for synthetic/accessibility clicks (orbit gating can miss);
-    // interior must not use this path (XOR with orbit onClick).
     const onCanvasClick = (e) => {
-      if (viewMode === "exterior") tryEnterFromPointer(e);
+      if (viewMode === "exterior") {
+        tryEnterFromPointer(e);
+        return;
+      }
+      // During enter ease controls are disabled; allow picks without waiting for orbit
+      if (viewMode === "interior" && enterAnim) {
+        trySelectFromPointer(e);
+      }
     };
     const onCanvasMove = (e) => {
       if (viewMode === "interior") tryHoverFromPointer(e);

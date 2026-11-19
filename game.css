@@ -360,6 +360,8 @@
 .game-scene-viewport[data-active="true"] {
   display: block;
   pointer-events: auto;
+  /* Above .game-encounter (z:6) so stage canvas stays pickable while modal blocks HUD/side */
+  z-index: 7;
 }
 .game-scene-canvas {
   position: absolute;
@@ -567,8 +569,8 @@
   justify-content: center;
   padding: 1rem;
   background: color-mix(in oklab, #04060c 72%, transparent);
-  /* Empty overlay areas pass through so stage canvas hitboxes stay targetable */
-  pointer-events: none;
+  /* Block HUD / side / travel; stage canvas sits above via viewport z-index:7 */
+  pointer-events: auto;
 }
 .game-encounter[data-open="true"] { display: flex; }
 .game-encounter-card {
@@ -580,7 +582,6 @@
     linear-gradient(165deg, color-mix(in oklab, #fbf6ea 94%, transparent), #efe4c8 55%, color-mix(in oklab, #d7e8f8 22%, #efe4c8));
   color: #2a2218;
   box-shadow: 0 24px 50px color-mix(in oklab, #000 45%, transparent);
-  pointer-events: auto;
 }
 .game-encounter-card h3 {
   font-family: Cinzel, serif;
