@@ -176,8 +176,20 @@
 
   function syncVitalsFromSheet(s) {
     const sheet = sheetSnapshot();
-    const hpMax = Math.max(1, Number(sheet?.hp) || s.hpMax || 10);
-    const level = Math.max(1, Number(sheet?.level) || s.level || 1);
+    const sheetHp = Number(sheet?.hp);
+    const sheetLevel = Number(sheet?.level);
+    // Prefer the higher of voyage save vs sheet so a stale sheet never
+    // downgrades a milestone level / hpMax already recorded in the save.
+    const hpMax = Math.max(
+      1,
+      Number(s.hpMax) || 0,
+      Number.isFinite(sheetHp) && sheetHp > 0 ? sheetHp : 0
+    );
+    const level = Math.max(
+      1,
+      Number(s.level) || 0,
+      Number.isFinite(sheetLevel) && sheetLevel > 0 ? sheetLevel : 0
+    );
     s.hpMax = hpMax;
     s.level = level;
     if (s.hp == null || s.hp > hpMax) s.hp = hpMax;
@@ -263,6 +275,12 @@
 
   function persistSheetLevelHp() {
     try {
+      const api = window.PlanesboundSheets;
+      if (typeof api?.patch === "function") {
+        api.patch("player", { level: state.level, hp: state.hpMax });
+        return;
+      }
+      // Fallback when sheets API is unavailable: keep localStorage + any cached object in sync.
       const key = "planesbound-sheet-player-v1";
       const raw = localStorage.getItem(key);
       if (!raw) return;
@@ -270,6 +288,11 @@
       sheet.level = state.level;
       sheet.hp = state.hpMax;
       localStorage.setItem(key, JSON.stringify(sheet));
+      const cached = api?.get?.("player");
+      if (cached && typeof cached === "object") {
+        cached.level = state.level;
+        cached.hp = state.hpMax;
+      }
     } catch (_) {
       /* ignore */
     }
@@ -515,6 +538,14 @@
       dc: 14,
     };
     renderEncounter();
+  }
+
+  /** Esc cancel: close modal with no HP/fatigue/checked side effects. */
+  function dismissEncounter() {
+    if (!encounter) return;
+    encounter = null;
+    renderEncounter();
+    render();
   }
 
   function resolveEncounter(choiceId) {
@@ -1019,6 +1050,11 @@
         }</p>
         <div class="game-status-actions">
           <button type="button" class="game-btn" data-action="rest">Short rest</button>
+          ${
+            state.chapterComplete
+              ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
+              : ""
+          }
         </div>`;
     }
     if (inv) {
@@ -1045,7 +1081,7 @@
         )
         .join("")}</ul>${
         state.chapterComplete
-          ? `<p class="game-meta-line">Chapter closed. Continue exploring or start a new voyage from the win screen / hub.</p>`
+          ? `<p class="game-meta-line">Chapter closed. Continue exploring, or choose New voyage from Status / hub to reset the chapter.</p>`
           : state.shoreQuestComplete
             ? `<p class="game-meta-line">Both voyages marked. Keep sailing or return to the hub atlas.</p>`
             : state.questComplete
@@ -1072,8 +1108,12 @@
         ? `<button type="button" class="game-btn game-btn--astral" data-travel="color-pool">Seek a color pool</button>
            <button type="button" class="game-btn" data-travel="dust-lane">Enter Dust Lane</button>`
         : "";
+      const newVoyageBtn = state.chapterComplete
+        ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
+        : "";
       return `<button type="button" class="game-btn game-btn--astral" data-travel="astral-sea">Cast off into the Astral Sea</button>
         ${more}
+        ${newVoyageBtn}
         <button type="button" class="game-btn" data-action="rest">Short rest</button>
         <button type="button" class="game-btn" data-action="companion">Ask companion</button>
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
@@ -1166,6 +1206,8 @@
         "Chapter: First Crossing of the Astral Sea.",
       ],
     });
+    // Start full — never inherit defaultState's 10 HP when the sheet max is higher.
+    base.hp = base.hpMax;
     return base;
   }
 
@@ -1240,6 +1282,10 @@
     }
     if (btn.dataset.action === "rest") {
       shortRest();
+      return;
+    }
+    if (btn.dataset.action === "new-voyage") {
+      newVoyage();
       return;
     }
     if (btn.dataset.action === "atlas") {
@@ -1334,7 +1380,7 @@
       }
       if (encounter) {
         e.preventDefault();
-        resolveEncounter("skip");
+        dismissEncounter();
         return;
       }
       e.preventDefault();
