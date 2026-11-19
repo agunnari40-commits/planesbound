@@ -756,11 +756,21 @@
     teardownGl();
     if (!isBootCurrent(gen)) return false;
 
-    renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const Video = window.PlanesboundVideoMode;
+    const rOpts = Video?.rendererOpts?.() || { antialias: true };
+    renderer = new T.WebGLRenderer({
+      canvas,
+      antialias: !!rOpts.antialias,
+      alpha: false,
+      powerPreference: rOpts.powerPreference || "default",
+    });
+    if (Video?.applyRenderer) Video.applyRenderer(renderer, T);
+    else renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);
     renderer.outputColorSpace = T.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
+    const vMode = Video?.getMode?.();
+    const reducedGfx = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    renderer.shadowMap.enabled = vMode ? !!vMode.shadows : true;
     renderer.shadowMap.type = T.PCFSoftShadowMap;
     renderer.setClearColor(0x05060a, 1);
 
@@ -804,9 +814,11 @@
     scene.add(hemi);
     const key = new T.DirectionalLight(0xfff6ea, 1.15);
     key.position.set(8, 14, 10);
-    key.castShadow = true;
-    const reducedGfx = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    key.shadow.mapSize.set(reducedGfx ? 1024 : 2048, reducedGfx ? 1024 : 2048);
+    key.castShadow = !!renderer.shadowMap.enabled;
+    const shadowSize = reducedGfx
+      ? 1024
+      : vMode?.shadowMap || 2048;
+    key.shadow.mapSize.set(shadowSize, shadowSize);
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 60;
     key.shadow.camera.left = -16;

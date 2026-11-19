@@ -361,6 +361,19 @@
   display: block;
   pointer-events: auto;
 }
+/* Dim parchment/map art so skinned party + foe read clearly (video-path stage) */
+.game-scene[data-stage="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 45%, color-mix(in oklab, #0b1224 35%, transparent), color-mix(in oklab, #04060c 78%, transparent) 70%);
+  pointer-events: none;
+}
+.game-scene[data-stage="true"] {
+  background-blend-mode: soft-light, multiply;
+}
 .game-scene-canvas {
   position: absolute;
   inset: 0;
@@ -415,6 +428,35 @@
   pointer-events: none;
   max-width: 16rem;
 }
+.game-scene-beat {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  margin: 0;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.4rem;
+  background: color-mix(in oklab, #0c0a09 72%, transparent);
+  border: 1px solid color-mix(in oklab, #c5a059 50%, transparent);
+  color: #f0e6d0;
+  font-family: Cinzel, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 90%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .game-scene-beat:not([hidden]) {
+    animation: game-beat-in 0.35s ease-out;
+  }
+}
+@keyframes game-beat-in {
+  from { opacity: 0; transform: translate(-50%, -40%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
 .game-scene-copy {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -423,6 +465,16 @@
   max-width: 42rem;
   /* Pass clicks to stage canvas; only action chrome captures */
   pointer-events: none;
+}
+.game-scene[data-stage="true"] .game-scene-copy {
+  /* Leave room for the voyage combat dock */
+  bottom: 7.5rem;
+  padding-bottom: 0.5rem;
+}
+.game-shell[data-encounter] .game-scene-copy .eyebrow,
+.game-shell[data-encounter] .game-scene-copy h2,
+.game-shell[data-encounter] .game-scene-copy > p {
+  opacity: 0.72;
 }
 .game-scene-copy .game-scene-actions,
 .game-scene-copy button,
@@ -558,64 +610,135 @@
   font-size: .58rem;
 }
 
+/* Voyage dock — continuous MMO-weight encounter chrome (not a slideshow modal) */
 .game-encounter {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 6;
   display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: color-mix(in oklab, #04060c 72%, transparent);
-  /* Pass through empty dim to stage canvas; card alone captures modal clicks */
+  align-items: flex-end;
+  justify-content: stretch;
+  padding: 0.55rem 0.65rem 0.7rem;
+  background: linear-gradient(180deg, transparent, color-mix(in oklab, #04060c 78%, transparent) 35%);
   pointer-events: none;
 }
 .game-encounter[data-open="true"] { display: flex; }
 .game-encounter-card {
-  width: min(420px, 100%);
-  border-radius: .75rem;
-  padding: 1.1rem 1.15rem 1.2rem;
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto;
+  border-radius: .65rem;
+  padding: 0.75rem 0.9rem 0.85rem;
   border: 1px solid color-mix(in oklab, #c5a059 45%, #9ec4e8);
   background:
     linear-gradient(165deg, color-mix(in oklab, #fbf6ea 94%, transparent), #efe4c8 55%, color-mix(in oklab, #d7e8f8 22%, #efe4c8));
   color: #2a2218;
-  box-shadow: 0 24px 50px color-mix(in oklab, #000 45%, transparent);
+  box-shadow: 0 16px 36px color-mix(in oklab, #000 42%, transparent);
   pointer-events: auto;
   position: relative;
   z-index: 1;
 }
-/* While modal is open, freeze play chrome so dim pass-through cannot travel/rest/exit.
-   Must override `.game-scene-copy button { pointer-events: auto }` — parent none alone is not enough. */
-.game-shell[data-encounter="true"] .game-hud,
-.game-shell[data-encounter="true"] .game-hud *,
-.game-shell[data-encounter="true"] .game-side,
-.game-shell[data-encounter="true"] .game-side *,
-.game-shell[data-encounter="true"] .game-scene-copy,
-.game-shell[data-encounter="true"] .game-scene-copy .game-scene-actions,
-.game-shell[data-encounter="true"] .game-scene-copy button,
-.game-shell[data-encounter="true"] .game-scene-copy a {
+.game-encounter[data-live="true"] .game-encounter-card {
+  background:
+    linear-gradient(165deg, color-mix(in oklab, #1a2740 92%, transparent), color-mix(in oklab, #0f1a30 95%, transparent));
+  color: #e8eef8;
+  border-color: color-mix(in oklab, #9ec4e8 45%, #c5a059);
+}
+.game-encounter-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.game-encounter-vitals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c9dff5;
+}
+.game-encounter-vitals span {
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  border: 1px solid color-mix(in oklab, #9ec4e8 30%, transparent);
+  background: color-mix(in oklab, #0b1224 45%, transparent);
+}
+/* Travel locked during encounters; live combat keeps inventory/status interactive */
+.game-shell[data-encounter] .game-scene-copy .game-scene-actions,
+.game-shell[data-encounter] .game-scene-copy button,
+.game-shell[data-encounter] .game-scene-copy a {
+  pointer-events: none !important;
+  opacity: 0.45;
+}
+.game-shell[data-encounter="check"] .game-hud .game-hud-actions,
+.game-shell[data-encounter="check"] .game-hud .game-hud-actions * {
   pointer-events: none !important;
 }
-.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"],
-.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"] .game-scene-canvas {
+.game-shell[data-encounter] .game-scene-viewport[data-active="true"],
+.game-shell[data-encounter] .game-scene-viewport[data-active="true"] .game-scene-canvas,
+.game-shell[data-encounter] .game-encounter,
+.game-shell[data-encounter] .game-encounter * {
+  pointer-events: auto !important;
+  opacity: 1;
+}
+.game-shell[data-encounter="live"] .game-side,
+.game-shell[data-encounter="live"] .game-side * {
   pointer-events: auto !important;
 }
 .game-encounter-card h3 {
   font-family: Cinzel, serif;
-  margin: 0 0 .45rem;
-  font-size: 1rem;
+  margin: 0;
+  font-size: 0.95rem;
   letter-spacing: .04em;
   color: #5a3f18;
 }
-.game-encounter-card p {
-  margin: 0 0 .9rem;
-  font-size: .9rem;
+.game-encounter[data-live="true"] .game-encounter-card h3 { color: #d7ecff; }
+.game-encounter-card > p {
+  margin: 0 0 .65rem;
+  font-size: .86rem;
   line-height: 1.45;
 }
+.game-encounter[data-live="true"] .game-encounter-card > p { color: #c9dff5; }
 .game-encounter-actions {
   display: flex;
   flex-wrap: wrap;
   gap: .45rem;
+}
+.game-hud-video {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.game-hud-video label {
+  font-family: Cinzel, serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a6a32;
+}
+.game-hud[data-theme="astral"] .game-hud-video label { color: #9eb4cc; }
+.game-hud-video select {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, #c4ad7a 50%, transparent);
+  border-radius: 0.3rem;
+  background: color-mix(in oklab, #fffaf0 80%, transparent);
+  color: #2a2218;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+.game-hud[data-theme="astral"] .game-hud-video select {
+  background: color-mix(in oklab, #0b1224 70%, transparent);
+  color: #e8eef8;
+  border-color: color-mix(in oklab, #9ec4e8 40%, transparent);
 }
 
 .game-complete {
