@@ -249,7 +249,12 @@
   function makeFigure(T, url, x, tint, role) {
     const group = new T.Group();
     group.position.set(x, 0, 0);
-    group.userData.billboards = [];
+
+    // Single billboard: plate + emblem + frame share one lookAt (local z stays on the standee)
+    const billboard = new T.Group();
+    billboard.position.y = 1.85;
+    group.add(billboard);
+    group.userData.billboard = billboard;
 
     const plateUrl =
       role === "companion" ? "art/figure-companion.png" : "art/figure-player.png";
@@ -260,16 +265,17 @@
       metalness: 0.08,
       transparent: true,
       side: T.DoubleSide,
+      depthWrite: false,
     });
     loadTex(T, plateUrl, (tex) => {
       plateMat.map = tex;
       plateMat.needsUpdate = true;
     });
     const plate = new T.Mesh(new T.PlaneGeometry(2.2, 3.3), plateMat);
-    plate.position.y = 1.85;
+    plate.position.set(0, 0, 0);
     plate.castShadow = true;
-    group.add(plate);
-    group.userData.billboards.push(plate);
+    plate.renderOrder = 1;
+    billboard.add(plate);
 
     const emblemMat = new T.MeshStandardMaterial({
       color: 0xffffff,
@@ -277,16 +283,21 @@
       metalness: 0.12,
       transparent: true,
       side: T.DoubleSide,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
     loadTex(T, url, (tex) => {
       emblemMat.map = tex;
       emblemMat.needsUpdate = true;
     });
+    // Local to plate: slightly above center, tiny z so it sits on the painted standee
     const emblem = new T.Mesh(new T.CircleGeometry(0.42, 48), emblemMat);
-    emblem.position.set(0, 2.55, 0.04);
+    emblem.position.set(0, 0.7, 0.02);
     emblem.castShadow = true;
-    group.add(emblem);
-    group.userData.billboards.push(emblem);
+    emblem.renderOrder = 2;
+    billboard.add(emblem);
 
     const ring = new T.Mesh(
       new T.TorusGeometry(0.48, 0.022, 12, 48),
@@ -296,11 +307,15 @@
         metalness: 0.5,
         emissive: tint || 0xc5a059,
         emissiveIntensity: 0.4,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       })
     );
-    ring.position.set(0, 2.55, 0.05);
-    group.add(ring);
-    group.userData.billboards.push(ring);
+    ring.position.set(0, 0.7, 0.025);
+    ring.renderOrder = 3;
+    billboard.add(ring);
 
     const base = new T.Mesh(
       new T.CylinderGeometry(0.55, 0.7, 0.1, 48),
@@ -462,11 +477,10 @@
         }
       }
 
-      // Billboards: face camera
+      // One lookAt per standee — emblem/frame are children of the plate billboard
       [playerFig, companionFig].forEach((fig) => {
-        (fig.userData.billboards || []).forEach((ch) => {
-          if (ch?.lookAt) ch.lookAt(camera.position);
-        });
+        const bb = fig.userData.billboard;
+        if (bb) bb.lookAt(camera.position);
       });
 
       if (!reduced) {
