@@ -1,2 +1,11 @@
 # Private muse refs — copyrighted / ambiguous; do not ship to Pages
 art/lore/muse-private/
+
+# Local demo / tooling
+.playwright-mcp/
+planesbound-*.png
+astral-*.png
+races-*.png
+!art/astral-sea.png
+!art/companion-*.png
+!art/player-*.png

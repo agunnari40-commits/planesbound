@@ -1,0 +1,2526 @@
+{
+  "version": 1,
+  "source_note": "Names from public-domain folklore/myth, common SRD-safe tabletop staples, and original Planesbound coinages. All blurbs are original. No proprietary Monster Manual, SAO, or Blizzard text.",
+  "beings": [
+    {
+      "id": "human",
+      "name": "Human",
+      "tradition": "core",
+      "line": "Versatile mortal folk of cities, roads, and short bright lives."
+    },
+    {
+      "id": "aasimar",
+      "name": "Aasimar",
+      "tradition": "core",
+      "line": "Mortals touched by celestial light and quiet duty."
+    },
+    {
+      "id": "bugbear",
+      "name": "Bugbear",
+      "tradition": "core",
+      "line": "Silent hulking stalkers of night roads and ambush."
+    },
+    {
+      "id": "dragonborn",
+      "name": "Dragonborn",
+      "tradition": "core",
+      "line": "Draconic-blooded folk of breath, pride, and clan honor."
+    },
+    {
+      "id": "dwarf",
+      "name": "Dwarf",
+      "tradition": "core",
+      "line": "Stone-kin of deep halls; oath, craft, and mountain patience."
+    },
+    {
+      "id": "elf",
+      "name": "Elf",
+      "tradition": "core",
+      "line": "Long-lived woodland and starlit peoples of fine craft and memory."
+    },
+    {
+      "id": "firbolg",
+      "name": "Firbolg",
+      "tradition": "core",
+      "line": "Gentle forest giants who speak soft to trees and weather."
+    },
+    {
+      "id": "genasi-air",
+      "name": "Genasi (Air)",
+      "tradition": "core",
+      "line": "Elemental-blooded folk of wind, whisper, and altitude."
+    },
+    {
+      "id": "genasi-earth",
+      "name": "Genasi (Earth)",
+      "tradition": "core",
+      "line": "Stone-touched steadiness; grit under the skin."
+    },
+    {
+      "id": "genasi-fire",
+      "name": "Genasi (Fire)",
+      "tradition": "core",
+      "line": "Ember-blooded temper and furnace hearts."
+    },
+    {
+      "id": "genasi-water",
+      "name": "Genasi (Water)",
+      "tradition": "core",
+      "line": "Tide-blooded calm that can become storm."
+    },
+    {
+      "id": "gnome",
+      "name": "Gnome",
+      "tradition": "core",
+      "line": "Curious makers of clever devices and bright burrows."
+    },
+    {
+      "id": "goblin",
+      "name": "Goblin",
+      "tradition": "core",
+      "line": "Quick, cunning underfolk of scrap, swarm, and scrapyard wit."
+    },
+    {
+      "id": "goliath",
+      "name": "Goliath",
+      "tradition": "core",
+      "line": "Mountain giants among mortals; contest and altitude as culture."
+    },
+    {
+      "id": "half-elf",
+      "name": "Half-Elf",
+      "tradition": "core",
+      "line": "Bridgefolk between human bustle and elven long memory."
+    },
+    {
+      "id": "half-orc",
+      "name": "Half-Orc",
+      "tradition": "core",
+      "line": "Strength between two worlds; scars worn as credential."
+    },
+    {
+      "id": "halfling",
+      "name": "Halfling",
+      "tradition": "core",
+      "line": "Smallfolk of hearth, luck, and quiet courage."
+    },
+    {
+      "id": "hobgoblin",
+      "name": "Hobgoblin",
+      "tradition": "core",
+      "line": "Disciplined martial kin with banners, drills, and iron order."
+    },
+    {
+      "id": "kenku",
+      "name": "Kenku",
+      "tradition": "core",
+      "line": "Flightless avian mimics who speak in borrowed voices."
+    },
+    {
+      "id": "lizardfolk",
+      "name": "Lizardfolk",
+      "tradition": "core",
+      "line": "Cold-eyed swamp pragmatists of scale and simple need."
+    },
+    {
+      "id": "orc",
+      "name": "Orc",
+      "tradition": "core",
+      "line": "Fierce clanfolk forged by struggle and hard horizons."
+    },
+    {
+      "id": "tabaxi",
+      "name": "Tabaxi",
+      "tradition": "core",
+      "line": "Catfolk wanderers of curiosity, story, and sudden speed."
+    },
+    {
+      "id": "tiefling",
+      "name": "Tiefling",
+      "tradition": "core",
+      "line": "Mortals marked by infernal lineage\u2014horns, fire, and wary grace."
+    },
+    {
+      "id": "triton",
+      "name": "Triton",
+      "tradition": "core",
+      "line": "Sea-born guardians of deep trenches and coastal pacts."
+    },
+    {
+      "id": "yuan-ti-pureblood",
+      "name": "Yuan-ti Pureblood",
+      "tradition": "core",
+      "line": "Serpentine-blooded diplomats of cold patience."
+    },
+    {
+      "id": "aarakocra",
+      "name": "Aarakocra",
+      "tradition": "srd",
+      "line": "Winged cliff-dwellers who read wind like scripture."
+    },
+    {
+      "id": "aboleth",
+      "name": "Aboleth",
+      "tradition": "srd",
+      "line": "Ancient deep tyrants of slime and stolen minds."
+    },
+    {
+      "id": "angel-deva",
+      "name": "Angel (deva)",
+      "tradition": "srd",
+      "line": "Celestial messengers of radiant errands."
+    },
+    {
+      "id": "angel-planetar",
+      "name": "Angel (planetar)",
+      "tradition": "srd",
+      "line": "Warrior angels of judgment and green light."
+    },
+    {
+      "id": "angel-solar",
+      "name": "Angel (solar)",
+      "tradition": "srd",
+      "line": "Highest radiant generals of sunblade faith."
+    },
+    {
+      "id": "animated-armor",
+      "name": "Animated Armor",
+      "tradition": "srd",
+      "line": "Empty suits that fight for a room\u2019s curse."
+    },
+    {
+      "id": "ankheg",
+      "name": "Ankheg",
+      "tradition": "srd",
+      "line": "Burrowing insectile hunters of acid spit."
+    },
+    {
+      "id": "archon-lantern",
+      "name": "Archon (lantern)",
+      "tradition": "srd",
+      "line": "Floating lawful lights of celestial order."
+    },
+    {
+      "id": "banshee",
+      "name": "Banshee",
+      "tradition": "srd",
+      "line": "Wailing undead whose cry unravels hope."
+    },
+    {
+      "id": "basilisk",
+      "name": "Basilisk",
+      "tradition": "srd",
+      "line": "Gaze-killers of stone and petrified silence."
+    },
+    {
+      "id": "beholderkin-spectator",
+      "name": "Beholderkin (spectator)",
+      "tradition": "srd",
+      "line": "Lesser eye-beasts of watchful floating vigilance."
+    },
+    {
+      "id": "black-pudding",
+      "name": "Black Pudding",
+      "tradition": "srd",
+      "line": "Hungry dark oozes of dungeon floors."
+    },
+    {
+      "id": "bulette",
+      "name": "Bulette",
+      "tradition": "srd",
+      "line": "Land-sharks that breach soil like water."
+    },
+    {
+      "id": "carrion-crawler",
+      "name": "Carrion Crawler",
+      "tradition": "srd",
+      "line": "Many-legged tomb scavengers."
+    },
+    {
+      "id": "centaur",
+      "name": "Centaur",
+      "tradition": "srd",
+      "line": "Horse-bodied travelers of plains and old roads."
+    },
+    {
+      "id": "chimera",
+      "name": "Chimera",
+      "tradition": "srd",
+      "line": "Three-headed hybrids of nightmare and fire."
+    },
+    {
+      "id": "cloaker",
+      "name": "Cloaker",
+      "tradition": "srd",
+      "line": "Ceiling-shadows that unfold into wings and teeth."
+    },
+    {
+      "id": "cloud-giant",
+      "name": "Cloud Giant",
+      "tradition": "srd",
+      "line": "Sky-manor nobles of trade and storm."
+    },
+    {
+      "id": "cockatrice",
+      "name": "Cockatrice",
+      "tradition": "srd",
+      "line": "Bizarre fowl whose peck can freeze flesh."
+    },
+    {
+      "id": "couatl",
+      "name": "Couatl",
+      "tradition": "srd",
+      "line": "Feathered serpents of prophecy and mercy."
+    },
+    {
+      "id": "cyclops",
+      "name": "Cyclops",
+      "tradition": "srd",
+      "line": "One-eyed shepherds of lonely islands."
+    },
+    {
+      "id": "darkmantle",
+      "name": "Darkmantle",
+      "tradition": "srd",
+      "line": "Ceiling hangers that snuff light and cling."
+    },
+    {
+      "id": "death-knight",
+      "name": "Death Knight",
+      "tradition": "srd",
+      "line": "Fallen champions of armor and curse."
+    },
+    {
+      "id": "demon-balor",
+      "name": "Demon (balor)",
+      "tradition": "srd",
+      "line": "Whip-and-sword lords of Abyssal fire."
+    },
+    {
+      "id": "demon-dretch",
+      "name": "Demon (dretch)",
+      "tradition": "srd",
+      "line": "Miserable swarm-fodder of the Abyss."
+    },
+    {
+      "id": "demon-glabrezu",
+      "name": "Demon (glabrezu)",
+      "tradition": "srd",
+      "line": "Four-armed dealmakers of ruin."
+    },
+    {
+      "id": "demon-hezrou",
+      "name": "Demon (hezrou)",
+      "tradition": "srd",
+      "line": "Toadlike brutes of stench and crush."
+    },
+    {
+      "id": "demon-marilith",
+      "name": "Demon (marilith)",
+      "tradition": "srd",
+      "line": "Serpent-bodied generals of six blades."
+    },
+    {
+      "id": "demon-quasit",
+      "name": "Demon (quasit)",
+      "tradition": "srd",
+      "line": "Tiny chaotic tempters of petty evil."
+    },
+    {
+      "id": "demon-vrock",
+      "name": "Demon (vrock)",
+      "tradition": "srd",
+      "line": "Vulture demons of screech and spore."
+    },
+    {
+      "id": "devil-bearded",
+      "name": "Devil (bearded)",
+      "tradition": "srd",
+      "line": "Barbed infantry of Hell\u2019s drills."
+    },
+    {
+      "id": "devil-bone",
+      "name": "Devil (bone)",
+      "tradition": "srd",
+      "line": "Skeletal sergeants of fear and spear."
+    },
+    {
+      "id": "devil-chain",
+      "name": "Devil (chain)",
+      "tradition": "srd",
+      "line": "Chain-wrapped torturers of barbed links."
+    },
+    {
+      "id": "devil-erinyes",
+      "name": "Devil (erinyes)",
+      "tradition": "srd",
+      "line": "Winged infernal prosecutors of vow."
+    },
+    {
+      "id": "devil-ice",
+      "name": "Devil (ice)",
+      "tradition": "srd",
+      "line": "Gelugon tacticians of cold calculus."
+    },
+    {
+      "id": "devil-imp",
+      "name": "Devil (imp)",
+      "tradition": "srd",
+      "line": "Lawful tempters with contracts in claw."
+    },
+    {
+      "id": "devil-lemure",
+      "name": "Devil (lemure)",
+      "tradition": "srd",
+      "line": "Molten damned who climb by obedience."
+    },
+    {
+      "id": "devil-pit-fiend",
+      "name": "Devil (pit fiend)",
+      "tradition": "srd",
+      "line": "Hell\u2019s dukes of fire, fear, and empire."
+    },
+    {
+      "id": "displacer-beast",
+      "name": "Displacer Beast",
+      "tradition": "srd",
+      "line": "Panther-like predators that bend where they stand."
+    },
+    {
+      "id": "dragon-turtle",
+      "name": "Dragon Turtle",
+      "tradition": "srd",
+      "line": "Shell-backed sea behemoths of shipwreck."
+    },
+    {
+      "id": "dryad",
+      "name": "Dryad",
+      "tradition": "srd",
+      "line": "Tree-bound spirits who bargain for grove and root."
+    },
+    {
+      "id": "elemental-air",
+      "name": "Elemental (air)",
+      "tradition": "srd",
+      "line": "Living wind that argues about down."
+    },
+    {
+      "id": "elemental-earth",
+      "name": "Elemental (earth)",
+      "tradition": "srd",
+      "line": "Living stone that moves like patience."
+    },
+    {
+      "id": "elemental-fire",
+      "name": "Elemental (fire)",
+      "tradition": "srd",
+      "line": "Living flame without mercy or memory."
+    },
+    {
+      "id": "elemental-water",
+      "name": "Elemental (water)",
+      "tradition": "srd",
+      "line": "Living current of crush and cold."
+    },
+    {
+      "id": "ettin",
+      "name": "Ettin",
+      "tradition": "srd",
+      "line": "Two-headed giants who argue while swinging."
+    },
+    {
+      "id": "fairy-dragon",
+      "name": "Fairy Dragon",
+      "tradition": "srd",
+      "line": "Tiny chromatic jokesters of prismatic breath."
+    },
+    {
+      "id": "fire-giant",
+      "name": "Fire Giant",
+      "tradition": "srd",
+      "line": "Forge-lords of heat and iron law."
+    },
+    {
+      "id": "flameskull",
+      "name": "Flameskull",
+      "tradition": "srd",
+      "line": "Burning skulls that recite old spells."
+    },
+    {
+      "id": "flying-sword",
+      "name": "Flying Sword",
+      "tradition": "srd",
+      "line": "Blades that hunt without a hand."
+    },
+    {
+      "id": "frost-giant",
+      "name": "Frost Giant",
+      "tradition": "srd",
+      "line": "Jarls of ice, raid, and winter pride."
+    },
+    {
+      "id": "gelatinous-cube",
+      "name": "Gelatinous Cube",
+      "tradition": "srd",
+      "line": "Transparent corridor cleaners of bone and gear."
+    },
+    {
+      "id": "ghost",
+      "name": "Ghost",
+      "tradition": "srd",
+      "line": "Unfinished story clinging to place."
+    },
+    {
+      "id": "ghoul",
+      "name": "Ghoul",
+      "tradition": "srd",
+      "line": "Carrion hunters with a taste for the living."
+    },
+    {
+      "id": "githyanki",
+      "name": "Githyanki",
+      "tradition": "srd",
+      "line": "Astral corsairs of silver swords and hard void."
+    },
+    {
+      "id": "githzerai",
+      "name": "Githzerai",
+      "tradition": "srd",
+      "line": "Monastic mind-warriors of liminal fortresses."
+    },
+    {
+      "id": "golem-clay",
+      "name": "Golem (clay)",
+      "tradition": "srd",
+      "line": "Sacred mud given purpose and taboo."
+    },
+    {
+      "id": "golem-flesh",
+      "name": "Golem (flesh)",
+      "tradition": "srd",
+      "line": "Stitched life that should not walk."
+    },
+    {
+      "id": "golem-iron",
+      "name": "Golem (iron)",
+      "tradition": "srd",
+      "line": "Forge-born engines of crush."
+    },
+    {
+      "id": "golem-stone",
+      "name": "Golem (stone)",
+      "tradition": "srd",
+      "line": "Carved guardians of silent halls."
+    },
+    {
+      "id": "gorgon",
+      "name": "Gorgon",
+      "tradition": "srd",
+      "line": "Metallic bulls whose breath can harden flesh."
+    },
+    {
+      "id": "griffin",
+      "name": "Griffin",
+      "tradition": "srd",
+      "line": "Eagle-lion sentinels of high aeries."
+    },
+    {
+      "id": "guardinal-avoral",
+      "name": "Guardinal (avoral)",
+      "tradition": "srd",
+      "line": "Birdlike celestial guardians of good."
+    },
+    {
+      "id": "harpy",
+      "name": "Harpy",
+      "tradition": "srd",
+      "line": "Winged singers who lure travelers to cliffs."
+    },
+    {
+      "id": "helmed-horror",
+      "name": "Helmed Horror",
+      "tradition": "srd",
+      "line": "Constructed armor with stubborn will."
+    },
+    {
+      "id": "hill-giant",
+      "name": "Hill Giant",
+      "tradition": "srd",
+      "line": "Cruel hillfolk of size and appetite."
+    },
+    {
+      "id": "hippogriff",
+      "name": "Hippogriff",
+      "tradition": "srd",
+      "line": "Swift half-eagle mounts of daring riders."
+    },
+    {
+      "id": "homunculus",
+      "name": "Homunculus",
+      "tradition": "srd",
+      "line": "Tiny alchemical familiars of loyalty."
+    },
+    {
+      "id": "hook-horror",
+      "name": "Hook Horror",
+      "tradition": "srd",
+      "line": "Hook-armed cave dwellers of click and echo."
+    },
+    {
+      "id": "hydra",
+      "name": "Hydra",
+      "tradition": "srd",
+      "line": "Many-headed marsh beasts that grow back what they lose."
+    },
+    {
+      "id": "kraken",
+      "name": "Kraken",
+      "tradition": "srd",
+      "line": "Leviathans that make fleets into prayers."
+    },
+    {
+      "id": "kuo-toa",
+      "name": "Kuo-toa",
+      "tradition": "srd",
+      "line": "Mad deepfolk of sticky faith and hallucination."
+    },
+    {
+      "id": "lammasu",
+      "name": "Lammasu",
+      "tradition": "srd",
+      "line": "Winged lion-sages of protective lore."
+    },
+    {
+      "id": "lich",
+      "name": "Lich",
+      "tradition": "srd",
+      "line": "Undying spellcasters bound to phylactery."
+    },
+    {
+      "id": "manticore",
+      "name": "Manticore",
+      "tradition": "srd",
+      "line": "Spiked hunters with cruel appetite and iron tails."
+    },
+    {
+      "id": "medusa",
+      "name": "Medusa",
+      "tradition": "srd",
+      "line": "Serpent-haired petrifiers of vanity and fear."
+    },
+    {
+      "id": "mephit-dust",
+      "name": "Mephit (dust)",
+      "tradition": "srd",
+      "line": "Tiny grit-spirits of cough and cloud."
+    },
+    {
+      "id": "mephit-ice",
+      "name": "Mephit (ice)",
+      "tradition": "srd",
+      "line": "Frost imps that cut with breath."
+    },
+    {
+      "id": "mephit-magma",
+      "name": "Mephit (magma)",
+      "tradition": "srd",
+      "line": "Cinder imps of molten gossip."
+    },
+    {
+      "id": "mephit-smoke",
+      "name": "Mephit (smoke)",
+      "tradition": "srd",
+      "line": "Ash-winged pests of choking veil."
+    },
+    {
+      "id": "merfolk",
+      "name": "Merfolk",
+      "tradition": "srd",
+      "line": "Ocean people of coral cities and tide roads."
+    },
+    {
+      "id": "mimic",
+      "name": "Mimic",
+      "tradition": "srd",
+      "line": "Shapes that wait as chests, doors, and trust."
+    },
+    {
+      "id": "mind-flayer-thrall",
+      "name": "Mind Flayer Thrall",
+      "tradition": "srd",
+      "line": "Broken wills under psychic yoke\u2014tragic, not free."
+    },
+    {
+      "id": "minotaur",
+      "name": "Minotaur",
+      "tradition": "srd",
+      "line": "Horned maze-walkers of labyrinthine pride."
+    },
+    {
+      "id": "modron-monodrone",
+      "name": "Modron (monodrone)",
+      "tradition": "srd",
+      "line": "Lawful clockwork servants of absolute order."
+    },
+    {
+      "id": "mummy",
+      "name": "Mummy",
+      "tradition": "srd",
+      "line": "Desiccated guardians of tomb law."
+    },
+    {
+      "id": "nymph",
+      "name": "Nymph",
+      "tradition": "srd",
+      "line": "Radiant wild spirits of spring, pool, and glade."
+    },
+    {
+      "id": "ochre-jelly",
+      "name": "Ochre Jelly",
+      "tradition": "srd",
+      "line": "Acidic oozes that split when struck."
+    },
+    {
+      "id": "ogre",
+      "name": "Ogre",
+      "tradition": "srd",
+      "line": "Huge simple bullies of club and belly."
+    },
+    {
+      "id": "oni",
+      "name": "Oni",
+      "tradition": "srd",
+      "line": "Ogre magi of illusion and hunger."
+    },
+    {
+      "id": "owlbear",
+      "name": "Owlbear",
+      "tradition": "srd",
+      "line": "Impossible hybrid of feather, claw, and rage."
+    },
+    {
+      "id": "pegasus",
+      "name": "Pegasus",
+      "tradition": "srd",
+      "line": "Winged horses of storm-cloud and mountain peak."
+    },
+    {
+      "id": "piercer",
+      "name": "Piercer",
+      "tradition": "srd",
+      "line": "Stalactite ambushers that drop first."
+    },
+    {
+      "id": "pixie",
+      "name": "Pixie",
+      "tradition": "srd",
+      "line": "Glitter-wing pranksters of dusk meadows."
+    },
+    {
+      "id": "pseudodragon",
+      "name": "Pseudodragon",
+      "tradition": "srd",
+      "line": "Cat-sized dragons of bond and sting."
+    },
+    {
+      "id": "purple-worm",
+      "name": "Purple Worm",
+      "tradition": "srd",
+      "line": "Colossal burrowers of crush and gullet."
+    },
+    {
+      "id": "rakshasa",
+      "name": "Rakshasa",
+      "tradition": "srd",
+      "line": "Tiger-headed deceivers of reverse hands and bargains."
+    },
+    {
+      "id": "remorhaz",
+      "name": "Remorhaz",
+      "tradition": "srd",
+      "line": "Arctic heat-worms under ice."
+    },
+    {
+      "id": "roper",
+      "name": "Roper",
+      "tradition": "srd",
+      "line": "Cave stalkers that look like stone until they strike."
+    },
+    {
+      "id": "rug-of-smothering",
+      "name": "Rug of Smothering",
+      "tradition": "srd",
+      "line": "Floorcloths that prefer silence."
+    },
+    {
+      "id": "rust-monster",
+      "name": "Rust Monster",
+      "tradition": "srd",
+      "line": "Antennaed pests that eat iron for supper."
+    },
+    {
+      "id": "sahuagin",
+      "name": "Sahuagin",
+      "tradition": "srd",
+      "line": "Shark-blooded raiders of reef and wreck."
+    },
+    {
+      "id": "satyr",
+      "name": "Satyr",
+      "tradition": "srd",
+      "line": "Pipe-playing revelers of wood and wine."
+    },
+    {
+      "id": "shadow",
+      "name": "Shadow",
+      "tradition": "srd",
+      "line": "Undead silhouettes that drink strength."
+    },
+    {
+      "id": "shadow-demon",
+      "name": "Shadow Demon",
+      "tradition": "srd",
+      "line": "Demonic darkness between solid forms."
+    },
+    {
+      "id": "shield-guardian",
+      "name": "Shield Guardian",
+      "tradition": "srd",
+      "line": "Bound constructs that share a master\u2019s fate."
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton",
+      "tradition": "srd",
+      "line": "Animated bones kept moving by unfinished will."
+    },
+    {
+      "id": "slaad-red",
+      "name": "Slaad (red)",
+      "tradition": "srd",
+      "line": "Chaotic frog-beasts of liminal riot."
+    },
+    {
+      "id": "specter",
+      "name": "Specter",
+      "tradition": "srd",
+      "line": "Restless shade of a violent end."
+    },
+    {
+      "id": "sphinx",
+      "name": "Sphinx",
+      "tradition": "srd",
+      "line": "Riddle-keepers of desert gates and tests."
+    },
+    {
+      "id": "sprite",
+      "name": "Sprite",
+      "tradition": "srd",
+      "line": "Tiny winged wardens of mischief and warning."
+    },
+    {
+      "id": "stirge",
+      "name": "Stirge",
+      "tradition": "srd",
+      "line": "Blood-draining insectile pests of caves."
+    },
+    {
+      "id": "stone-giant",
+      "name": "Stone Giant",
+      "tradition": "srd",
+      "line": "Silent cliff artists of throw and carve."
+    },
+    {
+      "id": "storm-giant",
+      "name": "Storm Giant",
+      "tradition": "srd",
+      "line": "Sea-and-sky royalty of omen and thunder."
+    },
+    {
+      "id": "treant",
+      "name": "Treant",
+      "tradition": "srd",
+      "line": "Walking trees that remember centuries of axe and rain."
+    },
+    {
+      "id": "troll",
+      "name": "Troll",
+      "tradition": "srd",
+      "line": "Regenerating brutes of appetite and swamp."
+    },
+    {
+      "id": "umber-hulk",
+      "name": "Umber Hulk",
+      "tradition": "srd",
+      "line": "Tunneling brutes whose gaze confuses."
+    },
+    {
+      "id": "unicorn",
+      "name": "Unicorn",
+      "tradition": "srd",
+      "line": "Horned guardians of pure groves and quiet vows."
+    },
+    {
+      "id": "vampire-spawn",
+      "name": "Vampire Spawn",
+      "tradition": "srd",
+      "line": "Night-bound servants of a blooded master."
+    },
+    {
+      "id": "werebear",
+      "name": "Werebear",
+      "tradition": "srd",
+      "line": "Lunar guardian-beast of protective fury."
+    },
+    {
+      "id": "weretiger",
+      "name": "Weretiger",
+      "tradition": "srd",
+      "line": "Moon-stalker of jungle and pride."
+    },
+    {
+      "id": "werewolf",
+      "name": "Werewolf",
+      "tradition": "srd",
+      "line": "Moon-cursed hybrid of person and wolf."
+    },
+    {
+      "id": "wight",
+      "name": "Wight",
+      "tradition": "srd",
+      "line": "Grave-warriors who drain warmth from the living."
+    },
+    {
+      "id": "will-o-wisp",
+      "name": "Will-o'-Wisp",
+      "tradition": "srd",
+      "line": "Hungry lights that guide and mislead."
+    },
+    {
+      "id": "wraith",
+      "name": "Wraith",
+      "tradition": "srd",
+      "line": "Incorporeal hate that hates light."
+    },
+    {
+      "id": "wyvern",
+      "name": "Wyvern",
+      "tradition": "srd",
+      "line": "Two-winged drakes of venom and cliff nests."
+    },
+    {
+      "id": "yugoloth-mezzoloth",
+      "name": "Yugoloth (mezzoloth)",
+      "tradition": "srd",
+      "line": "Mercenary insectile fiends for hire."
+    },
+    {
+      "id": "yugoloth-nycaloth",
+      "name": "Yugoloth (nycaloth)",
+      "tradition": "srd",
+      "line": "Bat-winged sellswords of the Blood War."
+    },
+    {
+      "id": "yugoloth-ultroloth",
+      "name": "Yugoloth (ultroloth)",
+      "tradition": "srd",
+      "line": "Telepathic broker-fiends of cold deals."
+    },
+    {
+      "id": "zombie",
+      "name": "Zombie",
+      "tradition": "srd",
+      "line": "Slow hunger wearing a corpse."
+    },
+    {
+      "id": "abhartach",
+      "name": "Abhartach",
+      "tradition": "folklore",
+      "line": "Irish undead tyrant of early vampire-like tale."
+    },
+    {
+      "id": "addanc",
+      "name": "Addanc",
+      "tradition": "folklore",
+      "line": "Marsh beast of lake and hero tale."
+    },
+    {
+      "id": "afanc",
+      "name": "Afanc",
+      "tradition": "folklore",
+      "line": "Lake monster of Welsh river lore."
+    },
+    {
+      "id": "anansi",
+      "name": "Anansi",
+      "tradition": "folklore",
+      "line": "Spider storyteller of West African and Caribbean lore."
+    },
+    {
+      "id": "apsara",
+      "name": "Apsara",
+      "tradition": "folklore",
+      "line": "Celestial dancers of court and river."
+    },
+    {
+      "id": "asrai",
+      "name": "Asrai",
+      "tradition": "folklore",
+      "line": "Fragile water-fairies melted by sun."
+    },
+    {
+      "id": "asura",
+      "name": "Asura",
+      "tradition": "folklore",
+      "line": "Proud rival divinities of cosmic contest."
+    },
+    {
+      "id": "aswang",
+      "name": "Aswang",
+      "tradition": "folklore",
+      "line": "Night predator of Philippine folk horror."
+    },
+    {
+      "id": "aswang-hunter",
+      "name": "Aswang-hunter",
+      "tradition": "folklore",
+      "line": "Folk defenders trained against night predators (original role)."
+    },
+    {
+      "id": "baba-yaga",
+      "name": "Baba Yaga",
+      "tradition": "folklore",
+      "line": "Ambiguous crone of hut, mortar, and hard tests."
+    },
+    {
+      "id": "bai-ze",
+      "name": "Bai Ze",
+      "tradition": "folklore",
+      "line": "All-knowing white beast of omen catalogs."
+    },
+    {
+      "id": "barghest",
+      "name": "Barghest",
+      "tradition": "folklore",
+      "line": "Death-omen hound of Yorkshire night."
+    },
+    {
+      "id": "basilisk-myth",
+      "name": "Basilisk (myth)",
+      "tradition": "folklore",
+      "line": "King of serpents whose glance kills."
+    },
+    {
+      "id": "bean-nighe-washer",
+      "name": "Bean nighe (washer)",
+      "tradition": "folklore",
+      "line": "Ford washer of grave-clothes omen."
+    },
+    {
+      "id": "bean-sidhe",
+      "name": "Bean Sidhe",
+      "tradition": "folklore",
+      "line": "Wailing omen-spirits of coming death."
+    },
+    {
+      "id": "bean-fionn",
+      "name": "Bean-fionn",
+      "tradition": "folklore",
+      "line": "White lady of river drowning omen."
+    },
+    {
+      "id": "bean-nighe",
+      "name": "Bean-nighe",
+      "tradition": "folklore",
+      "line": "Washerwoman omen of Highland death."
+    },
+    {
+      "id": "beithir",
+      "name": "Beithir",
+      "tradition": "folklore",
+      "line": "Lightning serpent of Highland storm."
+    },
+    {
+      "id": "black-annis",
+      "name": "Black Annis",
+      "tradition": "folklore",
+      "line": "Blue-faced cave hag of Leicester lore."
+    },
+    {
+      "id": "black-shuck",
+      "name": "Black Shuck",
+      "tradition": "folklore",
+      "line": "One-eyed hellhound of East Anglia roads."
+    },
+    {
+      "id": "bloody-bones",
+      "name": "Bloody Bones",
+      "tradition": "folklore",
+      "line": "Closet horror of old warning rhyme."
+    },
+    {
+      "id": "blue-men-of-the-minch",
+      "name": "Blue Men of the Minch",
+      "tradition": "folklore",
+      "line": "Storm-calling sea spirits of Hebrides."
+    },
+    {
+      "id": "boobrie",
+      "name": "Boobrie",
+      "tradition": "folklore",
+      "line": "Giant water-bird of Hebridean lochs."
+    },
+    {
+      "id": "brownie",
+      "name": "Brownie",
+      "tradition": "folklore",
+      "line": "Helpful hearth-spirits who leave when insulted."
+    },
+    {
+      "id": "buggane",
+      "name": "Buggane",
+      "tradition": "folklore",
+      "line": "Manx giant of storm and church-wreck."
+    },
+    {
+      "id": "bunyi",
+      "name": "Bunyi",
+      "tradition": "folklore",
+      "line": "Echo-spirit of Malay forest paths (original tag)."
+    },
+    {
+      "id": "cailleach",
+      "name": "Cailleach",
+      "tradition": "folklore",
+      "line": "Winter hag of storm and stone."
+    },
+    {
+      "id": "cat-s-th",
+      "name": "Cat S\u00ecth",
+      "tradition": "folklore",
+      "line": "Fairy cat of Samhain omen."
+    },
+    {
+      "id": "cat-s-th-fairy",
+      "name": "Cat-s\u00ecth (fairy)",
+      "tradition": "folklore",
+      "line": "Samhain soul-stealing fairy cat."
+    },
+    {
+      "id": "ceffyl-d-r",
+      "name": "Ceffyl D\u0175r",
+      "tradition": "folklore",
+      "line": "Welsh water-horse of mist roads."
+    },
+    {
+      "id": "centaur-myth",
+      "name": "Centaur (myth)",
+      "tradition": "folklore",
+      "line": "Wild riders of Thessalian rumor."
+    },
+    {
+      "id": "cerberus",
+      "name": "Cerberus",
+      "tradition": "folklore",
+      "line": "Three-headed hound of underworld gates."
+    },
+    {
+      "id": "charybdis",
+      "name": "Charybdis",
+      "tradition": "folklore",
+      "line": "Whirlpool maw that drinks the sea."
+    },
+    {
+      "id": "chimera-myth",
+      "name": "Chimera (myth)",
+      "tradition": "folklore",
+      "line": "Lion-goat-serpent fire of Lycia."
+    },
+    {
+      "id": "chupacabra",
+      "name": "Chupacabra",
+      "tradition": "folklore",
+      "line": "Blood-taking cryptid of modern folklore."
+    },
+    {
+      "id": "church-grim",
+      "name": "Church grim",
+      "tradition": "folklore",
+      "line": "Guardian dog-spirit of churchyard."
+    },
+    {
+      "id": "clurichaun",
+      "name": "Clurichaun",
+      "tradition": "folklore",
+      "line": "Wine-cellar cousins of leprechaun lore."
+    },
+    {
+      "id": "coblynau",
+      "name": "Coblynau",
+      "tradition": "folklore",
+      "line": "Welsh mine-knockers of ore omen."
+    },
+    {
+      "id": "coyote-trickster",
+      "name": "Coyote (trickster)",
+      "tradition": "folklore",
+      "line": "Trickster culture-hero of many Native stories."
+    },
+    {
+      "id": "cyclops-myth",
+      "name": "Cyclops (myth)",
+      "tradition": "folklore",
+      "line": "One-eyed smiths and shepherds of epic."
+    },
+    {
+      "id": "c-s-th",
+      "name": "C\u00f9 S\u00ecth",
+      "tradition": "folklore",
+      "line": "Green fairy hound of Highland dark."
+    },
+    {
+      "id": "dearg-due",
+      "name": "Dearg Due",
+      "tradition": "folklore",
+      "line": "Seductive Irish undead of revenge."
+    },
+    {
+      "id": "dhampir",
+      "name": "Dhampir",
+      "tradition": "folklore",
+      "line": "Half-living children of vampire rumor and dusk."
+    },
+    {
+      "id": "dobhar-ch",
+      "name": "Dobhar-ch\u00fa",
+      "tradition": "folklore",
+      "line": "Otter-hound cryptid of Irish waters."
+    },
+    {
+      "id": "domovoi",
+      "name": "Domovoi",
+      "tradition": "folklore",
+      "line": "Slavic house guardians of stove and family luck."
+    },
+    {
+      "id": "dragon-european",
+      "name": "Dragon (European)",
+      "tradition": "folklore",
+      "line": "Hoard-keepers of cave, fire, and knight."
+    },
+    {
+      "id": "dullahan",
+      "name": "Dullahan",
+      "tradition": "folklore",
+      "line": "Headless rider of black coach omen."
+    },
+    {
+      "id": "dvergr",
+      "name": "Dvergr",
+      "tradition": "folklore",
+      "line": "Norse craft-kin of forge and mountain."
+    },
+    {
+      "id": "each-uisge",
+      "name": "Each-uisge",
+      "tradition": "folklore",
+      "line": "Deadliest Scottish water-horse."
+    },
+    {
+      "id": "fafnir",
+      "name": "Fafnir",
+      "tradition": "folklore",
+      "line": "Greed-turned dragon of Norse saga."
+    },
+    {
+      "id": "far-darrig",
+      "name": "Far darrig",
+      "tradition": "folklore",
+      "line": "Red-coated practical jokers of Irish tale."
+    },
+    {
+      "id": "faun",
+      "name": "Faun",
+      "tradition": "folklore",
+      "line": "Roman woodland half-goats of flute and frolic."
+    },
+    {
+      "id": "fear-dearg",
+      "name": "Fear Dearg",
+      "tradition": "folklore",
+      "line": "Red man of nightmare pranks."
+    },
+    {
+      "id": "fear-gorta",
+      "name": "Fear Gorta",
+      "tradition": "folklore",
+      "line": "Hunger spirit of famine roads."
+    },
+    {
+      "id": "fenghuang",
+      "name": "Fenghuang",
+      "tradition": "folklore",
+      "line": "Phoenix-like emblems of virtue and renewal."
+    },
+    {
+      "id": "fenrir",
+      "name": "Fenrir",
+      "tradition": "folklore",
+      "line": "Bound wolf of doom and broken chain."
+    },
+    {
+      "id": "finfolk",
+      "name": "Finfolk",
+      "tradition": "folklore",
+      "line": "Amphibious sorcerers of northern isles."
+    },
+    {
+      "id": "firebird",
+      "name": "Firebird",
+      "tradition": "folklore",
+      "line": "Radiant mythic bird of quests and stolen feathers."
+    },
+    {
+      "id": "fuath",
+      "name": "Fuath",
+      "tradition": "folklore",
+      "line": "Hostile Gaelic water spirits."
+    },
+    {
+      "id": "fury-erinyes-myth",
+      "name": "Fury (Erinyes myth)",
+      "tradition": "folklore",
+      "line": "Avenging goddesses of blood-guilt."
+    },
+    {
+      "id": "gancanagh",
+      "name": "Gancanagh",
+      "tradition": "folklore",
+      "line": "Love-talking fairy of clay pipe."
+    },
+    {
+      "id": "garuda",
+      "name": "Garuda",
+      "tradition": "folklore",
+      "line": "Eagle-bodied divine mounts of mythic sky."
+    },
+    {
+      "id": "ghul",
+      "name": "Ghul",
+      "tradition": "folklore",
+      "line": "Graveyard shapeshifters of desert night."
+    },
+    {
+      "id": "glaistig",
+      "name": "Glaistig",
+      "tradition": "folklore",
+      "line": "Goat-legged green lady of cattle and caution."
+    },
+    {
+      "id": "griffin-myth",
+      "name": "Griffin (myth)",
+      "tradition": "folklore",
+      "line": "Treasure guardians of gold and sky."
+    },
+    {
+      "id": "grindylow",
+      "name": "Grindylow",
+      "tradition": "folklore",
+      "line": "Pond-grabbers of children\u2019s warning tales."
+    },
+    {
+      "id": "gwyllgi",
+      "name": "Gwyllgi",
+      "tradition": "folklore",
+      "line": "Welsh black dog of lonely lanes."
+    },
+    {
+      "id": "gwyllion",
+      "name": "Gwyllion",
+      "tradition": "folklore",
+      "line": "Mountain hags who mislead travelers."
+    },
+    {
+      "id": "gytrash",
+      "name": "Gytrash",
+      "tradition": "folklore",
+      "line": "Northern shapechanging night-beast."
+    },
+    {
+      "id": "harpy-myth",
+      "name": "Harpy (myth)",
+      "tradition": "folklore",
+      "line": "Storm-women who snatch and foul."
+    },
+    {
+      "id": "hel-spawn",
+      "name": "Hel-spawn",
+      "tradition": "folklore",
+      "line": "Underworld attendants of Norse Hel (original)."
+    },
+    {
+      "id": "hulder",
+      "name": "Hulder",
+      "tradition": "folklore",
+      "line": "Forest seducers with hidden tails."
+    },
+    {
+      "id": "huli-jing",
+      "name": "Huli Jing",
+      "tradition": "folklore",
+      "line": "Fox spirits of Chinese romance and omen."
+    },
+    {
+      "id": "hydra-lernaean",
+      "name": "Hydra (Lernaean)",
+      "tradition": "folklore",
+      "line": "Regrowing marsh serpent of labors."
+    },
+    {
+      "id": "ifrit",
+      "name": "Ifrit",
+      "tradition": "folklore",
+      "line": "Fiery jinn of desert wrath and palace rumor."
+    },
+    {
+      "id": "jenny-greenteeth",
+      "name": "Jenny Greenteeth",
+      "tradition": "folklore",
+      "line": "River-hag of duckweed and drown."
+    },
+    {
+      "id": "jiangshi",
+      "name": "Jiangshi",
+      "tradition": "folklore",
+      "line": "Hopping corpse-hunters of sticky breath."
+    },
+    {
+      "id": "jinn",
+      "name": "Jinn",
+      "tradition": "folklore",
+      "line": "Smokeless-fire beings of wish, pride, and captivity."
+    },
+    {
+      "id": "jorogumo",
+      "name": "Jorogumo",
+      "tradition": "folklore",
+      "line": "Spider-women of silk and mountain inns."
+    },
+    {
+      "id": "j-rmungandr",
+      "name": "J\u00f6rmungandr",
+      "tradition": "folklore",
+      "line": "World-serpent ringed around the sea."
+    },
+    {
+      "id": "j-tunn",
+      "name": "J\u00f6tunn",
+      "tradition": "folklore",
+      "line": "Giant-kin of ice, stone, and rivalry with gods."
+    },
+    {
+      "id": "kappa",
+      "name": "Kappa",
+      "tradition": "folklore",
+      "line": "River imps of cucumber bargains and bowls."
+    },
+    {
+      "id": "kapre",
+      "name": "Kapre",
+      "tradition": "folklore",
+      "line": "Tree-smoking giants of Philippine night."
+    },
+    {
+      "id": "kelpie",
+      "name": "Kelpie",
+      "tradition": "folklore",
+      "line": "Water-horses that drown the trusting."
+    },
+    {
+      "id": "kelpie-scottish",
+      "name": "Kelpie (Scottish)",
+      "tradition": "folklore",
+      "line": "Shapechanging water-horse of lochs."
+    },
+    {
+      "id": "kitsune",
+      "name": "Kitsune",
+      "tradition": "folklore",
+      "line": "Fox spirits of illusion, message, and long game."
+    },
+    {
+      "id": "knucker",
+      "name": "Knucker",
+      "tradition": "folklore",
+      "line": "Sussex water-dragon of knuckerholes."
+    },
+    {
+      "id": "kobold-folklore",
+      "name": "Kobold (folklore)",
+      "tradition": "folklore",
+      "line": "Household sprites of mine, kitchen, and spite."
+    },
+    {
+      "id": "kodama",
+      "name": "Kodama",
+      "tradition": "folklore",
+      "line": "Tree spirits whose presence marks sacred woods."
+    },
+    {
+      "id": "koschei",
+      "name": "Koschei",
+      "tradition": "folklore",
+      "line": "Deathless antagonist of hidden soul and iron will."
+    },
+    {
+      "id": "laidly-worm",
+      "name": "Laidly Worm",
+      "tradition": "folklore",
+      "line": "Cursed sister-dragon of Northumbrian tale."
+    },
+    {
+      "id": "lambton-worm",
+      "name": "Lambton Worm",
+      "tradition": "folklore",
+      "line": "River-worm of County Durham ballad."
+    },
+    {
+      "id": "lares",
+      "name": "Lares",
+      "tradition": "folklore",
+      "line": "Household guardians of Roman door and hearth."
+    },
+    {
+      "id": "leanan-s-dhe",
+      "name": "Leanan s\u00eddhe",
+      "tradition": "folklore",
+      "line": "Muse-fairy of inspiration and drain."
+    },
+    {
+      "id": "lemures",
+      "name": "Lemures",
+      "tradition": "folklore",
+      "line": "Restless Roman shades needing rite."
+    },
+    {
+      "id": "leprechaun",
+      "name": "Leprechaun",
+      "tradition": "folklore",
+      "line": "Solitary shoemaker of pot and trick."
+    },
+    {
+      "id": "leshy",
+      "name": "Leshy",
+      "tradition": "folklore",
+      "line": "Forest lords who mislead and protect trees."
+    },
+    {
+      "id": "lindworm",
+      "name": "Lindworm",
+      "tradition": "folklore",
+      "line": "Serpentine northern dragons of ring and curse."
+    },
+    {
+      "id": "long-dragon",
+      "name": "Long (dragon)",
+      "tradition": "folklore",
+      "line": "Auspicious Chinese dragons of river and rain."
+    },
+    {
+      "id": "mami-wata",
+      "name": "Mami Wata",
+      "tradition": "folklore",
+      "line": "Water spirit of beauty, wealth, and danger."
+    },
+    {
+      "id": "manananggal",
+      "name": "Manananggal",
+      "tradition": "folklore",
+      "line": "Self-severing winged hunter of midnight."
+    },
+    {
+      "id": "manticore-myth",
+      "name": "Manticore (myth)",
+      "tradition": "folklore",
+      "line": "Persian-tale man-eater of spines."
+    },
+    {
+      "id": "marid",
+      "name": "Marid",
+      "tradition": "folklore",
+      "line": "Oceanic jinn of tide and towering pride."
+    },
+    {
+      "id": "menehune",
+      "name": "Menehune",
+      "tradition": "folklore",
+      "line": "Small builders of Hawaiian stonework legend."
+    },
+    {
+      "id": "merrow",
+      "name": "Merrow",
+      "tradition": "folklore",
+      "line": "Irish merfolk of green hair and soul-cages."
+    },
+    {
+      "id": "minotaur-myth",
+      "name": "Minotaur (myth)",
+      "tradition": "folklore",
+      "line": "Labyrinth bull-man of Crete."
+    },
+    {
+      "id": "moddey-dhoo",
+      "name": "Moddey Dhoo",
+      "tradition": "folklore",
+      "line": "Black dog of Manx fort rumor."
+    },
+    {
+      "id": "mokele-mbembe",
+      "name": "Mokele-mbembe",
+      "tradition": "folklore",
+      "line": "River cryptid of deep jungle rumor."
+    },
+    {
+      "id": "naga",
+      "name": "Naga",
+      "tradition": "folklore",
+      "line": "Serpent people of sacred waters and vows."
+    },
+    {
+      "id": "nemean-lion",
+      "name": "Nemean Lion",
+      "tradition": "folklore",
+      "line": "Invulnerable hide and heroic test."
+    },
+    {
+      "id": "nisse",
+      "name": "Nisse",
+      "tradition": "folklore",
+      "line": "Farm guardians of Nordic winter nights."
+    },
+    {
+      "id": "nuckelavee",
+      "name": "Nuckelavee",
+      "tradition": "folklore",
+      "line": "Skinless horse-horror of Orcadian sea."
+    },
+    {
+      "id": "nurikabe",
+      "name": "Nurikabe",
+      "tradition": "folklore",
+      "line": "Wall-spirits that block night roads."
+    },
+    {
+      "id": "n-kk",
+      "name": "N\u00f8kk",
+      "tradition": "folklore",
+      "line": "Water fiddlers who drown dancers."
+    },
+    {
+      "id": "oilliph-ist",
+      "name": "Oilliph\u00e9ist",
+      "tradition": "folklore",
+      "line": "Irish lake/river dragons of legend."
+    },
+    {
+      "id": "oni-myth",
+      "name": "Oni (myth)",
+      "tradition": "folklore",
+      "line": "Horned ogres of festival fear and punishment."
+    },
+    {
+      "id": "padfoot",
+      "name": "Padfoot",
+      "tradition": "folklore",
+      "line": "Northern English black-dog omen."
+    },
+    {
+      "id": "patupaiarehe",
+      "name": "Patupaiarehe",
+      "tradition": "folklore",
+      "line": "Pale mist-folk of New Zealand hill lore."
+    },
+    {
+      "id": "peg-powler",
+      "name": "Peg Powler",
+      "tradition": "folklore",
+      "line": "Tees river hag of green hair."
+    },
+    {
+      "id": "pegasus-myth",
+      "name": "Pegasus (myth)",
+      "tradition": "folklore",
+      "line": "Winged horse born of mythic blood."
+    },
+    {
+      "id": "peiste",
+      "name": "Peiste",
+      "tradition": "folklore",
+      "line": "Serpentine Irish water monsters."
+    },
+    {
+      "id": "penanggalan",
+      "name": "Penanggalan",
+      "tradition": "folklore",
+      "line": "Detached-head terror of Southeast Asian night."
+    },
+    {
+      "id": "peri",
+      "name": "Peri",
+      "tradition": "folklore",
+      "line": "Radiant winged folk of Persian romance."
+    },
+    {
+      "id": "phoenix-myth",
+      "name": "Phoenix (myth)",
+      "tradition": "folklore",
+      "line": "Self-renewing firebird of ash and dawn."
+    },
+    {
+      "id": "pontianak",
+      "name": "Pontianak",
+      "tradition": "folklore",
+      "line": "Vengeful spirit of tragic birth and white dress."
+    },
+    {
+      "id": "pwca",
+      "name": "Pwca",
+      "tradition": "folklore",
+      "line": "Welsh trickster cousin of the p\u00faca."
+    },
+    {
+      "id": "p-ca",
+      "name": "P\u00faca",
+      "tradition": "folklore",
+      "line": "Shapeshifting Irish mischief of night roads."
+    },
+    {
+      "id": "qilin",
+      "name": "Qilin",
+      "tradition": "folklore",
+      "line": "Gentle chimera-omens of sage arrival."
+    },
+    {
+      "id": "rakshasa-myth",
+      "name": "Rakshasa (myth)",
+      "tradition": "folklore",
+      "line": "Shapechanging night-walkers of epic tale."
+    },
+    {
+      "id": "raven-trickster",
+      "name": "Raven (trickster)",
+      "tradition": "folklore",
+      "line": "Culture-shaping bird of Pacific Northwest tale."
+    },
+    {
+      "id": "rawhead",
+      "name": "Rawhead",
+      "tradition": "folklore",
+      "line": "Nursery bogey of cupboard threat."
+    },
+    {
+      "id": "redcap",
+      "name": "Redcap",
+      "tradition": "folklore",
+      "line": "Bloodied-hat goblins of murderous thresholds."
+    },
+    {
+      "id": "roc",
+      "name": "Roc",
+      "tradition": "folklore",
+      "line": "Ship-lifting birds of Arabian sea legends."
+    },
+    {
+      "id": "rusalka",
+      "name": "Rusalka",
+      "tradition": "folklore",
+      "line": "Water-maidens of river grief and lure."
+    },
+    {
+      "id": "satyr-myth",
+      "name": "Satyr (myth)",
+      "tradition": "folklore",
+      "line": "Wine-and-wood companions of Dionysus."
+    },
+    {
+      "id": "scylla",
+      "name": "Scylla",
+      "tradition": "folklore",
+      "line": "Many-headed strait-monster of rock and hunger."
+    },
+    {
+      "id": "selkie",
+      "name": "Selkie",
+      "tradition": "folklore",
+      "line": "Seal-skinned coastal shapeshifters of borrowed human form."
+    },
+    {
+      "id": "selkie-orkney",
+      "name": "Selkie (Orkney)",
+      "tradition": "folklore",
+      "line": "Seal-wives of stolen skins and shore."
+    },
+    {
+      "id": "shellycoat",
+      "name": "Shellycoat",
+      "tradition": "folklore",
+      "line": "Shell-rattling water prankster."
+    },
+    {
+      "id": "silvanus-kin",
+      "name": "Silvanus-kin",
+      "tradition": "folklore",
+      "line": "Wild-wood attendants of Roman forest cult (original)."
+    },
+    {
+      "id": "simurgh",
+      "name": "Simurgh",
+      "tradition": "folklore",
+      "line": "Benevolent mythic bird of healing wisdom."
+    },
+    {
+      "id": "siren",
+      "name": "Siren",
+      "tradition": "folklore",
+      "line": "Shore-singers who wreck ships with longing."
+    },
+    {
+      "id": "skinwalker-generic",
+      "name": "Skinwalker (generic)",
+      "tradition": "folklore",
+      "line": "Taboo shapeshifter of fear-story caution\u2014handle respectfully."
+    },
+    {
+      "id": "sluagh",
+      "name": "Sluagh",
+      "tradition": "folklore",
+      "line": "Host of restless dead on night wind."
+    },
+    {
+      "id": "stoor-worm",
+      "name": "Stoor Worm",
+      "tradition": "folklore",
+      "line": "Orkney sea-worm of devouring myth."
+    },
+    {
+      "id": "strigoi",
+      "name": "Strigoi",
+      "tradition": "folklore",
+      "line": "Restless dead of Balkan night hunger."
+    },
+    {
+      "id": "s-r-te",
+      "name": "S\u00edr\u00edte",
+      "tradition": "folklore",
+      "line": "Irish fairy hosts of whirlwind travel (original gloss)."
+    },
+    {
+      "id": "taniwha",
+      "name": "Taniwha",
+      "tradition": "folklore",
+      "line": "Water guardians/monsters of M\u0101ori tradition."
+    },
+    {
+      "id": "tanuki",
+      "name": "Tanuki",
+      "tradition": "folklore",
+      "line": "Trickster raccoon-dogs of sake and shapeshift."
+    },
+    {
+      "id": "tengu",
+      "name": "Tengu",
+      "tradition": "folklore",
+      "line": "Crow-winged mountain mentors of sword and pride."
+    },
+    {
+      "id": "thunderbird",
+      "name": "Thunderbird",
+      "tradition": "folklore",
+      "line": "Storm-winged bird of indigenous North American legend (treat with respect)."
+    },
+    {
+      "id": "tikbalang",
+      "name": "Tikbalang",
+      "tradition": "folklore",
+      "line": "Horse-headed forest trickster of Philippine lore."
+    },
+    {
+      "id": "tokoloshe",
+      "name": "Tokoloshe",
+      "tradition": "folklore",
+      "line": "Mischievous night being of Southern African folklore."
+    },
+    {
+      "id": "troll-norse",
+      "name": "Troll (Norse)",
+      "tradition": "folklore",
+      "line": "Sun-shy mountain brutes of saga."
+    },
+    {
+      "id": "trow",
+      "name": "Trow",
+      "tradition": "folklore",
+      "line": "Orkney/Shetland underground folk."
+    },
+    {
+      "id": "tylwyth-teg",
+      "name": "Tylwyth Teg",
+      "tradition": "folklore",
+      "line": "Fair folk of Welsh hill and lake."
+    },
+    {
+      "id": "urisk",
+      "name": "Urisk",
+      "tradition": "folklore",
+      "line": "Lonely half-goat of Highland pools."
+    },
+    {
+      "id": "valkyrie",
+      "name": "Valkyrie",
+      "tradition": "folklore",
+      "line": "Chooser of the slain; chooser of fate."
+    },
+    {
+      "id": "vila",
+      "name": "Vila",
+      "tradition": "folklore",
+      "line": "Wind-nymph dancers of mountain meadows."
+    },
+    {
+      "id": "vodyanoy",
+      "name": "Vodyanoy",
+      "tradition": "folklore",
+      "line": "River-men who keep drowned bargains."
+    },
+    {
+      "id": "wendigo",
+      "name": "Wendigo",
+      "tradition": "folklore",
+      "line": "Hunger-spirit of winter taboo and excess."
+    },
+    {
+      "id": "white-dragon-britain",
+      "name": "White Dragon (Britain)",
+      "tradition": "folklore",
+      "line": "Rival dragon of Geoffrey\u2019s legend."
+    },
+    {
+      "id": "y-ddraig-goch",
+      "name": "Y Ddraig Goch",
+      "tradition": "folklore",
+      "line": "Red dragon emblem of Welsh myth."
+    },
+    {
+      "id": "yaksha",
+      "name": "Yaksha",
+      "tradition": "folklore",
+      "line": "Nature guardians of treasure and grove."
+    },
+    {
+      "id": "yokai-general",
+      "name": "Yokai (general)",
+      "tradition": "folklore",
+      "line": "Japanese uncanny beings of place and habit."
+    },
+    {
+      "id": "yuki-onna",
+      "name": "Yuki-onna",
+      "tradition": "folklore",
+      "line": "Snow women of blizzard beauty and cold."
+    },
+    {
+      "id": "zmey",
+      "name": "Zmey",
+      "tradition": "folklore",
+      "line": "Multi-headed Slavic dragons of greed and storm."
+    },
+    {
+      "id": "lfar",
+      "name": "\u00c1lfar",
+      "tradition": "folklore",
+      "line": "Elves of light and dark in Norse lore."
+    },
+    {
+      "id": "ashborn",
+      "name": "Ashborn",
+      "tradition": "original",
+      "line": "An original being of ash tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "ashbound",
+      "name": "Ashbound",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries ash weather into mortal rooms."
+    },
+    {
+      "id": "ashcaller",
+      "name": "Ashcaller",
+      "tradition": "original",
+      "line": "A people of ash-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "ashcrown",
+      "name": "Ashcrown",
+      "tradition": "original",
+      "line": "Custodians of ash thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "ashdeep",
+      "name": "Ashdeep",
+      "tradition": "original",
+      "line": "Custodians of ash thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "ashdrake",
+      "name": "Ashdrake",
+      "tradition": "original",
+      "line": "Scout-caste of the ash marches; maps before blades."
+    },
+    {
+      "id": "asheye",
+      "name": "Asheye",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries ash weather into mortal rooms."
+    },
+    {
+      "id": "ashflame",
+      "name": "Ashflame",
+      "tradition": "original",
+      "line": "Born where ash meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "ashguard",
+      "name": "Ashguard",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries ash weather into mortal rooms."
+    },
+    {
+      "id": "ashhand",
+      "name": "Ashhand",
+      "tradition": "original",
+      "line": "Born where ash meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "ashheart",
+      "name": "Ashheart",
+      "tradition": "original",
+      "line": "Scout-caste of the ash marches; maps before blades."
+    },
+    {
+      "id": "ashhunter",
+      "name": "Ashhunter",
+      "tradition": "original",
+      "line": "Born where ash meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "ashkin",
+      "name": "Ashkin",
+      "tradition": "original",
+      "line": "A planar traveler marked by ash and quiet resolve."
+    },
+    {
+      "id": "ashroot",
+      "name": "Ashroot",
+      "tradition": "original",
+      "line": "An original being of ash tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "ashscale",
+      "name": "Ashscale",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a ash bearing home."
+    },
+    {
+      "id": "ashseer",
+      "name": "Ashseer",
+      "tradition": "original",
+      "line": "A planar traveler marked by ash and quiet resolve."
+    },
+    {
+      "id": "ashshade",
+      "name": "Ashshade",
+      "tradition": "original",
+      "line": "Custodians of ash thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "ashsinger",
+      "name": "Ashsinger",
+      "tradition": "original",
+      "line": "A people of ash-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "ashsmith",
+      "name": "Ashsmith",
+      "tradition": "original",
+      "line": "An original being of ash tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "ashspark",
+      "name": "Ashspark",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a ash bearing home."
+    },
+    {
+      "id": "ashsprite",
+      "name": "Ashsprite",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a ash bearing home."
+    },
+    {
+      "id": "ashstone",
+      "name": "Ashstone",
+      "tradition": "original",
+      "line": "A people of ash-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "ashtide",
+      "name": "Ashtide",
+      "tradition": "original",
+      "line": "A planar traveler marked by ash and quiet resolve."
+    },
+    {
+      "id": "ashtooth",
+      "name": "Ashtooth",
+      "tradition": "original",
+      "line": "An original being of ash tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "ashveil",
+      "name": "Ashveil",
+      "tradition": "original",
+      "line": "Scout-caste of the ash marches; maps before blades."
+    },
+    {
+      "id": "ashvoice",
+      "name": "Ashvoice",
+      "tradition": "original",
+      "line": "A people of ash-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "ashwalker",
+      "name": "Ashwalker",
+      "tradition": "original",
+      "line": "Born where ash meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "ashwight",
+      "name": "Ashwight",
+      "tradition": "original",
+      "line": "Custodians of ash thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "ashwind",
+      "name": "Ashwind",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries ash weather into mortal rooms."
+    },
+    {
+      "id": "ashwing",
+      "name": "Ashwing",
+      "tradition": "original",
+      "line": "A planar traveler marked by ash and quiet resolve."
+    },
+    {
+      "id": "mossborn",
+      "name": "Mossborn",
+      "tradition": "original",
+      "line": "A people of moss-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "mossdrake",
+      "name": "Mossdrake",
+      "tradition": "original",
+      "line": "A planar traveler marked by moss and quiet resolve."
+    },
+    {
+      "id": "mossguard",
+      "name": "Mossguard",
+      "tradition": "original",
+      "line": "Scout-caste of the moss marches; maps before blades."
+    },
+    {
+      "id": "mosskin",
+      "name": "Mosskin",
+      "tradition": "original",
+      "line": "Born where moss meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "mosssinger",
+      "name": "Mosssinger",
+      "tradition": "original",
+      "line": "Custodians of moss thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "mosswalker",
+      "name": "Mosswalker",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries moss weather into mortal rooms."
+    },
+    {
+      "id": "mosswight",
+      "name": "Mosswight",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a moss bearing home."
+    },
+    {
+      "id": "starborn",
+      "name": "Starborn",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a star bearing home."
+    },
+    {
+      "id": "starbound",
+      "name": "Starbound",
+      "tradition": "original",
+      "line": "Born where star meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "starcaller",
+      "name": "Starcaller",
+      "tradition": "original",
+      "line": "An original being of star tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "starcrown",
+      "name": "Starcrown",
+      "tradition": "original",
+      "line": "A people of star-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "stardeep",
+      "name": "Stardeep",
+      "tradition": "original",
+      "line": "A people of star-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "stardrake",
+      "name": "Stardrake",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries star weather into mortal rooms."
+    },
+    {
+      "id": "stareye",
+      "name": "Stareye",
+      "tradition": "original",
+      "line": "Born where star meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "starflame",
+      "name": "Starflame",
+      "tradition": "original",
+      "line": "A planar traveler marked by star and quiet resolve."
+    },
+    {
+      "id": "starguard",
+      "name": "Starguard",
+      "tradition": "original",
+      "line": "Born where star meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "starhand",
+      "name": "Starhand",
+      "tradition": "original",
+      "line": "A planar traveler marked by star and quiet resolve."
+    },
+    {
+      "id": "starheart",
+      "name": "Starheart",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries star weather into mortal rooms."
+    },
+    {
+      "id": "starhunter",
+      "name": "Starhunter",
+      "tradition": "original",
+      "line": "A planar traveler marked by star and quiet resolve."
+    },
+    {
+      "id": "starkin",
+      "name": "Starkin",
+      "tradition": "original",
+      "line": "Scout-caste of the star marches; maps before blades."
+    },
+    {
+      "id": "starroot",
+      "name": "Starroot",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a star bearing home."
+    },
+    {
+      "id": "starscale",
+      "name": "Starscale",
+      "tradition": "original",
+      "line": "Custodians of star thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "starseer",
+      "name": "Starseer",
+      "tradition": "original",
+      "line": "Scout-caste of the star marches; maps before blades."
+    },
+    {
+      "id": "starshade",
+      "name": "Starshade",
+      "tradition": "original",
+      "line": "A people of star-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "starsinger",
+      "name": "Starsinger",
+      "tradition": "original",
+      "line": "An original being of star tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "starsmith",
+      "name": "Starsmith",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a star bearing home."
+    },
+    {
+      "id": "starspark",
+      "name": "Starspark",
+      "tradition": "original",
+      "line": "Custodians of star thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "starsprite",
+      "name": "Starsprite",
+      "tradition": "original",
+      "line": "Custodians of star thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "starstone",
+      "name": "Starstone",
+      "tradition": "original",
+      "line": "An original being of star tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "startide",
+      "name": "Startide",
+      "tradition": "original",
+      "line": "Scout-caste of the star marches; maps before blades."
+    },
+    {
+      "id": "startooth",
+      "name": "Startooth",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a star bearing home."
+    },
+    {
+      "id": "starveil",
+      "name": "Starveil",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries star weather into mortal rooms."
+    },
+    {
+      "id": "starvoice",
+      "name": "Starvoice",
+      "tradition": "original",
+      "line": "An original being of star tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "starwalker",
+      "name": "Starwalker",
+      "tradition": "original",
+      "line": "A planar traveler marked by star and quiet resolve."
+    },
+    {
+      "id": "starwight",
+      "name": "Starwight",
+      "tradition": "original",
+      "line": "A people of star-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "starwind",
+      "name": "Starwind",
+      "tradition": "original",
+      "line": "Born where star meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "starwing",
+      "name": "Starwing",
+      "tradition": "original",
+      "line": "Scout-caste of the star marches; maps before blades."
+    },
+    {
+      "id": "voidborn",
+      "name": "Voidborn",
+      "tradition": "original",
+      "line": "Custodians of void thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "voidbound",
+      "name": "Voidbound",
+      "tradition": "original",
+      "line": "A planar traveler marked by void and quiet resolve."
+    },
+    {
+      "id": "voidcaller",
+      "name": "Voidcaller",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a void bearing home."
+    },
+    {
+      "id": "voidcrown",
+      "name": "Voidcrown",
+      "tradition": "original",
+      "line": "An original being of void tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "voiddeep",
+      "name": "Voiddeep",
+      "tradition": "original",
+      "line": "An original being of void tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "voiddrake",
+      "name": "Voiddrake",
+      "tradition": "original",
+      "line": "Born where void meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "voideye",
+      "name": "Voideye",
+      "tradition": "original",
+      "line": "A planar traveler marked by void and quiet resolve."
+    },
+    {
+      "id": "voidflame",
+      "name": "Voidflame",
+      "tradition": "original",
+      "line": "Scout-caste of the void marches; maps before blades."
+    },
+    {
+      "id": "voidguard",
+      "name": "Voidguard",
+      "tradition": "original",
+      "line": "A planar traveler marked by void and quiet resolve."
+    },
+    {
+      "id": "voidhand",
+      "name": "Voidhand",
+      "tradition": "original",
+      "line": "Scout-caste of the void marches; maps before blades."
+    },
+    {
+      "id": "voidheart",
+      "name": "Voidheart",
+      "tradition": "original",
+      "line": "Born where void meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "voidhunter",
+      "name": "Voidhunter",
+      "tradition": "original",
+      "line": "Scout-caste of the void marches; maps before blades."
+    },
+    {
+      "id": "voidkin",
+      "name": "Voidkin",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries void weather into mortal rooms."
+    },
+    {
+      "id": "voidroot",
+      "name": "Voidroot",
+      "tradition": "original",
+      "line": "Custodians of void thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "voidscale",
+      "name": "Voidscale",
+      "tradition": "original",
+      "line": "A people of void-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "voidseer",
+      "name": "Voidseer",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries void weather into mortal rooms."
+    },
+    {
+      "id": "voidshade",
+      "name": "Voidshade",
+      "tradition": "original",
+      "line": "An original being of void tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "voidsinger",
+      "name": "Voidsinger",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a void bearing home."
+    },
+    {
+      "id": "voidsmith",
+      "name": "Voidsmith",
+      "tradition": "original",
+      "line": "Custodians of void thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "voidspark",
+      "name": "Voidspark",
+      "tradition": "original",
+      "line": "A people of void-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "voidsprite",
+      "name": "Voidsprite",
+      "tradition": "original",
+      "line": "A people of void-touched craft and hard-won hospitality."
+    },
+    {
+      "id": "voidstone",
+      "name": "Voidstone",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a void bearing home."
+    },
+    {
+      "id": "voidtide",
+      "name": "Voidtide",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries void weather into mortal rooms."
+    },
+    {
+      "id": "voidtooth",
+      "name": "Voidtooth",
+      "tradition": "original",
+      "line": "Custodians of void thresholds; bargain fairly, punish theft."
+    },
+    {
+      "id": "voidveil",
+      "name": "Voidveil",
+      "tradition": "original",
+      "line": "Born where void meets leyline; speaks little, remembers much."
+    },
+    {
+      "id": "voidvoice",
+      "name": "Voidvoice",
+      "tradition": "original",
+      "line": "Hearthless pilgrims seeking a void bearing home."
+    },
+    {
+      "id": "voidwalker",
+      "name": "Voidwalker",
+      "tradition": "original",
+      "line": "Scout-caste of the void marches; maps before blades."
+    },
+    {
+      "id": "voidwight",
+      "name": "Voidwight",
+      "tradition": "original",
+      "line": "An original being of void tradition\u2014scarce, watchful, and proud."
+    },
+    {
+      "id": "voidwind",
+      "name": "Voidwind",
+      "tradition": "original",
+      "line": "A planar traveler marked by void and quiet resolve."
+    },
+    {
+      "id": "voidwing",
+      "name": "Voidwing",
+      "tradition": "original",
+      "line": "Wanderers whose blood carries void weather into mortal rooms."
+    }
+  ]
+}

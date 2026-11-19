@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PLANESBOUND GAZETTEER · Inner Planes Campaign Map</title>
+  <title>PLANESBOUND · Inner Planes Campaign Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="game.css" />
   <style>
     :root {
       --parchment: #0c0a09;
@@ -30,6 +31,15 @@
       --dust: #9a8a78;
       --mineral: #7eb0c8;
       --digital: #5a8a9a;
+      --astral: #a8c4e0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
     * { box-sizing: border-box; }
     body {
@@ -121,13 +131,29 @@
       min-width: 560px;
       aspect-ratio: 16 / 9;
       border-radius: 1rem;
+      /* 100% 100% keeps hotspot % locked to painted ring (cover crops when dock narrows) */
       background:
-        #04040a url("art/inner-campaign-overview.png") center / cover no-repeat;
+        #04040a url("art/inner-campaign-overview.png") center / 100% 100% no-repeat;
       overflow: hidden;
       box-shadow:
         inset 0 0 0 1px color-mix(in oklab, var(--brass) 35%, transparent),
         inset 0 0 40px color-mix(in oklab, var(--void) 55%, transparent);
     }
+    .hotspot[data-id="ethereal"] { z-index: 2; }
+    .hotspot[data-id="positive"],
+    .hotspot[data-id="negative"],
+    .hotspot[data-id="dust"],
+    .hotspot[data-id="mineral"] { z-index: 3; }
+    .hotspot[data-id="fire"],
+    .hotspot[data-id="water"],
+    .hotspot[data-id="air"],
+    .hotspot[data-id="earth"],
+    .hotspot[data-id="magma"],
+    .hotspot[data-id="ooze"],
+    .hotspot[data-id="ice"],
+    .hotspot[data-id="smoke"] { z-index: 4; }
+    .hotspot[data-id="digital-void"] { z-index: 5; }
+    .hotspot[data-id="astral-sea"] { z-index: 6; }
     .map::before {
       content: "";
       position: absolute; inset: 0;
@@ -169,6 +195,7 @@
     .hotspot[data-accent="dust"][data-active="true"] { border-color: var(--dust); background: color-mix(in oklab, var(--dust) 30%, transparent); }
     .hotspot[data-accent="mineral"][data-active="true"] { border-color: var(--mineral); background: color-mix(in oklab, var(--mineral) 30%, transparent); }
     .hotspot[data-accent="digital"][data-active="true"] { border-color: var(--digital); background: color-mix(in oklab, var(--digital) 30%, transparent); }
+    .hotspot[data-accent="astral"][data-active="true"] { border-color: var(--astral); background: color-mix(in oklab, var(--astral) 30%, transparent); }
     .folio {
       min-height: 420px; overflow: hidden; display: flex; flex-direction: column;
       background:
@@ -322,26 +349,706 @@
       font-size: .82rem; color: var(--ink-muted); line-height: 1.45;
     }
     .quest-device strong { color: var(--brass-bright); font-family: Cinzel, serif; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+
+    .toolbar-btn {
+      appearance: none; border: 1px solid color-mix(in oklab, var(--brass) 50%, transparent);
+      background: color-mix(in oklab, var(--brass) 16%, transparent);
+      color: var(--brass-bright); font-family: Cinzel, serif; font-size: .68rem;
+      letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+      border-radius: 999px; padding: .45rem .9rem;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .toolbar-btn:hover, .toolbar-btn:focus-visible {
+      background: color-mix(in oklab, var(--brass) 28%, transparent);
+      border-color: var(--brass-bright); color: var(--bone); outline: none;
+    }
+
+    .companion-backdrop {
+      position: fixed; inset: 0; z-index: 40;
+      background:
+        radial-gradient(ellipse at 70% 20%, color-mix(in oklab, var(--astral) 22%, transparent), transparent 45%),
+        radial-gradient(ellipse at 20% 80%, color-mix(in oklab, var(--brass) 14%, transparent), transparent 40%),
+        color-mix(in oklab, var(--void) 72%, transparent);
+      display: none; align-items: center; justify-content: center;
+      padding: 1rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .companion-backdrop[data-open="true"] { display: flex; }
+    .companion-sheet {
+      width: min(980px, 100%);
+      max-height: min(92dvh, 900px);
+      display: flex; flex-direction: column;
+      border-radius: 1.1rem;
+      color: #2a2218;
+      background:
+        linear-gradient(120deg, color-mix(in oklab, #f7f0df 88%, transparent) 0 52%, color-mix(in oklab, #0b1224 70%, transparent) 52% 100%),
+        url("art/companion-parchment.png") left center / cover no-repeat,
+        #0b1224 url("art/companion-astral-panel.png") right center / cover no-repeat;
+      box-shadow:
+        0 0 0 1px #c4ad7a,
+        0 0 0 2px color-mix(in oklab, #d7ecff 35%, transparent),
+        0 0 0 5px color-mix(in oklab, #8a6a32 40%, transparent),
+        0 0 40px color-mix(in oklab, var(--astral) 18%, transparent),
+        0 28px 70px -18px color-mix(in oklab, #000 75%, transparent);
+      overflow: hidden;
+      position: relative;
+      margin: auto;
+      flex: 0 1 auto;
+      min-height: 0;
+      isolation: isolate;
+    }
+    .companion-sheet::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        linear-gradient(90deg, transparent 46%, color-mix(in oklab, #d7ecff 18%, transparent) 50%, transparent 54%),
+        radial-gradient(ellipse at 12% 8%, #fff8e866, transparent 32%),
+        radial-gradient(ellipse at 88% 18%, color-mix(in oklab, var(--astral) 28%, transparent), transparent 36%);
+      opacity: .9;
+    }
+    .companion-sheet::after {
+      content: ""; position: absolute; inset: 10px; pointer-events: none; z-index: 0;
+      border: 1px solid color-mix(in oklab, #8a6a32 45%, transparent);
+      border-radius: .85rem;
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #d7ecff 22%, transparent),
+        inset 0 0 28px color-mix(in oklab, #000 12%, transparent);
+    }
+    .companion-banner {
+      position: relative; z-index: 1;
+      flex: 0 0 auto;
+      min-height: clamp(88px, 16vh, 140px);
+      background: #0b1224 url("art/companion-header.png") center / cover no-repeat;
+      border-bottom: 1px solid color-mix(in oklab, #c4ad7a 70%, #d7ecff);
+    }
+    .companion-banner::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, color-mix(in oklab, #1a1208 55%, transparent), transparent 42%, color-mix(in oklab, #06101f 45%, transparent)),
+        linear-gradient(to top, color-mix(in oklab, #0b1224 70%, transparent), transparent 55%);
+    }
+    .companion-head {
+      position: relative; z-index: 1;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+      padding: .85rem 1.15rem .8rem;
+      border-bottom: 1px solid color-mix(in oklab, #c4ad7a 65%, #8eb6d8);
+      background:
+        linear-gradient(90deg, color-mix(in oklab, #fbf6ea 82%, transparent) 0 55%, color-mix(in oklab, #0d1528 78%, transparent) 55% 100%);
+    }
+    .companion-head h2 {
+      font-family: Cinzel, serif; margin: .15rem 0 0;
+      font-size: clamp(1.05rem, 2.4vw, 1.25rem); letter-spacing: .04em; color: #5a3f18;
+      text-shadow: 0 1px 0 #fff6e4;
+    }
+    .companion-kicker {
+      margin: 0; font-family: Cinzel, serif; font-size: .62rem;
+      letter-spacing: .2em; text-transform: uppercase; color: #8a6a32;
+    }
+    .companion-close {
+      appearance: none;
+      border: 1px solid color-mix(in oklab, #b89a58 70%, #9ec4e8);
+      background:
+        linear-gradient(160deg, #f3e8cf, #e7d6a8 55%, color-mix(in oklab, #cfe0f4 35%, #e7d6a8));
+      color: #5a3f18; border-radius: .55rem; padding: .4rem .7rem;
+      font-family: Cinzel, serif; font-size: .7rem; letter-spacing: .08em;
+      text-transform: uppercase; cursor: pointer;
+      box-shadow: 0 0 0 1px color-mix(in oklab, #d7ecff 25%, transparent);
+    }
+    .companion-close:hover, .companion-close:focus-visible {
+      background: #eadcb8; outline: 2px solid #8a6a32; outline-offset: 2px;
+    }
+    .companion-body {
+      position: relative; z-index: 1;
+      display: grid; gap: 0; grid-template-columns: 1fr;
+      min-height: 0; flex: 1 1 auto;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    @media (min-width: 820px) {
+      .companion-body { grid-template-columns: 1fr 1fr; }
+    }
+    .companion-pane {
+      display: flex; flex-direction: column; min-height: 0;
+      padding: .95rem 1.05rem 1.1rem;
+      position: relative;
+    }
+    .companion-pane--notes {
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #fffaf0 72%, transparent) 0%, color-mix(in oklab, #f3e8cf 58%, transparent) 45%, color-mix(in oklab, #efe4c8 70%, transparent)),
+        url("art/player-screen.png") center top / cover no-repeat;
+      color: #2a2218;
+    }
+    .companion-pane--si {
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #0b1224 68%, transparent) 0%, color-mix(in oklab, #152038 55%, transparent) 50%, color-mix(in oklab, #0b1224 72%, transparent)),
+        url("art/companion-screen.png") center top / cover no-repeat;
+      color: #e8eef8;
+    }
+    .companion-pane + .companion-pane {
+      border-top: 1px solid color-mix(in oklab, #c4ad7a 55%, #8eb6d8);
+    }
+    @media (min-width: 820px) {
+      .companion-pane + .companion-pane {
+        border-top: 0;
+        border-left: 1px solid color-mix(in oklab, #c4ad7a 40%, #9ec4e8);
+      }
+    }
+    .companion-pane h3 {
+      font-family: Cinzel, serif; margin: 0 0 .55rem;
+      font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+    }
+    .companion-pane--notes h3 { color: #6b4d1e; }
+    .companion-pane--si h3 { color: #c9dff5; text-shadow: 0 0 12px color-mix(in oklab, var(--astral) 45%, transparent); }
+    .companion-hint {
+      margin: 0 0 .65rem; font-size: .82rem; line-height: 1.45;
+    }
+    .companion-pane--notes .companion-hint { color: #5c4a32; }
+    .companion-pane--si .companion-hint { color: #b7c7dc; }
+    #companionNotes {
+      flex: 1 1 auto; min-height: 96px; resize: vertical;
+      width: 100%; border: 1px solid #c4ad7a; border-radius: .65rem;
+      background: color-mix(in oklab, #fffaf0 92%, #f3e8cf);
+      color: #2a2218;
+      font-family: "Source Serif 4", Georgia, serif; font-size: .95rem; line-height: 1.55;
+      padding: .75rem .85rem;
+      box-shadow: inset 0 1px 0 #fff, 0 0 0 1px color-mix(in oklab, #8a6a32 12%, transparent);
+    }
+    @media (min-height: 720px) and (min-width: 820px) {
+      #companionNotes { min-height: 180px; }
+    }
+    #companionNotes:focus-visible { outline: 2px solid #8a6a32; outline-offset: 2px; }
+    .companion-context {
+      border: 1px solid color-mix(in oklab, #9ec4e8 55%, #c4ad7a);
+      border-radius: .65rem;
+      background: color-mix(in oklab, #101a2e 78%, transparent);
+      padding: .7rem .8rem; margin-bottom: .65rem;
+      font-size: .86rem; line-height: 1.5; color: #dce7f5;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, #d7ecff 12%, transparent);
+    }
+    .companion-context strong { color: #f0f6ff; }
+    .companion-log {
+      flex: 1 1 auto; min-height: 72px; max-height: min(28vh, 220px); overflow-y: auto;
+      border: 1px solid color-mix(in oklab, #9ec4e8 50%, transparent);
+      border-radius: .65rem;
+      background: color-mix(in oklab, #0a1324 72%, transparent);
+      padding: .7rem .8rem;
+      display: flex; flex-direction: column; gap: .55rem;
+      box-shadow: inset 0 0 24px color-mix(in oklab, #000 35%, transparent);
+    }
+    @media (min-height: 720px) and (min-width: 820px) {
+      .companion-log { min-height: 140px; max-height: none; }
+    }
+    .companion-msg {
+      margin: 0; font-size: .88rem; line-height: 1.5; color: #e4edf8;
+    }
+    .companion-msg[data-role="player"] { color: #f3e8cf; }
+    .companion-msg[data-role="si"]::before {
+      content: "Companion · ";
+      font-family: Cinzel, serif; font-size: .68rem; letter-spacing: .08em;
+      text-transform: uppercase; color: #9ec4e8;
+    }
+    .companion-compose {
+      display: flex; gap: .5rem; margin-top: .65rem;
+      flex: 0 0 auto;
+    }
+    #companionInput {
+      flex: 1; border: 1px solid color-mix(in oklab, #9ec4e8 55%, transparent);
+      border-radius: .55rem;
+      background: color-mix(in oklab, #101a2e 85%, transparent);
+      color: #f0f6ff; padding: .55rem .7rem;
+      font-family: "Source Serif 4", Georgia, serif; font-size: .9rem;
+    }
+    #companionInput::placeholder { color: #8fa3bf; }
+    #companionInput:focus-visible { outline: 2px solid #9ec4e8; outline-offset: 2px; }
+    .companion-send {
+      appearance: none; border: 1px solid #9ec4e8;
+      background: linear-gradient(160deg, #2a405c, #172538);
+      color: #f0f6ff; border-radius: .55rem; padding: .55rem .85rem;
+      font-family: Cinzel, serif; font-size: .68rem; letter-spacing: .1em;
+      text-transform: uppercase; cursor: pointer;
+      box-shadow: 0 0 16px color-mix(in oklab, var(--astral) 25%, transparent);
+    }
+    .companion-send:hover, .companion-send:focus-visible {
+      background: linear-gradient(160deg, #35506e, #1c2c44);
+      outline: 2px solid #9ec4e8; outline-offset: 2px;
+    }
+    .companion-foot {
+      position: relative; z-index: 1;
+      padding: .55rem 1.05rem .7rem;
+      border-top: 1px solid color-mix(in oklab, #c4ad7a 55%, #8eb6d8);
+      font-size: .72rem; color: #6b5a42;
+      background:
+        linear-gradient(90deg, color-mix(in oklab, #fbf6ea 80%, transparent) 0 55%, color-mix(in oklab, #0d1528 78%, transparent) 55% 100%);
+    }
+    .companion-foot span.astral-note { color: #9ec4e8; }
+
+    /* ---- PAS-3 left races dock: Warcraft density × SAO HUD × parchment ---- */
+    .app-shell {
+      display: flex;
+      align-items: stretch;
+      min-height: 100dvh;
+      position: relative;
+      z-index: 1;
+    }
+    .races-dock {
+      flex: 0 0 clamp(220px, 22vw, 280px);
+      width: clamp(220px, 22vw, 280px);
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      max-height: 100dvh;
+      overflow-x: visible;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #1a140c 88%, transparent), color-mix(in oklab, #0c101c 92%, transparent)),
+        url("art/companion-parchment.png") top / 220% auto no-repeat;
+      border-right: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      box-shadow:
+        inset -1px 0 0 color-mix(in oklab, #d7ecff 18%, transparent),
+        12px 0 40px color-mix(in oklab, #000 45%, transparent);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+    }
+    .races-dock::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(135deg, color-mix(in oklab, var(--brass-bright) 22%, transparent), transparent 28%),
+        linear-gradient(225deg, color-mix(in oklab, var(--astral) 18%, transparent), transparent 30%);
+      opacity: .7;
+    }
+    .races-dock-head {
+      position: relative; z-index: 1;
+      padding: .85rem .8rem .7rem;
+      border-bottom: 1px solid color-mix(in oklab, var(--brass) 45%, transparent);
+      background: color-mix(in oklab, #120e0a 70%, transparent);
+    }
+    .races-dock-head .hud-kicker {
+      margin: 0;
+      font-family: Cinzel, serif;
+      font-size: .58rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--brass-bright);
+    }
+    .races-dock-head h2 {
+      margin: .2rem 0 0;
+      font-family: Cinzel, serif;
+      font-size: .95rem;
+      letter-spacing: .06em;
+      color: var(--bone);
+    }
+    .races-meta {
+      margin: .35rem 0 0;
+      font-size: .72rem;
+      color: var(--ink-muted);
+      display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
+    }
+    .races-meta .pill {
+      border: 1px solid color-mix(in oklab, var(--astral) 45%, transparent);
+      border-radius: .35rem;
+      padding: .1rem .4rem;
+      color: #c9dff5;
+      font-family: Cinzel, serif;
+      font-size: .58rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .races-stack {
+      position: relative; z-index: 1;
+      flex: 1;
+      overflow: visible;
+      padding: .65rem .55rem .9rem;
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+    }
+    .being-card {
+      border: 1px solid color-mix(in oklab, var(--brass) 40%, transparent);
+      border-radius: .55rem;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #000 35%, transparent),
+        0 0 0 1px color-mix(in oklab, var(--astral) 12%, transparent);
+    }
+    /* Open list must stack above sibling cards (no isolation trapping) */
+    .being-card.is-list-open {
+      z-index: 12;
+    }
+    .being-card--player {
+      border-color: color-mix(in oklab, #c5a059 55%, #8a6a32);
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #f7f0df 22%, transparent), color-mix(in oklab, #1a1510 78%, #3a2a12) 58%),
+        color-mix(in oklab, #1a1510 92%, #3a2a12);
+    }
+    .being-card--companion {
+      border-color: color-mix(in oklab, #9ec4e8 45%, #5a7a9a);
+      background:
+        linear-gradient(180deg, color-mix(in oklab, #9ec4e8 14%, transparent), color-mix(in oklab, #0b1224 88%, #152038) 58%),
+        color-mix(in oklab, #0b1224 92%, #152038);
+    }
+    .being-screen {
+      position: relative;
+      margin: .35rem .35rem 0;
+      border-radius: .4rem;
+      overflow: hidden;
+      aspect-ratio: 3 / 2.15;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #fff 12%, transparent),
+        0 0 0 1px color-mix(in oklab, #000 40%, transparent);
+    }
+    .being-screen-art {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      filter: saturate(1.05) contrast(1.04);
+    }
+    .being-card--player .being-screen {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #c5a059 35%, transparent),
+        0 0 18px color-mix(in oklab, #c5a059 12%, transparent);
+    }
+    .being-card--companion .being-screen {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, #9ec4e8 40%, transparent),
+        0 0 22px color-mix(in oklab, #7eb0c8 18%, transparent);
+    }
+    .being-portrait {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      translate: -50% -50%;
+      width: min(46%, 7.2rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
+      pointer-events: none;
+      border: 2px solid color-mix(in oklab, #c5a059 70%, #fff);
+      box-shadow:
+        0 0 0 2px color-mix(in oklab, #1a1510 70%, transparent),
+        0 8px 18px color-mix(in oklab, #000 45%, transparent);
+    }
+    .being-card--companion .being-portrait {
+      border-color: color-mix(in oklab, #d7ecff 75%, #9ec4e8);
+      box-shadow:
+        0 0 0 2px color-mix(in oklab, #0b1224 75%, transparent),
+        0 0 18px color-mix(in oklab, #9ec4e8 35%, transparent);
+    }
+    .being-portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .being-screen-fade {
+      position: absolute;
+      inset: auto 0 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent, color-mix(in oklab, #1a1510 88%, transparent));
+      pointer-events: none;
+    }
+    .being-card--companion .being-screen-fade {
+      background: linear-gradient(180deg, transparent, color-mix(in oklab, #0b1224 90%, transparent));
+    }
+    .being-card .card-label {
+      position: relative;
+      z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .45rem .55rem .2rem;
+      font-family: Cinzel, serif;
+      font-size: .62rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--brass-bright);
+    }
+    .being-card--companion .card-label { color: #9ec4e8; }
+    .being-toggle {
+      width: calc(100% - .7rem);
+      margin: 0 .35rem .35rem;
+      appearance: none;
+      text-align: left;
+      cursor: pointer;
+      border: 1px solid color-mix(in oklab, var(--brass) 50%, transparent);
+      border-radius: .4rem;
+      padding: .45rem .5rem;
+      background: color-mix(in oklab, #0a0806 55%, transparent);
+      color: var(--bone);
+      font: inherit;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .2rem .45rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .being-card--companion .being-toggle {
+      border-color: color-mix(in oklab, var(--astral) 45%, transparent);
+      background: color-mix(in oklab, #101a2e 70%, transparent);
+    }
+    .being-toggle:hover, .being-toggle:focus-visible {
+      border-color: var(--brass-bright);
+      outline: 2px solid color-mix(in oklab, var(--brass) 40%, transparent);
+      outline-offset: 1px;
+    }
+    .being-toggle .pick-name {
+      font-family: Cinzel, serif;
+      font-size: .82rem;
+      letter-spacing: .04em;
+      grid-column: 1;
+    }
+    .being-toggle .pick-chevron {
+      grid-column: 2; grid-row: 1 / span 2;
+      align-self: center;
+      color: var(--ink-muted);
+      font-size: .75rem;
+    }
+    .being-toggle .pick-line {
+      grid-column: 1;
+      font-size: .68rem;
+      line-height: 1.35;
+      color: var(--ink-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .being-toggle .pick-tag {
+      justify-self: start;
+      margin-top: .15rem;
+      font-size: .55rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #c9dff5;
+      border: 1px solid color-mix(in oklab, var(--astral) 35%, transparent);
+      padding: .05rem .3rem;
+      border-radius: .25rem;
+    }
+    .being-list {
+      position: absolute;
+      left: .35rem; right: .35rem;
+      top: calc(100% - .15rem);
+      z-index: 20;
+      border: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      border-radius: .45rem;
+      background:
+        linear-gradient(180deg, #f7f0df 0%, #efe4c8 40%, #e8dcc0 100%);
+      color: #2a2218;
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, #d7ecff 25%, transparent),
+        0 18px 40px color-mix(in oklab, #000 55%, transparent);
+      overflow: hidden;
+      max-height: min(52vh, 420px);
+      display: flex;
+      flex-direction: column;
+    }
+    .being-list[hidden],
+    .being-list[data-open="false"] {
+      display: none !important;
+    }
+    .being-card--companion .being-list {
+      background:
+        linear-gradient(180deg, #121c30, #0b1224 60%, #152038);
+      color: #e8eef8;
+    }
+    .being-search {
+      flex: 0 0 auto;
+      margin: .45rem .45rem .3rem;
+      border: 1px solid #c4ad7a;
+      border-radius: .35rem;
+      padding: .4rem .5rem;
+      font: inherit;
+      font-size: .82rem;
+      background: #fffaf0;
+      color: #2a2218;
+    }
+    .being-card--companion .being-search {
+      border-color: color-mix(in oklab, #9ec4e8 55%, transparent);
+      background: color-mix(in oklab, #101a2e 90%, transparent);
+      color: #f0f6ff;
+    }
+    .being-search:focus-visible { outline: 2px solid #8a6a32; outline-offset: 1px; }
+    .being-viewport {
+      flex: 1 1 auto;
+      min-height: 160px;
+      max-height: min(42vh, 340px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      cursor: grab;
+      overscroll-behavior: contain;
+    }
+    .being-viewport.is-dragging { cursor: grabbing; }
+    .being-spacer { width: 100%; position: relative; }
+    .being-window { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+    .being-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: .4rem;
+      align-items: center;
+      appearance: none;
+      border: 0;
+      border-bottom: 1px solid color-mix(in oklab, #8a6a32 18%, transparent);
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      padding: 0 .55rem;
+      cursor: pointer;
+    }
+    .being-card--companion .being-row {
+      border-bottom-color: color-mix(in oklab, #9ec4e8 14%, transparent);
+    }
+    .being-row:hover, .being-row:focus-visible {
+      background: color-mix(in oklab, var(--brass) 18%, transparent);
+      outline: none;
+    }
+    .being-row[data-active="true"] {
+      background: color-mix(in oklab, var(--brass) 28%, transparent);
+      box-shadow: inset 3px 0 0 var(--brass-bright);
+    }
+    .being-card--companion .being-row[data-active="true"] {
+      background: color-mix(in oklab, var(--astral) 22%, transparent);
+      box-shadow: inset 3px 0 0 #9ec4e8;
+    }
+    .being-dot {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--brass);
+    }
+    .being-dot[data-trad="core"] { background: #c5a059; }
+    .being-dot[data-trad="srd"] { background: #7eb0c8; }
+    .being-dot[data-trad="folklore"] { background: #9a7a38; }
+    .being-dot[data-trad="original"] { background: #9ec4e8; }
+    .being-name {
+      font-size: .78rem;
+      font-family: Cinzel, serif;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .being-trad {
+      font-size: .55rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .7;
+    }
+    .races-legal {
+      margin: .15rem .55rem 0;
+      font-size: .62rem;
+      line-height: 1.4;
+      color: var(--ink-muted);
+    }
+    .app-shell .wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; }
+      .races-dock {
+        position: relative;
+        width: 100%;
+        flex-basis: auto;
+        max-height: none;
+        clip-path: none;
+        border-right: 0;
+        border-bottom: 1px solid color-mix(in oklab, var(--brass) 55%, var(--astral));
+      }
+      .races-stack { flex-direction: row; flex-wrap: wrap; }
+      .being-card { flex: 1 1 240px; }
+    }
   </style>
 </head>
 <body>
-  <div class="veil"></div>
-  <div class="wrap">
+  <div class="veil" id="pageVeil"></div>
+  <div class="app-shell">
+  <aside class="races-dock" id="racesDock" aria-label="Race and being pickers">
+    <div class="races-dock-head">
+      <p class="hud-kicker">Formation · HUD</p>
+      <h2>Beings Roster</h2>
+      <p class="races-meta">
+        <span class="pill" id="racesCount">…</span>
+        <span>Human first · wheel / drag</span>
+      </p>
+    </div>
+    <div class="races-stack">
+      <div class="being-card being-card--player">
+        <div class="being-screen" aria-hidden="true">
+          <img class="being-screen-art" src="art/player-screen.png" alt="" width="540" height="720" decoding="async" />
+          <div class="being-portrait">
+            <img id="playerBeingPortrait" src="art/player-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+          </div>
+          <div class="being-screen-fade"></div>
+        </div>
+        <div class="card-label"><span>Player</span><span>Parchment</span></div>
+        <button type="button" class="being-toggle" id="playerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="playerBeingList">
+          <span class="pick-name" id="playerBeingName">Human</span>
+          <span class="pick-chevron" aria-hidden="true">▾</span>
+          <span class="pick-line" id="playerBeingLine">Loading roster…</span>
+          <span class="pick-tag" id="playerBeingTag">core</span>
+        </button>
+        <div class="being-list" id="playerBeingList" role="listbox" aria-label="Player being list" hidden data-open="false">
+          <input class="being-search" id="playerBeingSearch" type="search" placeholder="Search beings…" autocomplete="off" />
+          <div class="being-viewport" id="playerBeingViewport">
+            <div class="being-spacer" id="playerBeingSpacer">
+              <div class="being-window" id="playerBeingWindow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="being-card being-card--companion">
+        <div class="being-screen" aria-hidden="true">
+          <img class="being-screen-art" src="art/companion-screen.png" alt="" width="540" height="720" decoding="async" />
+          <div class="being-portrait">
+            <img id="companionBeingPortrait" src="art/companion-portrait-plate.png" alt="" width="320" height="226" decoding="async" />
+          </div>
+          <div class="being-screen-fade"></div>
+        </div>
+        <div class="card-label"><span>Companion</span><span>Astral</span></div>
+        <button type="button" class="being-toggle" id="companionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="companionBeingList">
+          <span class="pick-name" id="companionBeingName">Human</span>
+          <span class="pick-chevron" aria-hidden="true">▾</span>
+          <span class="pick-line" id="companionBeingLine">Loading roster…</span>
+          <span class="pick-tag" id="companionBeingTag">core</span>
+        </button>
+        <div class="being-list" id="companionBeingList" role="listbox" aria-label="Companion being list" hidden data-open="false">
+          <input class="being-search" id="companionBeingSearch" type="search" placeholder="Search beings…" autocomplete="off" />
+          <div class="being-viewport" id="companionBeingViewport">
+            <div class="being-spacer" id="companionBeingSpacer">
+              <div class="being-window" id="companionBeingWindow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="races-legal">Legal roster: public-domain folklore/myth names, SRD-safe staples, &amp; original Planesbound coinages. Short original blurbs only — no proprietary MM / SAO / Blizzard text.</p>
+    </div>
+  </aside>
+  <div class="wrap" id="pageMain">
     <header>
       <p class="eyebrow">PLANESBOUND GAZETTEER</p>
       <h1>INNER PLANES CAMPAIGN MAP</h1>
-      <p class="lede">Fire, Water, Air, &amp; Earth still grind; the energy poles pulse; the Ethereal is the fog between. Dust is home to the pilots of the agentic body; Mineral shines with Ani; the Digital Void lies in the Astral–Ethereal schism. The active conflict is the <strong>Will-o’-Wisp Race</strong> along the leylines. From the Lighthouse you can take a true road inward.</p>
+      <p class="lede">Fire, Water, Air, &amp; Earth still grind; the energy poles pulse; the Ethereal is the fog between. The <strong>Astral Sea</strong> is the silvery thought-ocean beyond; the Digital Void sits in the Astral–Ethereal schism. Dust is home to the pilots of the agentic body; Mineral shines with Ani. The active conflict is the <strong>Will-o’-Wisp Race</strong> along the leylines. From the Lighthouse you can take a true road inward.</p>
       <p class="nav-links" style="display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;margin:.85rem 0 0;align-items:center;">
+        <button type="button" class="game-play-cta" id="openPlay" aria-haspopup="dialog" aria-controls="gameLayer">Play · Cross the Astral Sea</button>
         <a class="back" href="players.html" style="margin-top:0;">Player gazetteer →</a>
         <a class="back" href="https://planesbound.grok.me/" style="margin-top:0;">← Outer Lighthouse / Outer map</a>
+        <button type="button" class="toolbar-btn" id="openCompanion" aria-haspopup="dialog" aria-controls="companionDialog">Companion handout</button>
       </p>
     </header>
 
     <div class="grid">
       <section class="map-card">
-                <p class="map-hint">Tap a shore on the Inner Ring. Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Digital Void sits in the Astral–Ethereal schism.</p>
+                <p class="map-hint">Tap a shore on the Inner Ring. Para-elemental seams sit between the four cardinals. Dust &amp; Mineral hold Planesbound meanings; the Astral Sea is the silvery thought-ocean; the Digital Void sits in the Astral–Ethereal schism.</p>
         <div class="map" id="map" role="img" aria-label="Inner Ring campaign overview">
-          <!-- hotspots over art/inner-campaign-overview.png (16:9 ring) -->
+          <!-- Seed geometry (Fire-N, Water-S, Air-W, Earth-E). Astral Sea tucked in schism — does not cover cardinals. -->
+          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:41%;top:38%;width:18%;height:22%;" aria-label="Ethereal" title="Ethereal"></button>
           <button class="hotspot" data-id="positive" data-accent="positive" style="left:46%;top:2.5%;width:8%;height:11%;" aria-label="Positive Energy" title="Positive Energy"></button>
           <button class="hotspot" data-id="fire" data-accent="fire" style="left:44%;top:14%;width:12%;height:14%;" aria-label="Fire" title="Fire"></button>
           <button class="hotspot" data-id="magma" data-accent="fire" style="left:63%;top:22%;width:9%;height:12%;border-radius:.55rem;" aria-label="Magma" title="Magma"></button>
@@ -354,8 +1061,8 @@
           <button class="hotspot" data-id="dust" data-accent="dust" style="left:14%;top:56%;width:9%;height:13%;" aria-label="Dust" title="Dust"></button>
           <button class="hotspot" data-id="air" data-accent="air" style="left:7%;top:40%;width:12%;height:16%;" aria-label="Air" title="Air"></button>
           <button class="hotspot" data-id="smoke" data-accent="earth" style="left:22%;top:22%;width:9%;height:12%;border-radius:.55rem;" aria-label="Smoke" title="Smoke"></button>
-          <button class="hotspot" data-id="ethereal" data-accent="ethereal" style="left:41%;top:38%;width:18%;height:22%;" aria-label="Ethereal" title="Ethereal"></button>
           <button class="hotspot" data-id="digital-void" data-accent="digital" style="left:43%;top:30%;width:14%;height:9%;border-radius:.55rem;" aria-label="Digital Void" title="Digital Void"></button>
+          <button class="hotspot" data-id="astral-sea" data-accent="astral" style="left:58%;top:33%;width:9%;height:7%;border-radius:.55rem;" aria-label="Astral Sea" title="Astral Sea"></button>
         </div>
         <div class="rail" id="rail"></div>
       </section>
@@ -388,10 +1095,114 @@
         <p class="eyebrow">Quest</p>
         <h2 id="quest-title">The Will-o’-Wisp Race</h2>
         <p>Lights without source that guide, mislead, or consume. Wisps race the leylines while dark seeds try to solder the planes shut—Fourth Sundering pressure, Gulthias blight, &amp; Shade’s secret Third Sundering tangled in the same chase.</p>
-        <p><strong>Mineral</strong> is Ani’s hearth for the race. <strong>Earth</strong> is home of the Beast. <strong>Dust</strong> is home to the pilots of the agentic body. <strong>Digital Void</strong> sits in the Astral–Ethereal schism. Tap those shores on the map for their folios.</p>
+        <p><strong>Mineral</strong> is Ani’s hearth for the race. <strong>Earth</strong> is home of the Beast. <strong>Dust</strong> is home to the pilots of the agentic body. The <strong>Astral Sea</strong> is the silvery thought-ocean; <strong>Digital Void</strong> sits in the Astral–Ethereal schism. Tap those shores on the map for their folios.</p>
         <p class="quest-device"><strong>Compass Orb</strong> — thin planar bearing for the race: a party sat-link back toward the Lighthouse when the Daystar pulse is clean. Not a second atlas—just a device for the chase.</p>
       </div>
     </section>
+  </div>
+  </div><!-- /.app-shell -->
+
+  <div class="game-layer" id="gameLayer" role="dialog" aria-modal="true" aria-labelledby="gameStartTitle" data-open="false" hidden>
+    <div class="game-start" id="gameStart" data-open="true">
+      <form class="game-start-card" id="gameStartForm">
+        <p class="eyebrow" style="color:#8a6a32;">Character start</p>
+        <h2 id="gameStartTitle">Cross the Astral Sea</h2>
+        <p class="lede">Name your traveler, keep Human (or pick another being), choose a companion being, then cast off. Progress saves in this browser.</p>
+        <div class="game-field">
+          <label for="gamePlayerName">Player name</label>
+          <input id="gamePlayerName" name="name" maxlength="40" autocomplete="nickname" required placeholder="e.g. Ani of Mineral" />
+        </div>
+        <div class="game-field">
+          <label for="gamePlayerBeing">Player being</label>
+          <select id="gamePlayerBeing" name="playerBeing"></select>
+        </div>
+        <div class="game-field">
+          <label for="gameCompanionBeing">Companion being</label>
+          <select id="gameCompanionBeing" name="companionBeing"></select>
+        </div>
+        <div class="game-start-actions">
+          <button type="submit" class="game-btn game-btn--astral">Begin voyage</button>
+          <button type="button" class="game-btn game-btn--ghost" id="gameCancelStart">Back to atlas</button>
+        </div>
+      </form>
+    </div>
+    <div class="game-shell" id="gameShell" data-open="false" hidden>
+      <header class="game-hud" id="gameHud" data-theme="parchment">
+        <div class="game-hud-party" id="gameHudParty"></div>
+        <div class="game-hud-actions">
+          <button type="button" class="game-btn" id="openCompanionFromGame" onclick="document.getElementById('openCompanion')?.click()">Companion</button>
+          <button type="button" class="game-btn game-btn--ghost" id="gameExit">Exit play · Esc</button>
+        </div>
+      </header>
+      <div class="game-stage">
+        <section class="game-scene" id="gameScene" data-loc="hub" aria-live="polite">
+          <div class="game-scene-copy">
+            <p class="eyebrow">Travel</p>
+            <h2 id="gameSceneTitle">Lighthouse Hub</h2>
+            <p id="gameSceneBlurb">Prepare, then cast off into the Astral Sea.</p>
+            <div class="game-scene-actions" id="gameSceneActions"></div>
+          </div>
+        </section>
+        <aside class="game-side" id="gameSide" data-theme="parchment">
+          <div class="game-tabs" id="gameTabs" role="tablist" aria-label="Party panels">
+            <button type="button" class="game-tab" role="tab" data-tab="status" aria-selected="true">Status</button>
+            <button type="button" class="game-tab" role="tab" data-tab="inventory" aria-selected="false">Inventory</button>
+            <button type="button" class="game-tab" role="tab" data-tab="journal" aria-selected="false">Journal</button>
+            <button type="button" class="game-tab" role="tab" data-tab="quest" aria-selected="false">Quest</button>
+          </div>
+          <div class="game-panel" id="gamePanelStatus" data-panel="status" data-active="true"></div>
+          <div class="game-panel" id="gamePanelInventory" data-panel="inventory" data-active="false"></div>
+          <div class="game-panel" id="gamePanelJournal" data-panel="journal" data-active="false"></div>
+          <div class="game-panel" id="gamePanelQuest" data-panel="quest" data-active="false"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-complete" id="gameComplete" role="dialog" aria-modal="true" aria-labelledby="gameCompleteTitle" data-open="false" hidden>
+    <div class="game-complete-card" tabindex="-1">
+      <div class="game-complete-art" role="img" aria-label="Astral Sea crossing complete"></div>
+      <div class="game-complete-body">
+        <p class="eyebrow" style="color:#8a6a32;">Quest complete</p>
+        <h2 id="gameCompleteTitle">You crossed the Astral Sea</h2>
+        <p>Embarked, discovered a memory isle, and locked a Lighthouse bearing. Keep exploring the Sea, ask the companion, or return to the hub atlas.</p>
+        <div class="game-start-actions">
+          <button type="button" class="game-btn game-btn--astral" id="gameContinueExplore">Continue exploring</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="companion-backdrop" id="companionDialog" role="dialog" aria-modal="true" aria-labelledby="companionTitle" data-open="false" hidden>
+    <div class="companion-sheet" tabindex="-1">
+      <div class="companion-banner" role="img" aria-label="Parchment dissolving into Astral Sea"></div>
+      <div class="companion-head">
+        <div>
+          <p class="companion-kicker">Planesbound handout · parchment × astral</p>
+          <h2 id="companionTitle">Player &amp; Companion Window</h2>
+        </div>
+        <button type="button" class="companion-close" id="closeCompanion" aria-label="Close companion handout">Close · Esc</button>
+      </div>
+      <div class="companion-body">
+        <section class="companion-pane companion-pane--notes" aria-labelledby="notesHeading">
+          <h3 id="notesHeading">Player notes</h3>
+          <p class="companion-hint">Ink on parchment — bearings, names, &amp; table decisions. Being: <strong id="companionPlayerBeingLabel">Human</strong>. Saved in this browser.</p>
+          <textarea id="companionNotes" spellcheck="true" placeholder="Session notes, party bearings, questions for the keepers…"></textarea>
+        </section>
+        <section class="companion-pane companion-pane--si" aria-labelledby="siHeading">
+          <h3 id="siHeading">Superintelligence companion</h3>
+          <p class="companion-hint">Silvery counsel from the thought-ocean. Companion being: <strong id="companionSiBeingLabel">Human</strong>.</p>
+          <div class="companion-context" id="companionContext" aria-live="polite"></div>
+          <div class="companion-log" id="companionLog" aria-live="polite"></div>
+          <form class="companion-compose" id="companionForm">
+            <label class="visually-hidden" for="companionInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Ask the companion</label>
+            <input id="companionInput" name="q" autocomplete="off" placeholder="Ask the companion…" />
+            <button type="submit" class="companion-send">Ask</button>
+          </form>
+        </section>
+      </div>
+      <p class="companion-foot">Esc closes · notes persist locally · <span class="astral-note">no network required for this phase</span></p>
+    </div>
   </div>
 
   <script>
@@ -487,14 +1298,28 @@ const planes = [
         travel: "Ethereal curtain-road to Inner shores; follow the facet-glow when the Daystar bearing is clean. Do not shatter what lights your way."
       },
       {
+        id: "astral-sea", name: "Astral Sea", epithet: "The Silvery Thought-Ocean",
+        kind: "Transitive plane", alignment: "N", alignmentLong: "Mind as weather · distance as desire",
+        accent: "#a8c4e0", art: "art/astral-sea.png",
+        overview: "The Astral Sea is the silvery thought-ocean of Planesbound travel—starfields of intention, islands of crystallized memory, & ley-filaments that hum when a will-o’-wisp race runs hot. It is not the Inner Ring’s matter, but the mind-sky beyond the Ethereal curtain: where distance answers desire & a clean Daystar bearing can throw a silver road.",
+        inhabitants: "Githyanki-style corsairs in rumor only, dream-mariners, color pools that remember other planes, & keepers who chart silver wakes. Near the schism, signal-ghosts from the Digital Void sometimes wash ashore like wreckage of meaning.",
+        layers: [
+          {name:"The Open Astral", epithet:"Starry void where thought is wind"},
+          {name:"Memory Isles", epithet:"Crystal shoals of half-remembered worlds"},
+          {name:"The Schism Shore", epithet:"Where Astral thought-sea meets Ethereal fog"}
+        ],
+        structure: "An open transitive expanse adjacent to the Ethereal curtain-road & the Digital Void fault. Color pools & silver wakes mark crossings; the Schism Shore is where thought-sea & mist refuse each other.",
+        travel: "From the Lighthouse, prefer the Ethereal curtain-road when the Daystar bearing is clean, then step outward into silver where fog thins. Direct Astral launches are possible with a Compass Orb sat-link—but do not skip the Ethereal approach unless the table agrees the schism is already open."
+      },
+      {
         id: "digital-void", name: "Digital Void", epithet: "Astral–Ethereal Schism",
         kind: "Schism plane", alignment: "N", alignmentLong: "Fault line between thought-sea & fog",
         accent: "#5a8a9a", art: "art/digital-void.png",
-        overview: "The Digital Void is a thin plane in the schism between the Astral & the Ethereal—fault-line geography where thought-sea & fog almost touch, & something colder than either leaks through. It is real campaign ground: a locus near the Ethereal curtain, not a fifth elemental cardinal.",
+        overview: "The Digital Void is a thin plane in the schism between the Astral Sea & the Ethereal—fault-line geography where thought-sea & fog almost touch, & something colder than either leaks through. It is real campaign ground: a locus near the Ethereal curtain, not a fifth elemental cardinal.",
         inhabitants: "Not neatly catalogued. Echoes, signal-ghosts, & absences that behave like weather have been reported by keepers who preferred not to stay. The Void does not argue; it drops packets of meaning & waits.",
         layers: [{name:"The Schism", epithet:"Between Astral thought-sea & Ethereal mist"}],
-        structure: "A thin ring-locus around the Ethereal mist on the atlas—adjacent to the curtain-road, not a new elemental cardinal.",
-        travel: "Approach carefully: near the existing Ethereal curtain-road from the Lighthouse, when the Daystar bearing is clean, in the Astral–Ethereal schism. Walk the fog, then step where mist & thought-sea refuse each other."
+        structure: "A thin ring-locus around the Ethereal mist on the atlas—adjacent to the curtain-road & the Astral Sea, not a new elemental cardinal.",
+        travel: "Approach carefully: near the existing Ethereal curtain-road from the Lighthouse, when the Daystar bearing is clean, in the Astral–Ethereal schism. Walk the fog, then step where mist & thought-sea refuse each other—or open the Astral Sea folio for the silvery road beyond."
       },
       {
         id: "magma", name: "Magma", epithet: "Fire ⊕ Earth",
@@ -579,6 +1404,7 @@ const planes = [
               <p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55;margin:1rem 0 0;">Tap a shore on the map, or pick one from the strip below. The active quest — <a href="#quest" style="color:var(--brass-bright)">The Will-o’-Wisp Race</a> — sits under the atlas.</p>
             </div>
           </div>`;
+        refreshCompanionContext();
         return;
       }
       const artBlock = p.art
@@ -623,10 +1449,11 @@ const planes = [
         <details>
           <summary>From the Lighthouse</summary>
           <div class="panel">
-            <p style="margin:0">Outer atlas → <a href="https://planesbound.grok.me/" style="color:var(--brass)">The Lighthouse</a>. Keepers open Inner roads through the Ethereal when the Daystar bearing is clean. The Digital Void lies in the Astral–Ethereal schism near that curtain-road.</p>
+            <p style="margin:0">Outer atlas → <a href="https://planesbound.grok.me/" style="color:var(--brass)">The Lighthouse</a>. Keepers open Inner roads through the Ethereal when the Daystar bearing is clean. The Astral Sea is the silvery thought-ocean beyond; the Digital Void lies in the Astral–Ethereal schism near that curtain-road.</p>
           </div>
         </details>
       `;
+      refreshCompanionContext();
     }
 
     function select(id) {
@@ -642,8 +1469,226 @@ const planes = [
       h.addEventListener("click", () => select(h.dataset.id));
     });
 
+    const NOTES_KEY = "planesbound-companion-notes-v1";
+    const companionDialog = document.getElementById("companionDialog");
+    const companionNotes = document.getElementById("companionNotes");
+    const companionLog = document.getElementById("companionLog");
+    const companionContext = document.getElementById("companionContext");
+    const companionForm = document.getElementById("companionForm");
+    const companionInput = document.getElementById("companionInput");
+    const openCompanionBtn = document.getElementById("openCompanion");
+    const closeCompanionBtn = document.getElementById("closeCompanion");
+    let companionOpener = null;
+
+    function currentPlane() {
+      return selected ? byId[selected] || null : null;
+    }
+
+    function refreshCompanionContext() {
+      const game = window.PlanesboundGame;
+      if (game?.isPlayOpen?.()) {
+        const ctx = game.counselContext();
+        companionContext.innerHTML = `<strong>${escapeHtml(ctx.locationTitle)}</strong> · party ${escapeHtml(ctx.playerName)} (${escapeHtml(ctx.playerBeing)}) with ${escapeHtml(ctx.companionBeing)}<br>${escapeHtml(ctx.blurb)}`;
+        return;
+      }
+      const p = currentPlane();
+      if (!p) {
+        companionContext.innerHTML = "<strong>Atlas open.</strong> No shore selected — ask about the Inner Ring, the Astral Sea, or tap a hotspot first.";
+        return;
+      }
+      companionContext.innerHTML = `<strong>${escapeHtml(p.name)}</strong> · ${escapeHtml(p.epithet)}<br>${escapeHtml(p.kind)}. ${escapeHtml(p.alignmentLong)}.`;
+    }
+
+    function appendCompanionMsg(role, text) {
+      const p = document.createElement("p");
+      p.className = "companion-msg";
+      p.dataset.role = role;
+      p.textContent = text;
+      companionLog.appendChild(p);
+      companionLog.scrollTop = companionLog.scrollHeight;
+    }
+
+    function companionReply(question) {
+      const q = question.toLowerCase();
+      const p = currentPlane();
+      const beingsApi = window.PlanesboundBeings;
+      const game = window.PlanesboundGame;
+      const gameCtx = game?.isPlayOpen?.() ? game.counselContext() : null;
+
+      if (gameCtx) {
+        if (/\b(where am i|location|where are we)\b/.test(q)) {
+          return `You stand in ${gameCtx.locationTitle}. ${gameCtx.blurb}`;
+        }
+        if (/\b(quest|objective|cross the astral)\b/.test(q)) {
+          const done = Object.entries(gameCtx.objectives)
+            .map(([k, v]) => `${k}:${v ? "done" : "open"}`)
+            .join(", ");
+          return gameCtx.questComplete
+            ? `Cross the Astral Sea is complete. Keep exploring from ${gameCtx.locationTitle}, ${gameCtx.playerName}.`
+            : `Quest Cross the Astral Sea — status [${done}]. Embark, discover a memory isle, then take a Lighthouse bearing.`;
+        }
+        if (/\b(who am i|party|my name)\b/.test(q)) {
+          return `${gameCtx.playerName} (${gameCtx.playerBeing}) travels with companion ${gameCtx.companionBeing}. Location: ${gameCtx.locationTitle}.`;
+        }
+        if (/\b(travel|astral|sea|isle|bearing|hub)\b/.test(q)) {
+          return `Counsel for ${gameCtx.locationTitle}: ${gameCtx.blurb} Use Travel actions in Play mode — cast off, seek a memory isle, or lock a Lighthouse bearing.`;
+        }
+      }
+
+      // Roster only when clearly asking about selected beings / the Beings Roster
+      // (not "Will-o’-Wisp Race", plane "companion", or generic race keywords)
+      const rosterAsk =
+        /\b(who am i|what am i)\b/.test(q) ||
+        /\b(my|selected|current)\s+(player\s+|companion\s+)?(being|race|species)\b/.test(q) ||
+        /\b(player|companion)\s+being\b/.test(q) ||
+        /\bbeings?\s+roster\b/.test(q) ||
+        /\bwhat\s+(being|race|species)\s+(am i|did i|have i|is selected)\b/.test(q);
+      if (beingsApi && rosterAsk) {
+        const pl = beingsApi.getPlayer();
+        const co = beingsApi.getCompanion();
+        return `Player being: ${pl.name} (${pl.tradition}) — ${pl.line} Companion being: ${co.name} (${co.tradition}) — ${co.line} Change either from the left Beings Roster.`;
+      }
+      if (/\b(astral|thought-?sea|silver|color pool)\b/.test(q)) {
+        const astral = byId["astral-sea"];
+        return `${astral.name}: ${astral.overview} Travel note — ${astral.travel}`;
+      }
+      if (/\b(schism|digital void|void)\b/.test(q)) {
+        const dv = byId["digital-void"];
+        return `${dv.name}: ${dv.overview} Travel note — ${dv.travel}`;
+      }
+      if (/\b(travel|road|curtain|lighthouse|how (do|to) (get|go|reach))\b/.test(q) && p) {
+        return `Travel for ${p.name}: ${p.travel}`;
+      }
+      if (/\b(who|denizen|meet|inhabit|creature)\b/.test(q) && p) {
+        return `Who you’ll meet on ${p.name}: ${p.inhabitants}`;
+      }
+      if (/\b(layer|shape|structure|geography)\b/.test(q) && p) {
+        const layers = p.layers.map(l => `${l.name} (${l.epithet})`).join("; ");
+        return `${p.name} shape: ${layers}. ${p.structure}`;
+      }
+      if (/\b(wisp|quest|race|ley)\b/.test(q)) {
+        return "The Will-o’-Wisp Race runs the leylines. Mineral is Ani’s hearth; Earth homes the Beast; Dust holds the pilots; Astral Sea is the silvery thought-ocean; Digital Void sits in the Astral–Ethereal schism. Keep a Compass Orb for a thin sat-link to the Lighthouse.";
+      }
+      if (p) {
+        return `On ${p.name} (${p.epithet}): ${p.overview} Ask about travel, denizens, layers, or the Astral Sea for a sharper bearing.`;
+      }
+      return "The atlas is open but no shore is selected. Tap Astral Sea for the silvery thought-ocean, or any Inner Ring shore—then ask again. I can counsel travel, denizens, layers, the schism, or the Will-o’-Wisp Race.";
+    }
+
+    const pageMain = document.getElementById("pageMain");
+    const pageVeil = document.getElementById("pageVeil");
+    const racesDock = document.getElementById("racesDock");
+    const companionSheet = companionDialog.querySelector(".companion-sheet");
+    const companionPlayerBeingLabel = document.getElementById("companionPlayerBeingLabel");
+    const companionSiBeingLabel = document.getElementById("companionSiBeingLabel");
+
+    function syncBeingLabels() {
+      const api = window.PlanesboundBeings;
+      if (!api) return;
+      const p = api.getPlayer();
+      const c = api.getCompanion();
+      if (companionPlayerBeingLabel && p) companionPlayerBeingLabel.textContent = p.name;
+      if (companionSiBeingLabel && c) companionSiBeingLabel.textContent = c.name;
+    }
+    document.addEventListener("planesbound-beings-ready", syncBeingLabels);
+    document.addEventListener("planesbound-beings-changed", syncBeingLabels);
+
+    function companionFocusables() {
+      return [...companionSheet.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )].filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+    }
+
+    function setBackgroundInert(on) {
+      [pageMain, pageVeil, racesDock].forEach((el) => {
+        if (!el) return;
+        if (on) el.setAttribute("inert", "");
+        else el.removeAttribute("inert");
+        el.setAttribute("aria-hidden", on ? "true" : "false");
+      });
+    }
+
+    function openCompanion() {
+      companionOpener = document.activeElement;
+      companionDialog.hidden = false;
+      companionDialog.dataset.open = "true";
+      setBackgroundInert(true);
+      refreshCompanionContext();
+      if (!companionLog.dataset.greeted) {
+        appendCompanionMsg("si", "Handout open. I counsel from the folio you have selected—browser-local, no send beyond this page. Ask about travel, denizens, the Astral Sea, or the race.");
+        companionLog.dataset.greeted = "1";
+      }
+      companionNotes.focus();
+    }
+
+    function closeCompanion() {
+      companionDialog.dataset.open = "false";
+      companionDialog.hidden = true;
+      setBackgroundInert(false);
+      if (companionOpener && typeof companionOpener.focus === "function") {
+        companionOpener.focus();
+      } else {
+        openCompanionBtn.focus();
+      }
+    }
+
+    function isCompanionOpen() {
+      return companionDialog.dataset.open === "true";
+    }
+
+    openCompanionBtn.addEventListener("click", openCompanion);
+    closeCompanionBtn.addEventListener("click", closeCompanion);
+    companionDialog.addEventListener("click", (e) => {
+      if (e.target === companionDialog) closeCompanion();
+    });
+
+    companionNotes.value = localStorage.getItem(NOTES_KEY) || "";
+    companionNotes.addEventListener("input", () => {
+      localStorage.setItem(NOTES_KEY, companionNotes.value);
+    });
+
+    companionForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = companionInput.value.trim();
+      if (!q) return;
+      appendCompanionMsg("player", q);
+      companionInput.value = "";
+      appendCompanionMsg("si", companionReply(q));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!isCompanionOpen()) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        closeCompanion();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusables = companionFocusables();
+      if (!focusables.length) {
+        e.preventDefault();
+        companionSheet.focus();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !companionSheet.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !companionSheet.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
     renderRail();
     renderFolio(null);
+    refreshCompanionContext();
   </script>
+  <script src="races-menu.js" defer></script>
+  <script src="game.js" defer></script>
 </body>
 </html>
