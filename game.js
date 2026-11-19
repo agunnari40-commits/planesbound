@@ -478,6 +478,7 @@
   }
 
   function shortRest() {
+    if (encounter || stage?.flourishing) return;
     if (state.location !== "hub" && state.location !== "mineral-shore" && state.location !== "memory-isle") {
       pushJournal("Rest blocked: only hub, Memory Isle, or Mineral Shore offer safe short rest.");
       save();
@@ -1119,6 +1120,7 @@
   }
 
   function travelTo(loc) {
+    if (encounter || stage?.flourishing) return;
     if (!LOCATIONS[loc]) return;
     const from = state.location;
 
@@ -1686,6 +1688,7 @@
   }
 
   function onSceneClick(e) {
+    if (encounter || stage?.flourishing) return;
     const useBtn = e.target.closest("[data-use-item]");
     if (useBtn) {
       useItem(useBtn.dataset.useItem);

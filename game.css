@@ -584,14 +584,21 @@
   position: relative;
   z-index: 1;
 }
-/* While modal is open, freeze play chrome so dim pass-through cannot travel/rest/exit */
+/* While modal is open, freeze play chrome so dim pass-through cannot travel/rest/exit.
+   Must override `.game-scene-copy button { pointer-events: auto }` — parent none alone is not enough. */
 .game-shell[data-encounter="true"] .game-hud,
+.game-shell[data-encounter="true"] .game-hud *,
 .game-shell[data-encounter="true"] .game-side,
-.game-shell[data-encounter="true"] .game-scene-copy {
-  pointer-events: none;
+.game-shell[data-encounter="true"] .game-side *,
+.game-shell[data-encounter="true"] .game-scene-copy,
+.game-shell[data-encounter="true"] .game-scene-copy .game-scene-actions,
+.game-shell[data-encounter="true"] .game-scene-copy button,
+.game-shell[data-encounter="true"] .game-scene-copy a {
+  pointer-events: none !important;
 }
-.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"] {
-  pointer-events: auto;
+.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"],
+.game-shell[data-encounter="true"] .game-scene-viewport[data-active="true"] .game-scene-canvas {
+  pointer-events: auto !important;
 }
 .game-encounter-card h3 {
   font-family: Cinzel, serif;
