@@ -1,0 +1,111 @@
+{
+ "_about": "Items. Hushcube is the template item.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "hushcube",
+   "name": "Hushcube",
+   "rarity": "wondrous",
+   "attunement": true,
+   "mana_cost": 7,
+   "range_ft": 20,
+   "target": "one_creature",
+   "save": {
+    "stat": "wis",
+    "on_fail": true
+   },
+   "damage": {
+    "dice": "Xd8",
+    "x": "nightburrs_on_board",
+    "x_min": 1,
+    "type": "necrotic"
+   },
+   "conditions": [
+    {
+     "id": "stunned",
+     "rounds": 1
+    }
+   ],
+   "extra_effects": [
+    {
+     "op": "end_effects",
+     "tags": [
+      "hope",
+      "courage"
+     ],
+     "lock_until": "target_next_turn_end"
+    }
+   ],
+   "craft": null,
+   "flavor": "Grey crystal holding a sliver of the Ebbing Dark.",
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "magpie_lens",
+   "name": "Magpie Lens",
+   "rarity": "quest",
+   "attunement": false,
+   "mana_cost": 0,
+   "range_ft": 0,
+   "target": "none",
+   "save": null,
+   "damage": null,
+   "conditions": [],
+   "extra_effects": [
+    {
+     "op": "unlock",
+     "id": "track_light"
+    }
+   ],
+   "craft": {
+    "structure": "forge",
+    "crafter": "eldest_child",
+    "cost": {
+     "lightshard": 3,
+     "stone": 2
+    }
+   },
+   "flavor": "Ground by the Eldest Child for the dark lamp.",
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "needlesphere",
+   "name": "Needlesphere",
+   "rarity": "quest",
+   "attunement": false,
+   "extra_effects": [
+    {
+     "op": "unlock",
+     "id": "track_bearing"
+    }
+   ],
+   "flavor": "Nested brass rings around a bead of root sap.",
+   "_src": [
+    "S1",
+    "FILLER fields"
+   ]
+  },
+  {
+   "id": "morrowseed",
+   "name": "Morrowseed",
+   "rarity": "quest",
+   "attunement": false,
+   "extra_effects": [
+    {
+     "op": "unlock",
+     "id": "track_seed"
+    }
+   ],
+   "flavor": "A cutting that fell in the Quiet Shear.",
+   "_src": [
+    "S1",
+    "FILLER fields"
+   ]
+  }
+ ]
+}

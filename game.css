@@ -884,6 +884,59 @@ body.game-active #companionDialog[data-open="true"] {
   z-index: 60;
 }
 
+/* Morrowroot mode inlay */
+.game-field-hint {
+  margin: .35rem 0 0;
+  font-size: .82rem;
+  line-height: 1.4;
+  color: #6a5638;
+}
+.mr-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin: .55rem 0;
+}
+.mr-chip {
+  display: inline-flex;
+  gap: .3rem;
+  align-items: baseline;
+  padding: .2rem .45rem;
+  border: 1px solid color-mix(in oklab, #8a6a32 35%, transparent);
+  background: color-mix(in oklab, #fbf6ea 70%, #e8d9b0);
+  font-size: .78rem;
+  color: #3a2e1c;
+}
+.mr-chip em {
+  font-style: normal;
+  font-weight: 600;
+  color: #5a3f18;
+  text-transform: capitalize;
+}
+.mr-filler {
+  display: inline-block;
+  margin-left: .35rem;
+  padding: .05rem .35rem;
+  font-size: .72rem;
+  letter-spacing: .04em;
+  color: #6a4010;
+  border: 1px solid #b8862a;
+  background: #f3e2b8;
+}
+.game-scene[data-loc="morrowroot"] {
+  background:
+    radial-gradient(ellipse at 30% 20%, color-mix(in oklab, #e7872b 18%, transparent), transparent 55%),
+    linear-gradient(165deg, #1a2430 0%, #2a3340 40%, #3d2e22 100%);
+}
+.game-scene[data-loc="morrowroot"] .game-scene-copy,
+.game-scene[data-loc="morrowroot"] #gameSceneTitle,
+.game-scene[data-loc="morrowroot"] #gameSceneBlurb {
+  color: #f3ebe0;
+}
+.game-scene[data-loc="morrowroot"] #gameSceneBlurb {
+  color: #d2c4ae;
+}
+
 @media (max-width: 640px) {
   .game-hud { padding: .45rem .55rem; }
   .game-scene { min-height: 280px; }

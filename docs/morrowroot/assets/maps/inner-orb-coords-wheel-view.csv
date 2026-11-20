@@ -1,0 +1,15 @@
+id,x,y,size,label
+positive,50.0,28.6,md,Positive
+fire,50.0,34.2,md,Fire
+smoke,34.0,33.6,md,Smoke
+magma,64.0,32.6,md,Magma
+digital-void,37.6,39.2,md,Digital Void
+mineral,73.2,36.4,md,Mineral
+air,25.8,49.0,md,Air
+earth,70.2,50.0,xl,Earth
+ethereal,50.0,61.4,md,Ethereal
+ooze,65.2,63.2,md,Ooze
+dust,27.8,64.6,md,Dust
+water,50.0,71.6,md,Water
+ice,60.8,73.0,md,Ice
+negative,50.0,80.2,md,Negative

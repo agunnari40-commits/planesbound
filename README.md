@@ -23,17 +23,19 @@ Then open `http://localhost:5173/` (hub: `index.html`, players gazetteer: `playe
 - Catalog: `data/beings.json` (Human first; hundreds of entries). Legal sourcing — folklore/myth names, SRD-safe staples, original coinages; original blurbs only.
 - Virtualized wheel/drag lists in `races-menu.js`.
 
-### Play mode (PAS-6)
+### Play mode (PAS-6 + Morrowroot modes)
 
 Single-player browser slice — no network AI required:
 
 1. Open the hub and tap **Play · Cross the Astral Sea**.
-2. Name your traveler, keep/pick a player being (Human default), pick a companion being → **Begin voyage**.
-3. From the hub scene, **Cast off into the Astral Sea**.
-4. **Seek a memory isle**, then **Follow Lighthouse pulse** / take a bearing (quest completes; keep exploring).
-5. Ask the **Companion** anytime — counsel uses your location + party (Esc exits play / closes dialogs).
+2. Choose a **play mode** (Astral Sea Voyage is the original chapter; Campaign, Hearth Night, Homestead, Raid, Expedition, Cards, and Will-o'-Wisp Race inlay Morrowroot rules).
+3. Name your traveler, keep/pick beings → **Begin**.
+4. For Astral Sea Voyage: from the hub scene, **Cast off into the Astral Sea**, then isle → lighthouse bearing. Mid-voyage, **Other play modes** returns to the mode picker without wiping the atlas.
+5. Ask the **Companion** anytime (Esc exits play / closes dialogs).
 
-Save key: `localStorage` `planesbound-game-v1`. Files: `game.js`, `game.css`.
+Save keys: `localStorage` `planesbound-game-v1` (voyage) and `planesbound-morrowroot-v1` (mode session). Files: `game.js`, `game.css`, `morrowroot-*.js`, `data/morrowroot/`.
+
+Design docs: `docs/morrowroot/` (CURSOR-HANDOFF, play-modes, art-style, story-apocrypha, open-questions). Canonical town name is **Ten Towns**. Far section label is **BEYOND**. Records tagged `_src: FILLER` are placeholders—easy to swap in JSON.
 
 ## Grok Build / planesbound.grok.me
 
@@ -44,7 +46,7 @@ This tree is Grok-ready as multi-file static HTML:
 - Art assets: `art/`
 - Fallback: `404.html`
 
-Publish by uploading this repo root (or pointing Grok Build at it) so `planesbound.grok.me` serves `index.html`. There is no `scripts/package-grok.mjs` in this seed — ship the HTML + `art/` as-is.
+Do **not** publish this branch to the live `planesbound.grok.me` site from agent work—ship via an reviewed PR only. There is no `scripts/package-grok.mjs` in this seed.
 
 ## Source
 

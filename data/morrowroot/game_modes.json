@@ -1,0 +1,152 @@
+{
+ "_about": "Selectable modes. Presets are defined in presets[].",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "party_board",
+   "name": "Party Board",
+   "standalone_preset": "hearth_night",
+   "in_campaign": true,
+   "v1": true,
+   "_src": [
+    "S5",
+    "S3",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "homestead",
+   "name": "Homestead Survival",
+   "standalone_preset": "endless_winter",
+   "in_campaign": true,
+   "v1": true,
+   "realtime": false,
+   "_src": [
+    "S5",
+    "S3"
+   ]
+  },
+  {
+   "id": "raid",
+   "name": "Raid Defense",
+   "standalone_preset": "raid_gauntlet",
+   "in_campaign": true,
+   "v1": true,
+   "_src": [
+    "S5",
+    "S3"
+   ]
+  },
+  {
+   "id": "expedition",
+   "name": "Planar Expedition",
+   "standalone_preset": null,
+   "in_campaign": true,
+   "v1": true,
+   "_src": [
+    "S5",
+    "S3"
+   ]
+  },
+  {
+   "id": "cards",
+   "name": "Card & Item",
+   "standalone_preset": "deck_editor",
+   "in_campaign": true,
+   "v1": true,
+   "_src": [
+    "S5",
+    "S3"
+   ]
+  },
+  {
+   "id": "wisp_race",
+   "name": "Will-o'-Wisp Race",
+   "courses": [
+    "race_lighthouse",
+    "race_inner_ring"
+   ],
+   "standalone_preset": "race_any",
+   "in_campaign": true,
+   "v1": true,
+   "_src": [
+    "S8",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "campaign",
+   "name": "Campaign",
+   "seasons": 8,
+   "_src": [
+    "S1",
+    "S2",
+    "S3"
+   ]
+  }
+ ],
+ "presets": [
+  {
+   "id": "hearth_night",
+   "board": "dale",
+   "rounds": 10,
+   "movement": "party_dice",
+   "minigame_every_round": true,
+   "clock_locked": "hoarstep",
+   "closing_raid": "wave_frost_raiders_6",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "endless_winter",
+   "clock_advance_every_seasons": 2,
+   "holds_enabled": false,
+   "score": "seasons_survived",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "raid_gauntlet",
+   "waves": 12,
+   "build_actions_between_waves": 2,
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "race_any",
+   "courses": [
+    "race_lighthouse",
+    "race_inner_ring"
+   ],
+   "_src": [
+    "FILLER"
+   ]
+  }
+ ],
+ "seat_modes": [
+  {
+   "id": "solo_ai",
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "hotseat",
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "online_coop",
+   "min": 2,
+   "max": 4,
+   "authority": "host",
+   "_src": [
+    "S3"
+   ]
+  }
+ ]
+}

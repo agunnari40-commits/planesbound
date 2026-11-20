@@ -1,0 +1,38 @@
+{
+ "_about": "Ending selection, first match wins.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "hard_cost",
+   "order": 1,
+   "trigger": "nightburr_dim_nursery_rooted_when_lens_set",
+   "_src": [
+    "S3 default"
+   ]
+  },
+  {
+   "id": "mercy",
+   "order": 2,
+   "trigger": "spared_old_beast_and_churnglint_and_regent",
+   "_src": [
+    "S3 default"
+   ]
+  },
+  {
+   "id": "bittersweet",
+   "order": 3,
+   "trigger": "asked_moot_why_lamp_forbidden_in_s7",
+   "_src": [
+    "S3 default"
+   ]
+  },
+  {
+   "id": "main",
+   "order": 4,
+   "trigger": "default",
+   "_src": [
+    "S3"
+   ]
+  }
+ ]
+}

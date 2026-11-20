@@ -1186,7 +1186,19 @@
       <form class="game-start-card" id="gameStartForm">
         <p class="eyebrow" style="color:#8a6a32;">Character start</p>
         <h2 id="gameStartTitle">Cross the Astral Sea</h2>
-        <p class="lede">Name your traveler, keep Human (or pick another being), choose a companion being, then cast off. Progress saves in this browser.</p>
+        <p class="lede">Pick a play mode, name your traveler, choose beings, then begin. Astral Sea Voyage is the original chapter; other modes inlay Morrowroot systems from the game-build package. Progress saves in this browser.</p>
+        <div class="game-field">
+          <label for="gameModeSelect">Play mode</label>
+          <select id="gameModeSelect" name="playMode" aria-describedby="gameModeBlurb"></select>
+          <p class="game-field-hint" id="gameModeBlurb">Existing Planesbound chapter — Cross the Astral Sea.</p>
+        </div>
+        <div class="game-field" id="gameRaceCourseField" hidden>
+          <label for="gameRaceCourse">Race course</label>
+          <select id="gameRaceCourse" name="raceCourse">
+            <option value="race_lighthouse">Lighthouse Race (outer Slide Circuit)</option>
+            <option value="race_inner_ring">Inner Ring &amp; Will-o’-Wisp Race</option>
+          </select>
+        </div>
         <div class="game-field">
           <label for="gamePlayerName">Player name</label>
           <input id="gamePlayerName" name="name" maxlength="40" autocomplete="nickname" required placeholder="e.g. Ani of Mineral" />
@@ -1200,7 +1212,7 @@
           <select id="gameCompanionBeing" name="companionBeing"></select>
         </div>
         <div class="game-start-actions">
-          <button type="submit" class="game-btn game-btn--astral">Begin voyage</button>
+          <button type="submit" class="game-btn game-btn--astral">Begin</button>
           <button type="button" class="game-btn game-btn--ghost" id="gameCancelStart">Back to atlas</button>
         </div>
       </form>
@@ -1821,6 +1833,9 @@ const planes = [
   <script src="wow-actors.js" defer></script>
   <script src="video-mode.js" defer></script>
   <script src="white-room.js" defer></script>
+  <script src="morrowroot-data.js" defer></script>
+  <script src="morrowroot-core.js" defer></script>
+  <script src="morrowroot-play.js" defer></script>
   <script src="game.js" defer></script>
 </body>
 </html>

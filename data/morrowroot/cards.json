@@ -1,0 +1,83 @@
+{
+ "_about": "Starter cards (3 of 24 in v1). The remaining 21 are content work.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "hearth_spark",
+   "name": "Hearth Spark",
+   "kind": "warmth",
+   "mana_cost": 2,
+   "range_ft": 30,
+   "target": "ally",
+   "damage": null,
+   "save": null,
+   "effects": [
+    {
+     "op": "remove_chill",
+     "amount": 2
+    }
+   ],
+   "owner": "any",
+   "rarity": "starter",
+   "art_ref": "card_hearth_spark",
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "antler_call",
+   "name": "Antler Call",
+   "kind": "ability",
+   "mana_cost": 3,
+   "range_ft": 0,
+   "target": "self",
+   "damage": {
+    "dice": "1d6",
+    "type": "piercing",
+    "per_round": true,
+    "target": "beast"
+   },
+   "save": null,
+   "effects": [
+    {
+     "op": "summon",
+     "id": "hunt_spirit",
+     "rounds": 2
+    }
+   ],
+   "owner": "any",
+   "rarity": "starter",
+   "art_ref": "card_antler_call",
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "true_bearing",
+   "name": "True Bearing",
+   "kind": "ability",
+   "mana_cost": 1,
+   "range_ft": 0,
+   "target": "self",
+   "damage": null,
+   "save": null,
+   "effects": [
+    {
+     "op": "peek",
+     "what": [
+      "next_event",
+      "clock_trigger"
+     ]
+    }
+   ],
+   "owner": "any",
+   "rarity": "starter",
+   "art_ref": "card_true_bearing",
+   "_src": [
+    "S1"
+   ]
+  }
+ ]
+}

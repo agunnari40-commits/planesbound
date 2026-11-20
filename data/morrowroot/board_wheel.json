@@ -1,0 +1,676 @@
+{
+ "_about": "Wheel board positions in percent of the 1600x900 campaign map (assets/maps/campaign-map-nolabels.jpeg). wheel_view = outer plane & site cards; inner_view = hotspots on inner-map.jpeg; wheel_inner_orbs = Inner orbs overlaid on the Wheel view. Hub = axlestone drawn inside the atlas 'beastlands' card (FILLER, Q5). Duskmarrow hidden until season 8.",
+ "spaces": [
+  {
+   "id": "emberstrand",
+   "atlas_id": "fire",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 21.0,
+   "w_pct": 12.0,
+   "h_pct": 14.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "tidewell",
+   "atlas_id": "water",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 73.0,
+   "w_pct": 12.0,
+   "h_pct": 14.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "galeveil",
+   "atlas_id": "air",
+   "view": "inner_view",
+   "x_pct": 13.0,
+   "y_pct": 48.0,
+   "w_pct": 12.0,
+   "h_pct": 16.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "underheart",
+   "atlas_id": "earth",
+   "view": "inner_view",
+   "x_pct": 86.0,
+   "y_pct": 50.0,
+   "w_pct": 12.0,
+   "h_pct": 16.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "kindling_shore",
+   "atlas_id": "positive",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 8.0,
+   "w_pct": 8.0,
+   "h_pct": 11.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "ebbing_dark",
+   "atlas_id": "negative",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 90.0,
+   "w_pct": 8.0,
+   "h_pct": 12.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "veilway",
+   "atlas_id": "ethereal",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 52.0,
+   "w_pct": 16.0,
+   "h_pct": 16.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "magmaseam",
+   "atlas_id": "magma",
+   "view": "inner_view",
+   "x_pct": 67.5,
+   "y_pct": 28.0,
+   "w_pct": 9.0,
+   "h_pct": 12.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "brineseam",
+   "atlas_id": "ooze",
+   "view": "inner_view",
+   "x_pct": 70.0,
+   "y_pct": 59.5,
+   "w_pct": 8.0,
+   "h_pct": 9.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "rimeseam",
+   "atlas_id": "ice",
+   "view": "inner_view",
+   "x_pct": 62.0,
+   "y_pct": 74.0,
+   "w_pct": 8.0,
+   "h_pct": 9.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "smokeseam",
+   "atlas_id": "smoke",
+   "view": "inner_view",
+   "x_pct": 26.5,
+   "y_pct": 28.0,
+   "w_pct": 9.0,
+   "h_pct": 12.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_sifting",
+   "atlas_id": "dust",
+   "view": "inner_view",
+   "x_pct": 18.5,
+   "y_pct": 62.5,
+   "w_pct": 9.0,
+   "h_pct": 13.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "geodehall",
+   "atlas_id": "mineral",
+   "view": "inner_view",
+   "x_pct": 82.5,
+   "y_pct": 34.5,
+   "w_pct": 9.0,
+   "h_pct": 13.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_blank_grid",
+   "atlas_id": "digital-void",
+   "view": "inner_view",
+   "x_pct": 50.0,
+   "y_pct": 34.0,
+   "w_pct": 13.0,
+   "h_pct": 7.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "tallow_spires",
+   "atlas_id": "arcadia",
+   "view": "wheel_view",
+   "x_pct": 9.0,
+   "y_pct": 30.0,
+   "w_pct": 9.2,
+   "h_pct": 11.4,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "lanternmere",
+   "atlas_id": "celestia",
+   "view": "wheel_view",
+   "x_pct": 23.5,
+   "y_pct": 15.5,
+   "w_pct": 9.2,
+   "h_pct": 11.4,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "calmwater_reach",
+   "atlas_id": "bytopia",
+   "view": "wheel_view",
+   "x_pct": 37.0,
+   "y_pct": 11.5,
+   "w_pct": 8.5,
+   "h_pct": 10.6,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "hearthsun",
+   "atlas_id": "sun",
+   "view": "wheel_view",
+   "x_pct": 50.0,
+   "y_pct": 9.5,
+   "w_pct": 8.5,
+   "h_pct": 10.6,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "brightfallow",
+   "atlas_id": "elysium",
+   "view": "wheel_view",
+   "x_pct": 63.0,
+   "y_pct": 11.5,
+   "w_pct": 8.5,
+   "h_pct": 10.6,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "revelhollow",
+   "atlas_id": "arborea",
+   "view": "wheel_view",
+   "x_pct": 76.5,
+   "y_pct": 15.5,
+   "w_pct": 9.2,
+   "h_pct": 11.4,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "wrenchwind",
+   "atlas_id": "ysgard",
+   "view": "wheel_view",
+   "x_pct": 90.5,
+   "y_pct": 27.0,
+   "w_pct": 8.8,
+   "h_pct": 10.9,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_cogwold",
+   "atlas_id": "mechanus",
+   "view": "wheel_view",
+   "x_pct": 16.5,
+   "y_pct": 50.0,
+   "w_pct": 10.5,
+   "h_pct": 13.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "antlerwild",
+   "atlas_id": "beastlands",
+   "view": "wheel_view",
+   "x_pct": 48.5,
+   "y_pct": 49.0,
+   "w_pct": 14.2,
+   "h_pct": 17.7,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "magpie_light",
+   "atlas_id": "lighthouse",
+   "view": "wheel_view",
+   "x_pct": 59.2,
+   "y_pct": 41.8,
+   "w_pct": 4.9,
+   "h_pct": 6.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "rimeward",
+   "atlas_id": "ice-wall",
+   "view": "wheel_view",
+   "x_pct": 36.5,
+   "y_pct": 63.5,
+   "w_pct": 5.4,
+   "h_pct": 6.7,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_churn",
+   "atlas_id": "limbo",
+   "view": "wheel_view",
+   "x_pct": 81.0,
+   "y_pct": 50.5,
+   "w_pct": 11.9,
+   "h_pct": 14.8,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "ledgerfast",
+   "atlas_id": "acheron",
+   "view": "wheel_view",
+   "x_pct": 10.0,
+   "y_pct": 79.5,
+   "w_pct": 8.9,
+   "h_pct": 11.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "ironrue",
+   "atlas_id": "nine-hells",
+   "view": "wheel_view",
+   "x_pct": 23.5,
+   "y_pct": 86.5,
+   "w_pct": 8.5,
+   "h_pct": 10.6,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "cinder_ledgers",
+   "atlas_id": "gehenna",
+   "view": "wheel_view",
+   "x_pct": 36.8,
+   "y_pct": 90.5,
+   "w_pct": 8.0,
+   "h_pct": 9.9,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "gloamwound",
+   "atlas_id": "midnight-sun",
+   "view": "wheel_view",
+   "x_pct": 50.0,
+   "y_pct": 92.5,
+   "w_pct": 8.0,
+   "h_pct": 9.9,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "grey_sorrow",
+   "atlas_id": "hades",
+   "view": "wheel_view",
+   "x_pct": 63.2,
+   "y_pct": 90.5,
+   "w_pct": 8.0,
+   "h_pct": 9.9,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "carrion_tiers",
+   "atlas_id": "carceri",
+   "view": "wheel_view",
+   "x_pct": 76.0,
+   "y_pct": 86.5,
+   "w_pct": 8.2,
+   "h_pct": 10.2,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "weltering_pits",
+   "atlas_id": "abyss",
+   "view": "wheel_view",
+   "x_pct": 88.5,
+   "y_pct": 79.0,
+   "w_pct": 8.9,
+   "h_pct": 11.0,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "gnashmoor",
+   "atlas_id": "pandemonium",
+   "view": "wheel_view",
+   "x_pct": 93.0,
+   "y_pct": 66.0,
+   "w_pct": 8.0,
+   "h_pct": 9.9,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_askew",
+   "atlas_id": "far-realms",
+   "view": "wheel_view",
+   "x_pct": 6.2,
+   "y_pct": 62.8,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "the_mistlock",
+   "atlas_id": "domain-of-dread",
+   "view": "wheel_view",
+   "x_pct": 6.0,
+   "y_pct": 46.5,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "duskmarrow",
+   "atlas_id": "city-of-shade",
+   "view": "wheel_view",
+   "x_pct": 94.0,
+   "y_pct": 47.0,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "undercroft_registry",
+   "atlas_id": "miskatonic",
+   "view": "wheel_view",
+   "x_pct": 6.0,
+   "y_pct": 10.8,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "far_worlds",
+   "atlas_id": "universes-beyond",
+   "view": "wheel_view",
+   "x_pct": 94.0,
+   "y_pct": 10.8,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  },
+  {
+   "id": "starfold_prism",
+   "atlas_id": "lumia",
+   "view": "wheel_view",
+   "x_pct": 50.0,
+   "y_pct": 21.2,
+   "w_pct": 3.1,
+   "h_pct": 5.5,
+   "_src": [
+    "S8 coords",
+    "XWALK id"
+   ]
+  }
+ ],
+ "wheel_inner_orbs": [
+  {
+   "atlas_id": "positive",
+   "x_pct": 50.0,
+   "y_pct": 28.6,
+   "size": "md",
+   "id": "kindling_shore",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "fire",
+   "x_pct": 50.0,
+   "y_pct": 34.2,
+   "size": "md",
+   "id": "emberstrand",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "smoke",
+   "x_pct": 34.0,
+   "y_pct": 33.6,
+   "size": "md",
+   "id": "smokeseam",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "magma",
+   "x_pct": 64.0,
+   "y_pct": 32.6,
+   "size": "md",
+   "id": "magmaseam",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "digital-void",
+   "x_pct": 37.6,
+   "y_pct": 39.2,
+   "size": "md",
+   "id": "the_blank_grid",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "mineral",
+   "x_pct": 73.2,
+   "y_pct": 36.4,
+   "size": "md",
+   "id": "geodehall",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "air",
+   "x_pct": 25.8,
+   "y_pct": 49.0,
+   "size": "md",
+   "id": "galeveil",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "earth",
+   "x_pct": 70.2,
+   "y_pct": 50.0,
+   "size": "xl",
+   "id": "underheart",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "ethereal",
+   "x_pct": 50.0,
+   "y_pct": 61.4,
+   "size": "md",
+   "id": "veilway",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "ooze",
+   "x_pct": 65.2,
+   "y_pct": 63.2,
+   "size": "md",
+   "id": "brineseam",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "dust",
+   "x_pct": 27.8,
+   "y_pct": 64.6,
+   "size": "md",
+   "id": "the_sifting",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "water",
+   "x_pct": 50.0,
+   "y_pct": 71.6,
+   "size": "md",
+   "id": "tidewell",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "ice",
+   "x_pct": 60.8,
+   "y_pct": 73.0,
+   "size": "md",
+   "id": "rimeseam",
+   "_src": [
+    "S10"
+   ]
+  },
+  {
+   "atlas_id": "negative",
+   "x_pct": 50.0,
+   "y_pct": 80.2,
+   "size": "md",
+   "id": "ebbing_dark",
+   "_src": [
+    "S10"
+   ]
+  }
+ ],
+ "hidden": [
+  {
+   "id": "duskmarrow",
+   "reveal_season": 8,
+   "_src": [
+    "S3"
+   ]
+  }
+ ]
+}

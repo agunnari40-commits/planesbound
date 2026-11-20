@@ -1,6 +1,14 @@
 # Private muse refs — copyrighted / ambiguous; do not ship to Pages
 art/lore/muse-private/
 
+# Morrowroot private denylist / name crosswalk — never ship
+private/
+**/private/
+docs/morrowroot/private/
+
+# Atlas plane folio dumps — reference only; do not ship into builds (CURSOR-HANDOFF §0.4)
+docs/morrowroot/assets/planesbound-planes/
+
 # Local demo / tooling
 .playwright-mcp/
 planesbound-*.png

@@ -1,0 +1,94 @@
+{
+ "_about": "Eight season campaign; household beats live in reference/finishing-the-wheel.md.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "season": 1,
+   "stage_in_play": "zero",
+   "realm": "rimmerdale",
+   "signature_raid": "frost_raiders_6",
+   "hold_earned": null,
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 2,
+   "stage_in_play": "hoarstep",
+   "realm": "antlerwild",
+   "signature_raid": "slide_beast_stampede",
+   "hold_earned": null,
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 3,
+   "stage_in_play": "glasswater",
+   "realm": "the_churn",
+   "signature_raid": "burr_thralls_hunting_lantern",
+   "hold_earned": "nightburr_churn_edge",
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 4,
+   "stage_in_play": "glasswater",
+   "realm": "underheart",
+   "signature_raid": "crack_swarm",
+   "hold_earned": null,
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 5,
+   "stage_in_play": "long_hush",
+   "realm": "geodehall",
+   "signature_raid": "silent_raid",
+   "hold_earned": "nightburr_dim_nursery",
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 6,
+   "stage_in_play": "long_hush",
+   "realm": "the_sifting",
+   "signature_raid": "askew_leak",
+   "hold_earned": null,
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 7,
+   "stage_in_play": "stillmarrow",
+   "realm": "the_sifting",
+   "signature_raid": "frozen_muster_doubled",
+   "hold_earned": "lamp_relit",
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "season": 8,
+   "stage_in_play": "stillmarrow",
+   "realm": "antlerwild",
+   "signature_raid": "last_muster",
+   "hold_earned": null,
+   "_src": [
+    "S2",
+    "S3"
+   ]
+  }
+ ]
+}

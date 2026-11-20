@@ -1,0 +1,95 @@
+{
+ "_about": "Clock stages. Hold rules: max 1 banked; earned by uprooting a Nightburr or relighting the Magpie Light [S2].",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "index": 0,
+   "id": "zero",
+   "name": null,
+   "text": "A raw claim.",
+   "effects": [],
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "index": 1,
+   "id": "hoarstep",
+   "name": "Hoarstep",
+   "text": "Frost at dawn.",
+   "effects": [
+    {
+     "op": "hunt_yield_penalty",
+     "amount": 1
+    }
+   ],
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "index": 2,
+   "id": "glasswater",
+   "name": "Glasswater",
+   "text": "Rivers freeze.",
+   "effects": [
+    {
+     "op": "close_trade",
+     "target": "ten_towns"
+    }
+   ],
+   "_src": [
+    "S1"
+   ]
+  },
+  {
+   "index": 3,
+   "id": "long_hush",
+   "name": "Long Hush",
+   "text": "Sound dies outdoors.",
+   "effects": [
+    {
+     "op": "enable_possession",
+     "chill_threshold": 3
+    },
+    {
+     "op": "mute_outdoor_audio"
+    }
+   ],
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "index": 4,
+   "id": "stillmarrow",
+   "name": "Stillmarrow",
+   "text": "Creatures & people freeze where they stand.",
+   "effects": [
+    {
+     "op": "raid_multiplier",
+     "amount": 2
+    }
+   ],
+   "_src": [
+    "S1"
+   ]
+  },
+  {
+   "index": 5,
+   "id": "last_bell",
+   "name": "Last Bell",
+   "text": "The dale stops.",
+   "effects": [
+    {
+     "op": "game_over"
+    }
+   ],
+   "_src": [
+    "S1"
+   ]
+  }
+ ]
+}

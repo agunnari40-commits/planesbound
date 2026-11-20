@@ -1,0 +1,653 @@
+{
+ "_about": "All realms. Five are interactive in v1. atlas_id points into reference/planesbound-folios.json for layout only; never ship atlas names.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "antlerwild",
+   "name": "Antlerwild",
+   "ring": "outer",
+   "leaning": "good_untamed",
+   "element": null,
+   "interactive": true,
+   "alignment_effect": {
+    "id": "endless_hunt",
+    "text": "Hunts yield 1 extra Food; fleeing costs double Stamina."
+   },
+   "gate_condition": "Carry a trophy from a big game hunt.",
+   "hazard": "slide_fog",
+   "hunt_table": "ht_herd_roads",
+   "atlas_id": "beastlands",
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "the_churn",
+   "name": "The Churn (eastern edge)",
+   "ring": "outer",
+   "leaning": "pure_chaos",
+   "element": null,
+   "interactive": true,
+   "alignment_effect": {
+    "id": "thought_soup",
+    "text": "Once per turn, reroll any die; the second roll stands. [FILLER]"
+   },
+   "gate_condition": "Carry a Churnglint riddle answer. [FILLER]",
+   "hazard": "thought_made_matter",
+   "hunt_table": "ht_churn_edge",
+   "atlas_id": "limbo",
+   "_src": [
+    "S1",
+    "S2",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "underheart",
+   "name": "Underheart",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "earth",
+   "interactive": true,
+   "alignment_effect": {
+    "id": "stone_weight",
+    "text": "Movement costs 1 extra Stamina; Stone gathering doubles."
+   },
+   "gate_condition": "Pay Ani's season tithe in advance.",
+   "hazard": "ceiling_shift",
+   "hunt_table": "ht_underheart",
+   "atlas_id": "earth",
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "geodehall",
+   "name": "Geodehall",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "mineral",
+   "interactive": true,
+   "alignment_effect": {
+    "id": "stored_light",
+    "text": "Lightshard gathering doubles; Ani rests here to refill the Gravesworn's ember. [FILLER + S1]"
+   },
+   "gate_condition": "Ani travels with the party. [FILLER]",
+   "hazard": "fading_charge",
+   "hunt_table": null,
+   "atlas_id": "mineral",
+   "_src": [
+    "S1",
+    "S2",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "the_sifting",
+   "name": "The Sifting",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "dust",
+   "interactive": true,
+   "alignment_effect": {
+    "id": "dust_tells_truth",
+    "text": "True Bearing costs 0 mana here. [FILLER]"
+   },
+   "gate_condition": "Carry a shard of the Shear or a codex entry. [FILLER]",
+   "hazard": "memory_drift",
+   "hunt_table": "ht_sifting",
+   "atlas_id": "dust",
+   "_src": [
+    "S1",
+    "S2",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "lanternmere",
+   "name": "Lanternmere",
+   "ring": "outer",
+   "leaning": "lawful_good",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "celestia",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "calmwater_reach",
+   "name": "Calmwater Reach",
+   "ring": "outer",
+   "leaning": "good_ordered",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "bytopia",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "brightfallow",
+   "name": "Brightfallow",
+   "ring": "outer",
+   "leaning": "pure_good",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "elysium",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "revelhollow",
+   "name": "Revelhollow",
+   "ring": "outer",
+   "leaning": "free_good",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "arborea",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "wrenchwind",
+   "name": "Wrenchwind",
+   "ring": "outer",
+   "leaning": "chaotic",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "ysgard",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "gnashmoor",
+   "name": "Gnashmoor",
+   "ring": "outer",
+   "leaning": "chaotic_evil",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "pandemonium",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "weltering_pits",
+   "name": "The Weltering Pits",
+   "ring": "outer",
+   "leaning": "deep_evil",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "abyss",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "carrion_tiers",
+   "name": "Carrion Tiers",
+   "ring": "outer",
+   "leaning": "evil_grinding",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "carceri",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "grey_sorrow",
+   "name": "The Grey Sorrow",
+   "ring": "outer",
+   "leaning": "neutral_evil",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "hades",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "cinder_ledgers",
+   "name": "The Cinder Ledgers",
+   "ring": "outer",
+   "leaning": "lawful_evil",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "gehenna",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "ironrue",
+   "name": "Ironrue",
+   "ring": "outer",
+   "leaning": "lawful_cruel",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "nine-hells",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "the_cogwold",
+   "name": "The Cogwold",
+   "ring": "outer",
+   "leaning": "pure_law",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "mechanus",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "ledgerfast",
+   "name": "Ledgerfast",
+   "ring": "outer",
+   "leaning": "lawful_neutral",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "acheron",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "tallow_spires",
+   "name": "Tallow Spires",
+   "ring": "outer",
+   "leaning": "law_good",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "arcadia",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "emberstrand",
+   "name": "Emberstrand",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "fire",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "fire",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "tidewell",
+   "name": "Tidewell",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "water",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "water",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "galeveil",
+   "name": "Galeveil",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "air",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "air",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "kindling_shore",
+   "name": "Kindling Shore",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "positive",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "positive",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "ebbing_dark",
+   "name": "Ebbing Dark",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "negative",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "negative",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "the_blank_grid",
+   "name": "The Blank Grid",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "digital",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "digital-void",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "smokeseam",
+   "name": "Smokeseam",
+   "ring": "seam",
+   "leaning": "neutral",
+   "element": "smoke",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "smoke",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "magmaseam",
+   "name": "Magmaseam",
+   "ring": "seam",
+   "leaning": "neutral",
+   "element": "magma",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "magma",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "brineseam",
+   "name": "Brineseam",
+   "ring": "seam",
+   "leaning": "neutral",
+   "element": "ooze",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "ooze",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "rimeseam",
+   "name": "Rimeseam",
+   "ring": "seam",
+   "leaning": "neutral",
+   "element": "ice",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "ice",
+   "_src": [
+    "S1",
+    "XWALK atlas_id"
+   ]
+  },
+  {
+   "id": "veilway",
+   "name": "The Veilway",
+   "ring": "shore",
+   "leaning": "neutral",
+   "element": "mist",
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "ethereal",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "the_askew",
+   "name": "The Askew",
+   "ring": "beyond",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "far-realms",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "the_mistlock",
+   "name": "The Mistlock",
+   "ring": "beyond",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "domain-of-dread",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "undercroft_registry",
+   "name": "The Undercroft Registry",
+   "ring": "beyond",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "miskatonic",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "starfold_prism",
+   "name": "The Starfold Prism",
+   "ring": "beyond",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "lumia",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "far_worlds",
+   "name": "The Far Worlds (BEYOND)",
+   "ring": "beyond",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "universes-beyond",
+   "_src": [
+    "S1",
+    "XWALK"
+   ]
+  },
+  {
+   "id": "axlestone",
+   "name": "The Axlestone",
+   "ring": "hub",
+   "leaning": "neutral",
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "beastlands (atlas hub)",
+   "_src": [
+    "S1",
+    "FILLER hub art"
+   ]
+  },
+  {
+   "id": "duskmarrow",
+   "name": "Duskmarrow",
+   "ring": "hidden",
+   "leaning": null,
+   "element": null,
+   "interactive": false,
+   "alignment_effect": null,
+   "gate_condition": null,
+   "hazard": null,
+   "hunt_table": null,
+   "atlas_id": "city-of-shade",
+   "_src": [
+    "S1",
+    "S3 hidden until season 8"
+   ]
+  }
+ ]
+}

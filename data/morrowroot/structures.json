@@ -1,0 +1,229 @@
+{
+ "_about": "Homestead structures on the 12x12 grid.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "palisade_segment",
+   "name": "Palisade Segment",
+   "cost": {
+    "timber": 3,
+    "stone": 1
+   },
+   "effect": {
+    "raid_defense": 2
+   },
+   "hp": 6,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "smokehouse",
+   "name": "Smokehouse",
+   "cost": {
+    "timber": 4,
+    "stone": 2
+   },
+   "effect": {
+    "food_never_spoils": true
+   },
+   "hp": 6,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "forge",
+   "name": "Forge",
+   "cost": {
+    "stone": 3,
+    "ember": 2,
+    "lightshard": 1
+   },
+   "effect": {
+    "enables_crafting": true
+   },
+   "hp": 8,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S1",
+    "S3"
+   ]
+  },
+  {
+   "id": "warding_lantern",
+   "name": "Warding Lantern",
+   "cost": {
+    "lightshard": 2,
+    "stone": 1
+   },
+   "effect": {
+    "warmth_radius": 3,
+    "blocks_possession": true
+   },
+   "hp": 4,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [
+    "forge"
+   ],
+   "build_actions": 1,
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "hearth",
+   "name": "Hearth",
+   "cost": {},
+   "effect": {
+    "warmth_radius": 2
+   },
+   "hp": 10,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "FILLER stats; prebuilt in the cabin"
+   ]
+  },
+  {
+   "id": "storehouse",
+   "name": "Storehouse",
+   "cost": {
+    "timber": 3,
+    "stone": 1
+   },
+   "effect": {
+    "storage_bonus": 6
+   },
+   "hp": 6,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "hide_rack",
+   "name": "Hide Rack",
+   "cost": {
+    "timber": 2
+   },
+   "effect": {
+    "hide_per_big_game": 1
+   },
+   "hp": 3,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "barn",
+   "name": "Barn",
+   "cost": {
+    "timber": 6,
+    "stone": 2
+   },
+   "effect": {
+    "stamina_bonus_household": 1,
+    "storage_bonus": 4
+   },
+   "hp": 10,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "S5 barn foundation",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "sled_shed",
+   "name": "Sled Shed",
+   "cost": {
+    "timber": 4,
+    "hide": 1
+   },
+   "effect": {
+    "trade_while_glasswater": true
+   },
+   "hp": 5,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "S2 sled trade beats",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "watch_post",
+   "name": "Watch Post",
+   "cost": {
+    "timber": 3,
+    "stone": 1
+   },
+   "effect": {
+    "peek_raid_wave": true,
+    "raid_defense": 1
+   },
+   "hp": 5,
+   "footprint": [
+    1,
+    1
+   ],
+   "requires": [],
+   "build_actions": 1,
+   "_src": [
+    "S3 listed",
+    "S2",
+    "FILLER stats"
+   ]
+  }
+ ]
+}

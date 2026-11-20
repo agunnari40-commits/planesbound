@@ -1,0 +1,218 @@
+{
+ "_about": "Dale board, 13x9 pointy-top hexes, odd-r offset. Coords FILLER. Hunt/Hearth/Frost/Burr/Boast spaces to be placed by level design (counts in world-and-board.md).",
+ "width": 13,
+ "height": 9,
+ "orientation": "pointy_top",
+ "spaces": [
+  {
+   "id": "homestead",
+   "q": 3,
+   "r": 4,
+   "type": "home",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "kettlecross",
+   "q": 0,
+   "r": 4,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "saltwick",
+   "q": 1,
+   "r": 1,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "lowbraid",
+   "q": 1,
+   "r": 7,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "tallowmoor",
+   "q": 2,
+   "r": 2,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "fenspire",
+   "q": 2,
+   "r": 8,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "drumrest",
+   "q": 5,
+   "r": 1,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "haskeep",
+   "q": 5,
+   "r": 7,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "owlgate",
+   "q": 7,
+   "r": 2,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "brindle_ford",
+   "q": 6,
+   "r": 5,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "coldharrow",
+   "q": 9,
+   "r": 4,
+   "type": "trade",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "barrow_line",
+   "q": 5,
+   "r": 3,
+   "type": "event",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "rimeward_gate",
+   "q": 10,
+   "r": 4,
+   "type": "gate",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "bearing_head",
+   "q": 12,
+   "r": 3,
+   "type": "lighthouse",
+   "_src": [
+    "S3 contents",
+    "FILLER coords"
+   ]
+  },
+  {
+   "id": "rimeward_1",
+   "q": 10,
+   "r": 1,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_2",
+   "q": 10,
+   "r": 2,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_3",
+   "q": 10,
+   "r": 3,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_5",
+   "q": 10,
+   "r": 5,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_6",
+   "q": 10,
+   "r": 6,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_7",
+   "q": 10,
+   "r": 7,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  },
+  {
+   "id": "rimeward_8",
+   "q": 10,
+   "r": 8,
+   "type": "wall",
+   "_src": [
+    "S1",
+    "FILLER"
+   ]
+  }
+ ]
+}

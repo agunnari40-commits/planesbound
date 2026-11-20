@@ -1768,6 +1768,10 @@
     if (open) {
       document.getElementById("companionDialog")?.setAttribute("data-game-mode", "1");
     }
+    if (window.PlanesboundMorrowrootPlay?.isActive?.()) {
+      window.PlanesboundMorrowrootPlay.render?.();
+      return;
+    }
     render();
   }
 
@@ -1782,6 +1786,11 @@
   }
 
   function render() {
+    if (window.PlanesboundMorrowrootPlay?.isActive?.()) {
+      window.PlanesboundMorrowrootPlay.render?.();
+      window.PlanesboundGame = api();
+      return;
+    }
     const loc = LOCATIONS[state.location] || LOCATIONS.hub;
     const hud = el("gameHud");
     const scene = el("gameScene");
@@ -1909,6 +1918,7 @@
         ${newVoyageBtn}
         <button type="button" class="game-btn" data-action="rest">Short rest</button>
         <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        <button type="button" class="game-btn" data-action="play-modes">Other play modes</button>
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     if (loc === "astral-sea") {
@@ -2068,6 +2078,11 @@
     clearStageFlourishTimer();
     teardownEncounterStage();
     renderEncounter();
+    try {
+      window.PlanesboundMorrowrootPlay?.deactivate?.();
+    } catch (_) {
+      /* ignore */
+    }
     setPlayOpen(false);
   }
 
@@ -2098,6 +2113,10 @@
       newVoyage();
       return;
     }
+    if (btn.dataset.action === "play-modes") {
+      showStart(true);
+      return;
+    }
     if (btn.dataset.action === "atlas") {
       exitPlay();
       document.getElementById("map")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2120,6 +2139,8 @@
       isChapterComplete: () => !!state.chapterComplete,
       open: beginPlay,
       castOff: castOffFromCreation,
+      showStart,
+      setPlayOpen,
       travelTo,
       counselContext: () => {
         const loc = LOCATIONS[state.location] || LOCATIONS.hub;

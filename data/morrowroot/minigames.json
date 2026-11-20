@@ -1,0 +1,186 @@
+{
+ "_about": "Minigames restored for the Party Board (all FILLER). Format chosen per round by end-space colours, see play-modes.md 1.2.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "mg_hide_rack_rush",
+   "name": "Hide Rack Rush",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "hide": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_hide_rack_rush",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_sled_shed_sprint",
+   "name": "Sled Shed Sprint",
+   "format": "2v2",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "timber": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_sled_shed_sprint",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_barn_raising",
+   "name": "Barn Raising",
+   "format": "coop",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "build_action": "barn"
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_barn_raising",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_antler_chime",
+   "name": "Antler Chime",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "food": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_antler_chime",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_bellows",
+   "name": "Bellows Keeper",
+   "format": "1v3",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "ember": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_bellows",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_brindle_ice_fishing",
+   "name": "Ford Fishing",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "food": 2
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_brindle_ice_fishing",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_owlgate_post",
+   "name": "Owlgate Post",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "peek_event": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_owlgate_post",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_drumrest_rhythm",
+   "name": "Drumrest Rhythm",
+   "format": "coop",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "cancel_round_chill": true
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_drumrest_rhythm",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_churnglint_riddle",
+   "name": "Churnglint's Riddle",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "warmth": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_churnglint_riddle",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_fizzlet_feed",
+   "name": "Fizzlet Feed",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "lightshard": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_fizzlet_feed",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_lantern_line",
+   "name": "Lantern Line",
+   "format": "coop_vs_winter",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "remove_chill_all": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_lantern_line",
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "mg_wisp_dash",
+   "name": "Wisp Dash",
+   "format": "ffa",
+   "duration_s": 45,
+   "inputs": "one_or_two_buttons",
+   "winner_reward": {
+    "lightshard": 1
+   },
+   "children_interactive": false,
+   "art_ref": "scene_mg_wisp_dash",
+   "_src": [
+    "FILLER"
+   ]
+  }
+ ]
+}

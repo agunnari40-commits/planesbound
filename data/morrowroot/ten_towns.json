@@ -1,0 +1,89 @@
+{
+ "_about": "The Ten Towns (canonical owner naming; legacy production files said Ten Hearths; owner word is Ten Towns). Rumors & finale roles in docs/morrowroot/world-and-board.md.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "kettlecross",
+   "name": "Kettlecross",
+   "trade": "market: cured hide & copper pots",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "saltwick",
+   "name": "Saltwick",
+   "trade": "salt",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "lowbraid",
+   "name": "Lowbraid",
+   "trade": "rope & sled harness",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "tallowmoor",
+   "name": "Tallowmoor",
+   "trade": "candles & lamp oil",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "fenspire",
+   "name": "Fenspire",
+   "trade": "bottled marsh lights",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "drumrest",
+   "name": "Drumrest",
+   "trade": "drums & signal horns",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "haskeep",
+   "name": "Haskeep",
+   "trade": "iron & nails",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "owlgate",
+   "name": "Owlgate",
+   "trade": "scouts & owl post",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "brindle_ford",
+   "name": "Brindle Ford",
+   "trade": "cattle & cheese",
+   "_src": [
+    "S2"
+   ]
+  },
+  {
+   "id": "coldharrow",
+   "name": "Coldharrow",
+   "trade": "ice blocks & cold lore",
+   "_src": [
+    "S2"
+   ]
+  }
+ ],
+ "aliases": {
+  "ten_towns": "ten_towns"
+ }
+}

@@ -1,0 +1,186 @@
+{
+ "_about": "Will-o'-Wisp Race courses. Roll 1d6 + modifiers >= difficulty to clear a leg; fail = -1 Bearing; Bearing 0 = out.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "race_lighthouse",
+   "name": "Lighthouse Race",
+   "atlas_name": "The Slide Circuit",
+   "ring": "outer",
+   "start": "magpie_light",
+   "finish": "magpie_light",
+   "bearing_start": 3,
+   "legs": [
+    {
+     "n": 1,
+     "realm": "magpie_light",
+     "atlas_id": "lighthouse",
+     "note": "Light the stair. This is the last true bearing.",
+     "difficulty": 3
+    },
+    {
+     "n": 2,
+     "realm": "antlerwild",
+     "atlas_id": "beastlands",
+     "note": "The hub that should have been the center. Do not hunt long.",
+     "difficulty": 3
+    },
+    {
+     "n": 3,
+     "realm": "rimeward",
+     "atlas_id": "ice-wall",
+     "note": "A made ward. Cross only if the lattice still sings.",
+     "difficulty": 4
+    },
+    {
+     "n": 4,
+     "realm": "the_cogwold",
+     "atlas_id": "mechanus",
+     "note": "Keep the count. One missed gear & the wisp goes dark.",
+     "difficulty": 4
+    },
+    {
+     "n": 5,
+     "realm": "lanternmere",
+     "atlas_id": "celestia",
+     "note": "Do not skip the mountain. No Nightburr blight on this slope.",
+     "difficulty": 4
+    },
+    {
+     "n": 6,
+     "realm": "brightfallow",
+     "atlas_id": "elysium",
+     "note": "Rest is a trap here. Take water & leave.",
+     "difficulty": 3
+    },
+    {
+     "n": 7,
+     "realm": "revelhollow",
+     "atlas_id": "arborea",
+     "note": "Run the glade. Do not drink with the hosts. The blighted oak is a lie.",
+     "difficulty": 4
+    },
+    {
+     "n": 8,
+     "realm": "wrenchwind",
+     "atlas_id": "ysgard",
+     "note": "Jump or fall. The wisp does not wait.",
+     "difficulty": 5
+    },
+    {
+     "n": 9,
+     "realm": "the_churn",
+     "atlas_id": "limbo",
+     "note": "The wound. Hold a shape or become weather. The Regent's shadow hides in the soup.",
+     "difficulty": 5
+    }
+   ],
+   "fail_text": "The wisp has consumed the runner.",
+   "finish_text": "The wisp holds at the Magpie Light. Run it again if the bearing slips.",
+   "_src": [
+    "S8 legs+notes (renamed)",
+    "FILLER difficulty+rules"
+   ]
+  },
+  {
+   "id": "race_inner_ring",
+   "name": "Inner Ring Race",
+   "atlas_name": "Along the leylines",
+   "ring": "inner",
+   "start": "veilway",
+   "finish": "veilway",
+   "waypoint": {
+    "realm": "geodehall",
+    "effect": "refund_1_lightshard"
+   },
+   "fail_endings": [
+    {
+     "realm": "kindling_shore",
+     "roll": "odd",
+     "effect": {
+      "chill": "clear",
+      "food": -2
+     }
+    },
+    {
+     "realm": "ebbing_dark",
+     "roll": "even",
+     "effect": {
+      "chill": 2
+     }
+    }
+   ],
+   "bearing_start": 3,
+   "legs": [
+    {
+     "n": 1,
+     "realm": "veilway",
+     "atlas_id": "ethereal",
+     "note": "Call the wisp. The mist is the starting gate.",
+     "difficulty": 3
+    },
+    {
+     "n": 2,
+     "realm": "emberstrand",
+     "atlas_id": "fire",
+     "note": "Hold the heat. There is nothing to drink.",
+     "difficulty": 4
+    },
+    {
+     "n": 3,
+     "realm": "magmaseam",
+     "atlas_id": "magma",
+     "note": "Stone that has not chosen yet. Keep moving.",
+     "difficulty": 4
+    },
+    {
+     "n": 4,
+     "realm": "underheart",
+     "atlas_id": "earth",
+     "note": "Beast home. Do not hunt. You are a guest in the den.",
+     "difficulty": 4
+    },
+    {
+     "n": 5,
+     "realm": "brineseam",
+     "atlas_id": "ooze",
+     "note": "Every step is a contract with mud.",
+     "difficulty": 4
+    },
+    {
+     "n": 6,
+     "realm": "tidewell",
+     "atlas_id": "water",
+     "note": "No surface unless you make one. Do not invent a sky.",
+     "difficulty": 4
+    },
+    {
+     "n": 7,
+     "realm": "rimeseam",
+     "atlas_id": "ice",
+     "note": "Para elemental cold. This is not the Rimeward.",
+     "difficulty": 5
+    },
+    {
+     "n": 8,
+     "realm": "galeveil",
+     "atlas_id": "air",
+     "note": "No floor unless you make one. Think in three directions.",
+     "difficulty": 5
+    },
+    {
+     "n": 9,
+     "realm": "smokeseam",
+     "atlas_id": "smoke",
+     "note": "Find the curtain before the bank closes.",
+     "difficulty": 5
+    }
+   ],
+   "finish_text": "The wisp is back in the mist. The ring is still turning.",
+   "_src": [
+    "S8 legs+notes (renamed)",
+    "FILLER difficulty+rules"
+   ]
+  }
+ ]
+}

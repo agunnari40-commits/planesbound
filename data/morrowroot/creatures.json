@@ -1,0 +1,167 @@
+{
+ "_about": "Creatures: 2 per family (8). Legacy threat names from the original handoff must not ship.",
+ "_tags": "_src lists source tags from sources.md; FILLER = invented in this package, replace freely",
+ "items": [
+  {
+   "id": "frost_raider",
+   "name": "Frost Raider",
+   "family": "frost_raider",
+   "hp": 3,
+   "damage": 1,
+   "damage_type": "cold",
+   "move_sq": 6,
+   "resist": [
+    "cold"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "behavior": "rush_nearest_structure",
+   "wave_cost": 3,
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "rime_poured_raider",
+   "name": "Rime Poured Raider",
+   "family": "frost_raider",
+   "hp": 6,
+   "damage": 2,
+   "damage_type": "cold",
+   "move_sq": 5,
+   "resist": [
+    "cold"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "behavior": "rush_nearest_structure",
+   "wave_cost": 5,
+   "_src": [
+    "FILLER"
+   ]
+  },
+  {
+   "id": "burr_thrall",
+   "name": "Nightburr Thrall",
+   "family": "nightburr_thrall",
+   "hp": 5,
+   "damage": 2,
+   "damage_type": "necrotic",
+   "move_sq": 4,
+   "resist": [
+    "necrotic"
+   ],
+   "vulnerable": [
+    "radiant"
+   ],
+   "behavior": "seek_lantern",
+   "wave_cost": 5,
+   "_src": [
+    "S3"
+   ]
+  },
+  {
+   "id": "shadow_lamplighter",
+   "name": "Shadow Lamplighter",
+   "family": "nightburr_thrall",
+   "hp": 9,
+   "damage": 2,
+   "damage_type": "necrotic",
+   "move_sq": 4,
+   "resist": [
+    "necrotic"
+   ],
+   "vulnerable": [
+    "radiant"
+   ],
+   "behavior": "seek_lantern_leader",
+   "wave_cost": 8,
+   "_src": [
+    "S2 Crack Swarm leader",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "slide_beast",
+   "name": "Slide Beast",
+   "family": "slide_beast",
+   "hp": 4,
+   "damage": 1,
+   "damage_type": "bludgeoning",
+   "move_sq": 7,
+   "resist": [],
+   "vulnerable": [
+    "fire"
+   ],
+   "behavior": "stampede_line",
+   "wave_cost": 3,
+   "_src": [
+    "S1 family",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "askew_beast",
+   "name": "Wrong Angle Beast",
+   "family": "slide_beast",
+   "hp": 5,
+   "damage": 2,
+   "damage_type": "force",
+   "move_sq": 5,
+   "resist": [],
+   "vulnerable": [
+    "radiant"
+   ],
+   "behavior": "phase_to_nearest_seam",
+   "wave_cost": 5,
+   "_src": [
+    "S3 default: slide beast variant",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "frost_thrall",
+   "name": "Frost Thrall",
+   "family": "frost_thrall",
+   "hp": 6,
+   "damage": 2,
+   "damage_type": "cold",
+   "move_sq": 4,
+   "resist": [
+    "cold"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "behavior": "hunt_warmth",
+   "wave_cost": 6,
+   "_src": [
+    "S1 family",
+    "FILLER stats"
+   ]
+  },
+  {
+   "id": "rime_banner_bearer",
+   "name": "Rime Banner Bearer",
+   "family": "frost_thrall",
+   "hp": 10,
+   "damage": 2,
+   "damage_type": "cold",
+   "move_sq": 4,
+   "resist": [
+    "cold"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "behavior": "buff_allies_aura",
+   "wave_cost": 9,
+   "_src": [
+    "S2 Frozen Muster banner",
+    "FILLER stats"
+   ]
+  }
+ ]
+}
