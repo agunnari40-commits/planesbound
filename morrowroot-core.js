@@ -265,7 +265,8 @@
     let pool = list;
     if (forceFormat) pool = list.filter((m) => m.format === forceFormat) || list;
     const mg = rng.pick(pool);
-    state.filler = true;
+    // Minigames themselves are [FILLER]; do not flip the mode filler flag
+    // (Campaign can hit a frost-space minigame without becoming a filler preset).
     pushLog(state, `Minigame: ${mg.name} (${mg.format}) [FILLER]`);
     const reward = mg.winner_reward || {};
     for (const [k, v] of Object.entries(reward)) {
