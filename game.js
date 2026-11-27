@@ -1709,39 +1709,13 @@
     return document.getElementById(id);
   }
 
-  function fillBeingSelect(selectEl, selectedId) {
-    if (!selectEl) return;
+  /** Sync Play-start roster pickers to the full beings catalog (PAS-29). */
+  function syncStartBeingPickers(playerId, companionId) {
     const api = window.PlanesboundBeings;
-    const beings = api?.all?.() || [{ id: "human", name: "Human", tradition: "core" }];
-    const preferred = [
-      "human",
-      "aasimar",
-      "elf",
-      "dwarf",
-      "tiefling",
-      "dragonborn",
-      "halfling",
-      "gnome",
-      "orc",
-      "goblin",
-    ];
-    const byId = new Map(beings.map((b) => [b.id, b]));
-    const picks = [];
-    preferred.forEach((id) => {
-      if (byId.has(id)) picks.push(byId.get(id));
-    });
-    beings.slice(0, 80).forEach((b) => {
-      if (!picks.some((p) => p.id === b.id)) picks.push(b);
-    });
-    if (selectedId && byId.has(selectedId) && !picks.some((p) => p.id === selectedId)) {
-      picks.unshift(byId.get(selectedId));
-    }
-    selectEl.innerHTML = picks
-      .map(
-        (b) =>
-          `<option value="${escapeAttr(b.id)}"${b.id === selectedId ? " selected" : ""}>${escapeHtml(b.name)} (${escapeHtml(b.tradition)})</option>`
-      )
-      .join("");
+    if (!api?.setSelection) return;
+    const p = playerId || api.getPlayer?.()?.id || "human";
+    const c = companionId || api.getCompanion?.()?.id || "human";
+    api.setSelection(p, c);
   }
 
   function escapeHtml(s) {
@@ -2159,8 +2133,7 @@
       setPlayOpen(true);
       showStart(true);
       const pref = prefillFromCreation();
-      fillBeingSelect(el("gamePlayerBeing"), pref.playerBeingId || "human");
-      fillBeingSelect(el("gameCompanionBeing"), pref.companionBeingId || "human");
+      syncStartBeingPickers(pref.playerBeingId || "human", pref.companionBeingId || "human");
       const nameInput = el("gamePlayerName");
       if (nameInput && !nameInput.value) nameInput.value = pref.name || state.playerName || "";
       nameInput?.focus();
@@ -2396,8 +2369,10 @@
 
     document.addEventListener("planesbound-beings-ready", () => {
       if (playOpen && el("gameStart")?.dataset.open === "true") {
-        fillBeingSelect(el("gamePlayerBeing"), el("gamePlayerBeing")?.value || "human");
-        fillBeingSelect(el("gameCompanionBeing"), el("gameCompanionBeing")?.value || "human");
+        syncStartBeingPickers(
+          el("gamePlayerBeing")?.value || "human",
+          el("gameCompanionBeing")?.value || "human"
+        );
       }
     });
 

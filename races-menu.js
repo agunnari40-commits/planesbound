@@ -1,10 +1,18 @@
-/* Planesbound PAS-3 — left races dock + virtualized being pickers */
+/* Planesbound PAS-3/29 — virtualized searchable being pickers (dock + Play start) */
 (function () {
   const ROW = 40;
   const OVERSCAN = 8;
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
   const ART_DIR = "art/races";
+
+  /** Shared selection roles. Each mount binds UI ids via `prefix`. */
+  const MOUNTS = [
+    { role: "player", prefix: "player" },
+    { role: "companion", prefix: "companion" },
+    { role: "player", prefix: "gamePlayer", startForm: true },
+    { role: "companion", prefix: "gameCompanion", startForm: true },
+  ];
 
   function raceArtSrc(being) {
     if (!being) return `${ART_DIR}/_placeholder.png`;
@@ -13,9 +21,11 @@
 
   /** @type {{id:string,name:string,tradition:string,line:string}[]} */
   let beings = [];
-  let filtered = { player: [], companion: [] };
+  /** @type {Record<string, typeof beings>} */
+  const filtered = {};
   let selected = { player: "human", companion: "human" };
-  let openList = null; // 'player' | 'companion' | null
+  /** open key = `${prefix}` of the open mount */
+  let openMount = null;
 
   const dock = () => document.getElementById("racesDock");
   const countEl = () => document.getElementById("racesCount");
@@ -32,6 +42,28 @@
     return beings.find((b) => b.id === id) || beings[0];
   }
 
+  function ids(prefix) {
+    return {
+      toggle: `${prefix}BeingToggle`,
+      list: `${prefix}BeingList`,
+      search: `${prefix}BeingSearch`,
+      viewport: `${prefix}BeingViewport`,
+      spacer: `${prefix}BeingSpacer`,
+      window: `${prefix}BeingWindow`,
+      name: `${prefix}BeingName`,
+      line: `${prefix}BeingLine`,
+      tag: `${prefix}BeingTag`,
+      label: `${prefix}BeingLabel`,
+      count: `${prefix}BeingCount`,
+      hidden: `${prefix}Being`,
+      portrait: `${prefix === "player" || prefix === "companion" ? prefix : prefix.replace(/^game/, "").toLowerCase()}BeingPortrait`,
+    };
+  }
+
+  function portraitId(role) {
+    return `${role}BeingPortrait`;
+  }
+
   function persist() {
     localStorage.setItem(PLAYER_KEY, selected.player);
     localStorage.setItem(COMPANION_KEY, selected.companion);
@@ -43,19 +75,29 @@
         },
       })
     );
-    renderPicks();
+    renderAllPicks();
   }
 
-  function renderPicks() {
-    ["player", "companion"].forEach((role) => {
-      const b = byId(selected[role]);
-      const nameEl = document.getElementById(`${role}BeingName`);
-      const lineEl = document.getElementById(`${role}BeingLine`);
-      const tagEl = document.getElementById(`${role}BeingTag`);
-      const portrait = document.getElementById(`${role}BeingPortrait`);
-      if (nameEl) nameEl.textContent = b.name;
-      if (lineEl) lineEl.textContent = b.line;
-      if (tagEl) tagEl.textContent = b.tradition;
+  function renderMountPick(mount) {
+    const role = mount.role;
+    const b = byId(selected[role]);
+    const id = ids(mount.prefix);
+    const nameEl = document.getElementById(id.name);
+    const lineEl = document.getElementById(id.line);
+    const tagEl = document.getElementById(id.tag);
+    const labelEl = document.getElementById(id.label);
+    const hidden = document.getElementById(id.hidden);
+    const countNode = document.getElementById(id.count);
+    if (nameEl) nameEl.textContent = b.name;
+    if (lineEl) lineEl.textContent = b.line;
+    if (tagEl) tagEl.textContent = b.tradition;
+    if (labelEl) {
+      labelEl.textContent = `${b.name} · ${b.tradition}`;
+    }
+    if (hidden && "value" in hidden) hidden.value = b.id;
+    if (countNode) countNode.textContent = String(beings.length);
+    if (!mount.startForm) {
+      const portrait = document.getElementById(portraitId(role));
       if (portrait) {
         portrait.alt = `${b.name} portrait`;
         portrait.dataset.being = b.id;
@@ -66,33 +108,38 @@
           portrait.src = `${ART_DIR}/_placeholder-${b.tradition || "core"}.png`;
         };
       }
-    });
+    }
   }
 
-  function applyFilter(role) {
-    const q = (document.getElementById(`${role}BeingSearch`)?.value || "")
-      .trim()
-      .toLowerCase();
-    filtered[role] = !q
+  function renderAllPicks() {
+    MOUNTS.forEach(renderMountPick);
+  }
+
+  function applyFilter(mount) {
+    const id = ids(mount.prefix);
+    const q = (document.getElementById(id.search)?.value || "").trim().toLowerCase();
+    filtered[mount.prefix] = !q
       ? beings.slice()
       : beings.filter(
           (b) =>
             b.name.toLowerCase().includes(q) ||
             b.tradition.toLowerCase().includes(q) ||
-            b.line.toLowerCase().includes(q)
+            b.line.toLowerCase().includes(q) ||
+            b.id.toLowerCase().includes(q)
         );
-    const viewport = document.getElementById(`${role}BeingViewport`);
+    const viewport = document.getElementById(id.viewport);
     if (viewport) viewport.scrollTop = 0;
-    renderVirtual(role);
+    renderVirtual(mount);
   }
 
-  function renderVirtual(role) {
-    const viewport = document.getElementById(`${role}BeingViewport`);
-    const spacer = document.getElementById(`${role}BeingSpacer`);
-    const windowEl = document.getElementById(`${role}BeingWindow`);
+  function renderVirtual(mount) {
+    const id = ids(mount.prefix);
+    const viewport = document.getElementById(id.viewport);
+    const spacer = document.getElementById(id.spacer);
+    const windowEl = document.getElementById(id.window);
     if (!viewport || !spacer || !windowEl) return;
 
-    const list = filtered[role];
+    const list = filtered[mount.prefix] || [];
     spacer.style.height = `${list.length * ROW}px`;
     const scrollTop = viewport.scrollTop;
     let start = Math.max(0, Math.floor(scrollTop / ROW) - OVERSCAN);
@@ -103,9 +150,9 @@
     const parts = [];
     for (let i = start; i < end; i++) {
       const b = list[i];
-      const active = b.id === selected[role] ? "true" : "false";
+      const active = b.id === selected[mount.role] ? "true" : "false";
       parts.push(
-        `<button type="button" class="being-row" data-role="${role}" data-id="${escapeHtml(
+        `<button type="button" class="being-row" data-prefix="${escapeHtml(mount.prefix)}" data-role="${mount.role}" data-id="${escapeHtml(
           b.id
         )}" data-active="${active}" style="height:${ROW}px">` +
           `<img class="being-thumb" src="${escapeHtml(raceArtSrc(b))}" alt="" width="24" height="24" loading="lazy" decoding="async" data-trad="${escapeHtml(
@@ -121,42 +168,51 @@
     windowEl.innerHTML = parts.join("");
   }
 
-  function pick(role, id) {
-    selected[role] = id;
+  function pick(role, beingId, closePrefix) {
+    selected[role] = beingId;
     persist();
-    renderVirtual(role);
+    MOUNTS.filter((m) => m.role === role).forEach(renderVirtual);
     document.dispatchEvent(
       new CustomEvent("planesbound-race-picked", {
-        detail: { role, being: byId(id) },
+        detail: { role, being: byId(beingId) },
       })
     );
+    if (closePrefix) setListOpen(closePrefix, false);
   }
 
-  function setListOpen(role, open) {
-    const panel = document.getElementById(`${role}BeingList`);
-    const btn = document.getElementById(`${role}BeingToggle`);
-    const card = panel?.closest(".being-card");
+  function mountByPrefix(prefix) {
+    return MOUNTS.find((m) => m.prefix === prefix) || null;
+  }
+
+  function setListOpen(prefix, open) {
+    const mount = mountByPrefix(prefix);
+    if (!mount) return;
+    const id = ids(prefix);
+    const panel = document.getElementById(id.list);
+    const btn = document.getElementById(id.toggle);
+    const card = panel?.closest(".being-card, .game-field--picker");
     if (!panel || !btn) return;
     if (open) {
-      if (openList && openList !== role) setListOpen(openList, false);
-      openList = role;
+      if (openMount && openMount !== prefix) setListOpen(openMount, false);
+      openMount = prefix;
       panel.hidden = false;
       panel.dataset.open = "true";
       btn.setAttribute("aria-expanded", "true");
       card?.classList.add("is-list-open");
-      applyFilter(role);
+      applyFilter(mount);
       requestAnimationFrame(() => {
-        const viewport = document.getElementById(`${role}BeingViewport`);
+        const viewport = document.getElementById(id.viewport);
+        const list = filtered[prefix] || [];
         const idx = Math.max(
           0,
-          filtered[role].findIndex((b) => b.id === selected[role])
+          list.findIndex((b) => b.id === selected[mount.role])
         );
         if (viewport) viewport.scrollTop = Math.max(0, idx * ROW - ROW * 3);
-        renderVirtual(role);
-        document.getElementById(`${role}BeingSearch`)?.focus();
+        renderVirtual(mount);
+        document.getElementById(id.search)?.focus();
       });
     } else {
-      if (openList === role) openList = null;
+      if (openMount === prefix) openMount = null;
       panel.hidden = true;
       panel.dataset.open = "false";
       btn.setAttribute("aria-expanded", "false");
@@ -164,26 +220,30 @@
     }
   }
 
-  function wireRole(role) {
-    const toggle = document.getElementById(`${role}BeingToggle`);
-    const viewport = document.getElementById(`${role}BeingViewport`);
-    const search = document.getElementById(`${role}BeingSearch`);
-    const list = document.getElementById(`${role}BeingList`);
+  function wireMount(mount) {
+    const id = ids(mount.prefix);
+    const toggle = document.getElementById(id.toggle);
+    const viewport = document.getElementById(id.viewport);
+    const search = document.getElementById(id.search);
+    const list = document.getElementById(id.list);
+    if (!toggle || !list) return;
 
-    toggle?.addEventListener("click", () => {
-      const open = list?.dataset.open !== "true";
-      setListOpen(role, open);
+    filtered[mount.prefix] = beings.slice();
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const open = list.dataset.open !== "true";
+      setListOpen(mount.prefix, open);
     });
 
-    search?.addEventListener("input", () => applyFilter(role));
+    search?.addEventListener("input", () => applyFilter(mount));
 
     viewport?.addEventListener(
       "scroll",
-      () => renderVirtual(role),
+      () => renderVirtual(mount),
       { passive: true }
     );
 
-    // Drag-to-scroll only after movement; never capture on plain tap (keeps row clicks)
     const DRAG_THRESHOLD = 6;
     let pointerActive = false;
     let dragging = false;
@@ -231,15 +291,14 @@
     viewport?.addEventListener("pointerup", endDrag);
     viewport?.addEventListener("pointercancel", endDrag);
 
-    list?.addEventListener("click", (e) => {
+    list.addEventListener("click", (e) => {
       if (suppressClick) {
         suppressClick = false;
         return;
       }
       const row = e.target.closest(".being-row");
       if (!row) return;
-      pick(row.dataset.role, row.dataset.id);
-      setListOpen(row.dataset.role || role, false);
+      pick(row.dataset.role, row.dataset.id, row.dataset.prefix || mount.prefix);
     });
   }
 
@@ -250,9 +309,7 @@
     beings = Array.isArray(data.beings) ? data.beings : [];
     if (!beings.length || beings[0].id !== "human") {
       const human = beings.find((b) => b.id === "human");
-      beings = human
-        ? [human, ...beings.filter((b) => b.id !== "human")]
-        : beings;
+      beings = human ? [human, ...beings.filter((b) => b.id !== "human")] : beings;
     }
 
     selected.player = localStorage.getItem(PLAYER_KEY) || "human";
@@ -261,30 +318,27 @@
     if (!byId(selected.companion)) selected.companion = "human";
 
     if (countEl()) {
-      countEl().textContent = `${beings.length} beings`;
+      countEl().textContent = `${beings.length} races & beings`;
     }
 
-    wireRole("player");
-    wireRole("companion");
-    renderPicks();
-    filtered.player = beings.slice();
-    filtered.companion = beings.slice();
+    MOUNTS.forEach(wireMount);
+    renderAllPicks();
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && openList) {
-        setListOpen(openList, false);
+      if (e.key === "Escape" && openMount) {
+        setListOpen(openMount, false);
       }
     });
 
     document.addEventListener("click", (e) => {
-      if (!openList) return;
-      const dockEl = dock();
-      if (dockEl && !dockEl.contains(e.target)) {
-        setListOpen(openList, false);
-      }
+      if (!openMount) return;
+      const id = ids(openMount);
+      const panel = document.getElementById(id.list);
+      const toggle = document.getElementById(id.toggle);
+      if (panel?.contains(e.target) || toggle?.contains(e.target)) return;
+      setListOpen(openMount, false);
     });
 
-    // Expose for companion + Play voyage integration
     window.PlanesboundBeings = {
       getPlayer: () => byId(selected.player),
       getCompanion: () => byId(selected.companion),
@@ -295,7 +349,11 @@
         if (companionId && byId(companionId)) selected.companion = companionId;
         localStorage.setItem(PLAYER_KEY, selected.player);
         localStorage.setItem(COMPANION_KEY, selected.companion);
-        renderPicks();
+        renderAllPicks();
+        MOUNTS.forEach((m) => {
+          filtered[m.prefix] = beings.slice();
+          renderVirtual(m);
+        });
         document.dispatchEvent(
           new CustomEvent("planesbound-beings-changed", {
             detail: {
@@ -319,7 +377,7 @@
         selected.companion = c;
         changed = true;
       }
-      if (changed) renderPicks();
+      if (changed) renderAllPicks();
     });
 
     document.dispatchEvent(

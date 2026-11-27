@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="game.css?v=27" />
+  <link rel="stylesheet" href="game.css?v=29" />
   <link rel="stylesheet" href="character-sheets.css" />
   <link rel="stylesheet" href="white-room.css" />
   <link rel="stylesheet" href="art-motion.css" />
@@ -1186,18 +1186,44 @@
       <form class="game-start-card" id="gameStartForm">
         <p class="eyebrow" style="color:#8a6a32;">Character start</p>
         <h2 id="gameStartTitle">Cross the Astral Sea</h2>
-        <p class="lede">Name your traveler, keep Human (or pick another being), choose a companion being, then cast off. Progress saves in this browser.</p>
+        <p class="lede">Name your traveler, pick from the full race &amp; being roster (420), choose a companion the same way, then cast off. Progress saves in this browser.</p>
         <div class="game-field">
           <label for="gamePlayerName">Player name</label>
           <input id="gamePlayerName" name="name" maxlength="40" autocomplete="nickname" required placeholder="e.g. Ani of Mineral" />
         </div>
-        <div class="game-field">
-          <label for="gamePlayerBeing">Player being</label>
-          <select id="gamePlayerBeing" name="playerBeing"></select>
+        <div class="game-field game-field--picker">
+          <label id="gamePlayerBeingLbl">Player race / being</label>
+          <input type="hidden" id="gamePlayerBeing" name="playerBeing" value="human" />
+          <button type="button" class="game-being-toggle" id="gamePlayerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gamePlayerBeingList" aria-labelledby="gamePlayerBeingLbl">
+            <span class="game-being-toggle-label" id="gamePlayerBeingLabel">Human · core</span>
+            <span class="pick-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="being-list game-start-being-list" id="gamePlayerBeingList" role="listbox" aria-label="Player race and being list" hidden data-open="false">
+            <input class="being-search" id="gamePlayerBeingSearch" type="search" placeholder="Search all races &amp; beings…" autocomplete="off" />
+            <p class="game-start-roster-meta"><span id="gamePlayerBeingCount">0</span> in roster · scroll or search</p>
+            <div class="being-viewport" id="gamePlayerBeingViewport">
+              <div class="being-spacer" id="gamePlayerBeingSpacer">
+                <div class="being-window" id="gamePlayerBeingWindow"></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="game-field">
-          <label for="gameCompanionBeing">Companion being</label>
-          <select id="gameCompanionBeing" name="companionBeing"></select>
+        <div class="game-field game-field--picker">
+          <label id="gameCompanionBeingLbl">Companion race / being</label>
+          <input type="hidden" id="gameCompanionBeing" name="companionBeing" value="human" />
+          <button type="button" class="game-being-toggle" id="gameCompanionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gameCompanionBeingList" aria-labelledby="gameCompanionBeingLbl">
+            <span class="game-being-toggle-label" id="gameCompanionBeingLabel">Human · core</span>
+            <span class="pick-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="being-list game-start-being-list" id="gameCompanionBeingList" role="listbox" aria-label="Companion race and being list" hidden data-open="false">
+            <input class="being-search" id="gameCompanionBeingSearch" type="search" placeholder="Search all races &amp; beings…" autocomplete="off" />
+            <p class="game-start-roster-meta"><span id="gameCompanionBeingCount">0</span> in roster · scroll or search</p>
+            <div class="being-viewport" id="gameCompanionBeingViewport">
+              <div class="being-spacer" id="gameCompanionBeingSpacer">
+                <div class="being-window" id="gameCompanionBeingWindow"></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="game-start-actions">
           <button type="submit" class="game-btn game-btn--astral">Begin voyage</button>
@@ -1818,11 +1844,11 @@ const planes = [
     refreshCompanionContext();
   </script>
   <script src="art-motion.js" defer></script>
-  <script src="races-menu.js" defer></script>
+  <script src="races-menu.js?v=29" defer></script>
   <script src="character-sheets.js" defer></script>
   <script src="wow-actors.js" defer></script>
   <script src="video-mode.js" defer></script>
   <script src="white-room.js" defer></script>
-  <script src="game.js?v=27" defer></script>
+  <script src="game.js?v=29" defer></script>
 </body>
 </html>
