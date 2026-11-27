@@ -1,73 +1,41 @@
-/* Planesbound PAS-6/13/15/18/19/23/24/27 — voyage + live combat + AAA polish (feel/HUD/audio) */
+/* Planesbound PAS-6/13/15/18/19/23/24/27/33/37/39 — voyage + gates + icons + Web Audio */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
   const SAVE_KEY_LEGACY = "planesbound-game-v1";
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
+  const Gates = () => window.PlanesboundCombatGates;
 
-  /** Short Web Audio cues — no sample banks or audio libs (PAS-27). */
-  const AudioCues = (() => {
-    let ctx = null;
-    function ensure() {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      if (!ctx) ctx = new AC();
-      if (ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
-      }
-      return ctx;
-    }
-    function tone({ freq = 440, dur = 0.08, type = "sine", gain = 0.035, slide = 0 }) {
-      const c = ensure();
-      if (!c) return;
-      const t0 = c.currentTime;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, t0);
-      if (slide) osc.frequency.linearRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      osc.connect(g);
-      g.connect(c.destination);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.03);
-    }
-    return {
-      hit() {
-        tone({ freq: 240, dur: 0.09, type: "square", gain: 0.032, slide: 90 });
-      },
-      crit() {
-        tone({ freq: 280, dur: 0.08, type: "square", gain: 0.036, slide: 140 });
-        setTimeout(() => tone({ freq: 420, dur: 0.1, type: "sine", gain: 0.03 }), 55);
-      },
-      miss() {
-        tone({ freq: 150, dur: 0.07, type: "triangle", gain: 0.022, slide: -45 });
-      },
-      hurt() {
-        tone({ freq: 105, dur: 0.14, type: "sawtooth", gain: 0.028, slide: -55 });
-      },
-      soft() {
-        tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.028, slide: 130 });
-      },
-      kill() {
-        tone({ freq: 300, dur: 0.08, type: "square", gain: 0.034 });
-        setTimeout(() => tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.03 }), 70);
-      },
-      travel() {
-        tone({ freq: 360, dur: 0.1, type: "sine", gain: 0.022, slide: 180 });
-      },
-      target() {
-        tone({ freq: 640, dur: 0.045, type: "sine", gain: 0.018 });
-      },
-      quest() {
-        tone({ freq: 440, dur: 0.07, type: "sine", gain: 0.026 });
-        setTimeout(() => tone({ freq: 660, dur: 0.1, type: "sine", gain: 0.028 }), 85);
-      },
-    };
-  })();
+  /** PAS-39: shared Web Audio module (`audio.js`). Fallback keeps play silent-safe if script missing. */
+  const AudioCues = window.PlanesboundAudio || {
+    hit() {},
+    crit() {},
+    miss() {},
+    hurt() {},
+    soft() {},
+    kill() {},
+    parry() {},
+    roll() {},
+    travel() {},
+    target() {},
+    quest() {},
+    ui() {},
+    isMuted: () => false,
+    toggleMute: () => false,
+    syncMusicForLocation() {},
+    stopMusic() {},
+    ensure() {},
+  };
+
+  function syncMuteButton() {
+    const btn = el("gameMuteAudio");
+    if (!btn || !AudioCues.isMuted) return;
+    const on = !!AudioCues.isMuted();
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Sound · Off" : "Sound · On";
+    btn.title = on ? "Unmute combat cues and music bed" : "Mute all game audio";
+  }
 
   let travelToastTimer = 0;
   let combatFloatSeq = 0;
@@ -189,6 +157,7 @@
   let activeTab = "status";
   let playOpen = false;
   let encounter = null;
+  let combatGateRaf = 0;
 
   /** Encounter 3D stage (skinned meshes + hitboxes). */
   let stage = null;
@@ -684,39 +653,209 @@
       dc: 14,
       dcSoft: 12,
       choices: [],
+      gates: Gates()?.createState?.() || null,
     };
+    lastAppliedIncomingKey = null;
     syncLiveChoices();
     renderEncounter();
+    ensureCombatGateLoop();
   }
 
-  function syncLiveChoices() {
+  function stopCombatGateLoop() {
+    if (combatGateRaf) {
+      cancelAnimationFrame(combatGateRaf);
+      combatGateRaf = 0;
+    }
+  }
+
+  /** Dedup key for last applied incoming gate result (avoids dropped/double apply). */
+  let lastAppliedIncomingKey = null;
+
+  function applyIncomingGateResult(result) {
+    if (!encounter?.live || !result) return;
+    if (result.blocked === "iframe") {
+      spawnCombatFloat("dodge", "miss");
+      AudioCues.miss();
+      stage?.showBeat?.("Roll i-frame — clean", 1000);
+      pushJournal("Coil strike passes through your roll (i-frame).");
+      companionSay("Feet — yes.");
+      return;
+    }
+    if (result.blocked === "parry") {
+      spawnCombatFloat("parry", "assist");
+      AudioCues.hit();
+      stage?.showBeat?.("Parry!", 1000);
+      pushJournal("Parry catches the coil mid-lash.");
+      companionSay("Window read.");
+      return;
+    }
+    if (result.hit) {
+      const dmg = result.damage || 2;
+      state.hp = Math.max(1, state.hp - dmg);
+      stage?.playFoeStrike?.();
+      spawnCombatFloat(`−${dmg}`, "hurt");
+      AudioCues.hurt();
+      stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
+      pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
+      companionSay("Hold the line — threat reset.");
+    }
+  }
+
+  /**
+   * Tick gates and apply any newly committed incoming result exactly once.
+   * Used by the rAF loop and by syncLiveChoices so a tick outside rAF cannot drop damage.
+   */
+  function flushGateTick(now) {
+    const CG = Gates();
+    if (!CG || !encounter?.live || !encounter.gates) return false;
+    CG.tick(encounter.gates, now);
+    const result = encounter.gates.lastResult;
+    if (!result || result.type !== "incoming" || !encounter.gates.attackResolved) return false;
+    const key = `${result.at}|${result.blocked}|${result.hit ? 1 : 0}|${result.damage || 0}`;
+    if (key === lastAppliedIncomingKey) return false;
+    lastAppliedIncomingKey = key;
+    applyIncomingGateResult(result);
+    save();
+    return true;
+  }
+
+  function ensureCombatGateLoop() {
+    if (combatGateRaf || !encounter?.live || !encounter.gates || !Gates()) return;
+    let lastChoiceSig = "";
+    const step = (now) => {
+      combatGateRaf = 0;
+      if (!encounter?.live || !encounter.gates) return;
+      const applied = flushGateTick(now);
+      if (applied) {
+        render();
+        lastChoiceSig = "";
+      }
+      // skipTick: rAF already flushed; avoid a second tick with a later now that could race.
+      syncLiveChoices({ skipTick: true });
+      const sig = (encounter.choices || [])
+        .map((c) => `${c.id}:${c.disabled ? 1 : 0}`)
+        .join("|");
+      // Rebuild actions only when id/disabled flip — not when Parry label toggles NOW.
+      if (sig !== lastChoiceSig) {
+        lastChoiceSig = sig;
+        renderEncounterChrome();
+      } else {
+        renderEncounterVitalsOnly();
+      }
+      combatGateRaf = requestAnimationFrame(step);
+    };
+    combatGateRaf = requestAnimationFrame(step);
+  }
+
+  function parryChoiceLabel(telegraph, parryOpen, sta, CG) {
+    const cost = sta != null && CG ? ` · ${CG.ACTIONS.parry.stamina} STA` : "";
+    if (parryOpen) return `Parry · NOW${cost}`;
+    if (telegraph) return `Parry · wait window${cost}`;
+    return `Parry · on telegraph${cost}`;
+  }
+
+  function renderEncounterVitalsOnly() {
+    const vitals = el("gameEncounterVitals");
+    if (!vitals || !encounter?.live) return;
+    const g = encounter.gates;
+    const staMax = g?.staminaMax || 100;
+    const staNow = g ? Math.round(g.stamina) : staMax;
+    const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+    const CG = Gates();
+    const now = performance.now();
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+    const rolling = !!(g && CG && CG.isRolling(g, now));
+    const staEl = vitals.querySelector(".game-vital--sta");
+    if (staEl) {
+      staEl.childNodes[0].textContent = `STA ${staNow}/${staMax}`;
+      const bar = staEl.querySelector("b");
+      if (bar) bar.style.width = `${staPct}%`;
+    }
+    vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+    let gate = vitals.querySelector(".game-vital--gate");
+    if (telegraph || rolling) {
+      if (!gate) {
+        gate = document.createElement("span");
+        gate.className = "game-vital game-vital--gate";
+        vitals.appendChild(gate);
+      }
+      gate.classList.toggle("game-vital--parry-open", parryOpen);
+      gate.classList.toggle("game-vital--rolling", rolling && !telegraph);
+      gate.textContent = telegraph ? (parryOpen ? "PARRY NOW" : "TELEGRAPH") : "ROLL i-frame";
+    } else if (gate) {
+      gate.remove();
+    }
+    const parryBtn = el("gameEncounterActions")?.querySelector('[data-encounter-choice="parry"]');
+    if (parryBtn) {
+      parryBtn.classList.toggle("game-btn--parry-now", parryOpen);
+      // Update label in place so focus / in-flight click is not destroyed at window open.
+      const choice = encounter.choices?.find((c) => c.id === "parry");
+      const label = parryChoiceLabel(telegraph, parryOpen, staNow, CG);
+      if (choice) choice.label = label;
+      // Prefer label span so PAS-37 icons are not wiped by in-place parry updates.
+      const labelEl = parryBtn.querySelector(".game-btn-label");
+      if (labelEl) {
+        if (labelEl.textContent !== label) labelEl.textContent = label;
+      } else if (parryBtn.textContent !== label) {
+        parryBtn.textContent = label;
+      }
+    }
+  }
+
+  function syncLiveChoices(opts = {}) {
     if (!encounter?.live) return;
     const needTarget = !encounter.targeted;
     const busy = !!encounter.resolving;
     const companionLabel = beingName(state.companionBeingId, "Companion");
+    const CG = Gates();
+    const g = encounter.gates;
+    const now = performance.now();
+    // Tick + apply here unless the rAF step already flushed this frame.
+    if (!opts.skipTick && g && CG) {
+      if (flushGateTick(now)) render();
+    }
+    const sta = g ? Math.round(g.stamina) : null;
+    const winded = (action) => (g && CG ? !CG.canAfford(g, action) : false);
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
     encounter.choices = [
       {
         id: "strike",
-        label: needTarget ? "Strike (target foe first)" : `Strike · Athletics vs DC ${encounter.dc}`,
-        disabled: needTarget || busy,
+        label: needTarget
+          ? "Strike (target foe first)"
+          : `Strike · Athletics vs DC ${encounter.dc}${sta != null ? ` · ${CG.ACTIONS.strike.stamina} STA` : ""}`,
+        disabled: needTarget || busy || winded("strike") || telegraph,
         kind: "strike",
       },
       {
         id: "soft",
-        label: `Soft word · Insight vs DC ${encounter.dcSoft}`,
-        disabled: busy,
+        label: `Soft word · Insight vs DC ${encounter.dcSoft}${sta != null ? ` · ${CG.ACTIONS.soft.stamina} STA` : ""}`,
+        disabled: busy || winded("soft") || telegraph,
         kind: "soft",
       },
       {
         id: "assist",
-        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist`,
-        disabled: busy || encounter.assistUsed || needTarget,
+        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist${sta != null ? ` · ${CG.ACTIONS.assist.stamina} STA` : ""}`,
+        disabled: busy || encounter.assistUsed || needTarget || winded("assist") || telegraph,
         kind: "assist",
+      },
+      {
+        id: "roll",
+        label: `Roll · i-frames${sta != null ? ` · ${CG.ACTIONS.roll.stamina} STA` : ""}`,
+        disabled: busy || winded("roll") || !!(g && CG?.isRolling(g, now)),
+        kind: "roll",
+      },
+      {
+        id: "parry",
+        label: parryChoiceLabel(telegraph, parryOpen, sta, CG),
+        disabled: busy || winded("parry") || !telegraph,
+        kind: "parry",
       },
       {
         id: "slip",
         label: "Slip past (take 2 damage)",
-        disabled: busy,
+        disabled: busy || telegraph,
         kind: "slip",
       },
     ];
@@ -733,6 +872,7 @@
   /** Esc cancel: close modal with no HP/fatigue/checked side effects. */
   function dismissEncounter() {
     if (!encounter) return;
+    stopCombatGateLoop();
     encounter = null;
     teardownEncounterStage();
     renderEncounter();
@@ -753,6 +893,7 @@
   }
 
   function teardownEncounterStage() {
+    stopCombatGateLoop();
     clearStageFlourishTimer();
     stageBootGen += 1; // invalidate any in-flight boot
     if (stage) {
@@ -1218,6 +1359,7 @@
   }
 
   function finishEncounter(flourishWon) {
+    stopCombatGateLoop();
     const hadStage = !!stage;
     if (hadStage && stage) {
       stage.flourishing = true;
@@ -1251,9 +1393,22 @@
 
   function foeCounterattack() {
     if (!encounter?.live) return;
-    const dmg = 2 + (encounter.threat >= encounter.threatMax ? 1 : 0);
-    state.hp = Math.max(1, state.hp - dmg);
     encounter.threat = 0;
+    const CG = Gates();
+    if (CG && encounter.gates) {
+      encounter.gates.opts.foeDamage = state.hp <= state.hpMax / 2 ? 3 : 2;
+      CG.beginFoeAttack(encounter.gates, performance.now());
+      AudioCues.target();
+      stage?.showBeat?.("Coil telegraphs — Roll or Parry!", 1100);
+      pushJournal("Threat breaks into a telegraph — roll i-frames or parry the window.");
+      companionSay("Window incoming.");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+    const dmg = 2;
+    state.hp = Math.max(1, state.hp - dmg);
     stage?.playFoeStrike?.();
     spawnCombatFloat(`−${dmg}`, "hurt");
     AudioCues.hurt();
@@ -1262,13 +1417,86 @@
     companionSay("Hold the line — threat reset.");
   }
 
+  function gateSpendOrBail(actionId) {
+    const CG = Gates();
+    if (!CG || !encounter?.gates) return true;
+    const spent = CG.spend(encounter.gates, actionId);
+    if (!spent.ok) {
+      companionSay("Winded — recover stamina.");
+      stage?.showBeat?.("Not enough stamina", 900);
+      AudioCues.miss();
+      encounter.resolving = false;
+      syncLiveChoices();
+      renderEncounterChrome();
+      return false;
+    }
+    return true;
+  }
+
   function resolveLiveCombat(choiceId) {
     if (!encounter?.live || encounter.resolving) return;
+    const CG = Gates();
+    const now = performance.now();
+
+    if (choiceId === "roll") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.startRoll(encounter.gates, now);
+      if (!r.ok) {
+        companionSay("Winded — cannot roll.");
+        stage?.showBeat?.("Stamina low", 800);
+        AudioCues.miss();
+        return;
+      }
+      spawnCombatFloat("roll", "miss");
+      AudioCues.soft();
+      stage?.showBeat?.("Rolling — i-frames", 900);
+      pushJournal("You roll through the Astral grit (i-frame window open).");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
+    if (choiceId === "parry") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.tryParry(encounter.gates, now);
+      if (r.reason === "no_stamina") {
+        companionSay("Arms heavy — no stamina to parry.");
+        AudioCues.miss();
+        return;
+      }
+      if (r.reason === "no_attack") {
+        stage?.showBeat?.("No telegraph", 700);
+        return;
+      }
+      if (r.ok) {
+        spawnCombatFloat("parry", "assist");
+        AudioCues.parry?.();
+        stage?.showBeat?.("Parry!", 1000);
+        pushJournal("Parry window caught — coil denied.");
+        companionSay("Perfect timing.");
+      } else if (r.reason === "early") {
+        spawnCombatFloat("early", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry early", 800);
+        pushJournal("Parry too early — stamina spent, coil still coming.");
+      } else if (r.reason === "late") {
+        spawnCombatFloat("late", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry late", 800);
+        pushJournal("Parry too late — stamina spent.");
+      }
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
     if (choiceId === "slip") {
       encounter.resolving = true;
       state.poolChecked = true;
       state.hp = Math.max(1, state.hp - 2);
       spawnCombatFloat("−2", "hurt");
+      AudioCues.roll?.();
       AudioCues.hurt();
       pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
       companionSay("Discretion. The Mineral grit still waits.");
@@ -1295,6 +1523,7 @@
         renderEncounterChrome();
         return;
       }
+      if (!gateSpendOrBail("assist")) return;
       encounter.assistUsed = true;
       const bonus = combatEquipBonus();
       const dmg = 3 + bonus.dmg;
@@ -1333,6 +1562,7 @@
     }
 
     if (choiceId === "soft") {
+      if (!gateSpendOrBail("soft")) return;
       const roll = rollD20();
       const mod = skillMod("Insight");
       const total = roll + mod;
@@ -1385,6 +1615,7 @@
     }
 
     // strike
+    if (!gateSpendOrBail("strike")) return;
     const roll = rollD20();
     const mod = skillMod("Athletics");
     const total = roll + mod;
@@ -1454,6 +1685,7 @@
     if (kind === "isle-check") {
       state.isleChecked = true;
       if (choiceId === "roll") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.mod || 0;
         const total = roll + mod;
@@ -1486,6 +1718,7 @@
     } else if (kind === "dust-check") {
       state.dustChecked = true;
       if (choiceId === "athletics") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ath || 0;
         const total = roll + mod;
@@ -1511,6 +1744,7 @@
           stage?.playResolve?.(false);
         }
       } else if (choiceId === "insight") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ins || 0;
         const total = roll + mod;
@@ -1685,6 +1919,7 @@
       pulseSceneTravel();
       showTravelToast(LOCATIONS[loc]?.title || loc, nextObjectiveHint());
       AudioCues.travel();
+      AudioCues.syncMusicForLocation?.(loc);
     }
 
     const wantsIsle = loc === "memory-isle" && !state.isleChecked;
@@ -1781,8 +2016,11 @@
     if (title) title.textContent = encounter.title;
     if (body) {
       const eq = combatEquipBonus();
+      const CG = Gates();
+      const g = encounter.gates;
+      const gateHud = g && CG ? ` · ${CG.describeHud(g, performance.now())}` : "";
       const liveHint = encounter.live
-        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}.`
+        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}${gateHud}.`
         : "";
       body.textContent = encounter.body + liveHint;
     }
@@ -1798,16 +2036,32 @@
           0,
           Math.min(100, (encounter.threat / Math.max(1, encounter.threatMax)) * 100)
         );
+        const g = encounter.gates;
+        const staMax = g?.staminaMax || 100;
+        const staNow = g ? Math.round(g.stamina) : staMax;
+        const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+        const CG = Gates();
+        const now = performance.now();
+        const telegraph = !!(g && g.attackActive && !g.attackResolved);
+        const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+        const rolling = !!(g && CG && CG.isRolling(g, now));
         const threatHot = encounter.threat >= Math.max(1, encounter.threatMax - 1);
         const last = state.lastRoll;
         const rollChip = last
           ? `<span class="game-vital game-vital--roll">${escapeHtml(last.skill)} ${last.total}/${last.dc} · ${last.ok ? "ok" : "miss"}</span>`
           : "";
+        const gateChip = telegraph
+          ? `<span class="game-vital game-vital--gate${parryOpen ? " game-vital--parry-open" : ""}">${parryOpen ? "PARRY NOW" : "TELEGRAPH"}</span>`
+          : rolling
+            ? `<span class="game-vital game-vital--gate game-vital--rolling">ROLL i-frame</span>`
+            : "";
         vitals.dataset.threatHot = threatHot ? "true" : "false";
-        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${rollChip}`;
+        vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--sta">STA ${staNow}/${staMax}<i><b style="width:${staPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${gateChip}${rollChip}`;
       } else {
         vitals.hidden = true;
         delete vitals.dataset.threatHot;
+        delete vitals.dataset.parryOpen;
       }
     }
     if (actions) {
@@ -1815,16 +2069,40 @@
         .map((c) => {
           const primary =
             c.id === "roll" ||
+            c.id === "parry" ||
             c.id === "fight" ||
             c.id === "strike" ||
             c.id === "athletics" ||
             c.id === "insight" ||
             c.id === "assist";
           const kind = c.kind || c.id;
-          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${escapeHtml(c.label)}</button>`;
+          const urgent = c.id === "parry" && vitals?.dataset?.parryOpen === "true";
+          const icon = actionIconSrc(kind) || actionIconSrc(c.id);
+          const iconHtml = icon
+            ? `<img class="game-btn-icon" src="${escapeAttr(icon)}" alt="" width="22" height="22" decoding="async" aria-hidden="true" />`
+            : "";
+          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}${urgent ? " game-btn--parry-now" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
         })
         .join("");
     }
+  }
+
+  /** PAS-37 transparent action icons (brass/astral line art). */
+  function actionIconSrc(kind) {
+    const map = {
+      strike: "art/ui-icons/icon-strike.png",
+      athletics: "art/ui-icons/icon-strike.png",
+      fight: "art/ui-icons/icon-strike.png",
+      soft: "art/ui-icons/icon-soft.png",
+      insight: "art/ui-icons/icon-soft.png",
+      assist: "art/ui-icons/icon-assist.png",
+      roll: "art/ui-icons/icon-roll.png",
+      parry: "art/ui-icons/icon-parry.png",
+      slip: "art/ui-icons/icon-slip.png",
+      rest: "art/ui-icons/icon-rest.png",
+      companion: "art/ui-icons/icon-companion.png",
+    };
+    return map[kind] || null;
   }
 
   function renderEncounter() {
@@ -1916,6 +2194,11 @@
     document.body.classList.toggle("game-active", open);
     if (open) {
       document.getElementById("companionDialog")?.setAttribute("data-game-mode", "1");
+      AudioCues.ensure?.();
+      AudioCues.syncMusicForLocation?.(state.location || "hub");
+      syncMuteButton();
+    } else {
+      AudioCues.stopMusic?.(true);
     }
     render();
   }
@@ -2010,7 +2293,7 @@
                 : QUESTS["cross-astral-sea"].title
         }</p>
         <div class="game-status-actions">
-          <button type="button" class="game-btn" data-action="rest">Short rest</button>
+          <button type="button" class="game-btn game-btn--iconed" data-action="rest"><img class="game-btn-icon" src="art/ui-icons/icon-rest.png" alt="" width="20" height="20" decoding="async" aria-hidden="true" /><span class="game-btn-label">Short rest</span></button>
           ${
             state.chapterComplete
               ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
@@ -2062,8 +2345,18 @@
     window.PlanesboundGame = api();
   }
 
+  function iconedActionBtn(action, label, extraClass = "") {
+    const src = actionIconSrc(action);
+    const icon = src
+      ? `<img class="game-btn-icon" src="${escapeAttr(src)}" alt="" width="20" height="20" decoding="async" aria-hidden="true" />`
+      : "";
+    return `<button type="button" class="game-btn game-btn--iconed${extraClass ? ` ${extraClass}` : ""}" data-action="${escapeAttr(action)}">${icon}<span class="game-btn-label">${escapeHtml(label)}</span></button>`;
+  }
+
   function sceneActionsHtml() {
     const loc = state.location;
+    const restBtn = iconedActionBtn("rest", "Short rest");
+    const companionBtn = iconedActionBtn("companion", "Ask companion");
     if (loc === "hub") {
       const more = state.questComplete
         ? `<button type="button" class="game-btn game-btn--astral" data-travel="color-pool">Seek a color pool</button>
@@ -2075,8 +2368,8 @@
       return `<button type="button" class="game-btn game-btn--astral" data-travel="astral-sea">Cast off into the Astral Sea</button>
         ${more}
         ${newVoyageBtn}
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     if (loc === "astral-sea") {
@@ -2091,14 +2384,14 @@
         <button type="button" class="game-btn" data-travel="lighthouse-bearing">Follow Lighthouse pulse</button>
         ${dust}
         ${pool}
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-travel="hub">Return to hub</button>`;
     }
     if (loc === "memory-isle") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="lighthouse-bearing">Take bearing from the isle</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${restBtn}
+        ${companionBtn}`;
     }
     if (loc === "dust-lane") {
       const pool = state.questComplete
@@ -2107,25 +2400,25 @@
       return `${pool}
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
         <button type="button" class="game-btn" data-travel="mineral-shore"${state.objectives.pool ? "" : " disabled"} title="Need color pool first">Force Mineral (needs pool)</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "color-pool") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="mineral-shore">Step through toward Mineral</button>
         <button type="button" class="game-btn" data-travel="dust-lane">Sidestep into Dust Lane</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "mineral-shore") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Return via Lighthouse roads</button>
         <button type="button" class="game-btn" data-travel="color-pool">Back through the pool</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Ride bearing back to hub</button>
       <button type="button" class="game-btn" data-travel="astral-sea">Stay on the Astral Sea</button>
       <button type="button" class="game-btn" data-travel="dust-lane">Cut toward Dust Lane</button>
-      <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+      ${companionBtn}`;
   }
 
   function prefillFromCreation() {
@@ -2227,6 +2520,8 @@
     encounter = null;
     renderEncounter();
     render();
+    // Hub stays quiet — stop any astral bed left from the previous chapter.
+    AudioCues.syncMusicForLocation?.(state.location || "hub");
   }
 
   function exitPlay() {
@@ -2235,6 +2530,7 @@
     clearStageFlourishTimer();
     teardownEncounterStage();
     renderEncounter();
+    AudioCues.stopMusic?.(true);
     setPlayOpen(false);
   }
 
@@ -2288,6 +2584,8 @@
       open: beginPlay,
       castOff: castOffFromCreation,
       travelTo,
+      /** PAS-39 audio surface for combat-gates / tests. */
+      audio: () => window.PlanesboundAudio || AudioCues,
       counselContext: () => {
         const loc = LOCATIONS[state.location] || LOCATIONS.hub;
         const last = state.lastRoll;
@@ -2322,6 +2620,15 @@
     el("gameStartForm")?.addEventListener("submit", startCharacter);
     el("gameCancelStart")?.addEventListener("click", exitPlay);
     el("gameExit")?.addEventListener("click", exitPlay);
+    el("gameMuteAudio")?.addEventListener("click", () => {
+      AudioCues.toggleMute?.();
+      AudioCues.ui?.();
+      syncMuteButton();
+      if (!AudioCues.isMuted?.() && playOpen) {
+        AudioCues.syncMusicForLocation?.(state.location || "hub");
+      }
+    });
+    syncMuteButton();
     el("gameSceneActions")?.addEventListener("click", onSceneClick);
     el("gameSide")?.addEventListener("click", onSceneClick);
     el("gameContinueExplore")?.addEventListener("click", () => {
