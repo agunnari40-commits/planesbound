@@ -199,6 +199,31 @@
   border-color: color-mix(in oklab, #8a6a32 45%, transparent);
   color: #5c4a32;
 }
+.game-btn--iconed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.72rem 0.42rem 0.48rem;
+}
+.game-btn-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px color-mix(in oklab, #000 25%, transparent));
+  pointer-events: none;
+}
+.game-btn--astral .game-btn-icon {
+  filter: drop-shadow(0 0 6px color-mix(in oklab, #9ec4e8 35%, transparent));
+}
+.game-btn-label {
+  min-width: 0;
+  line-height: 1.2;
+}
+.game-btn--companion-chrome {
+  border-color: color-mix(in oklab, var(--brass-bright) 65%, #9ec4e8);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #fff 8%, transparent);
+}
 .game-btn:hover,
 .game-btn:focus-visible {
   outline: 2px solid #8a6a32;
@@ -937,10 +962,16 @@
   z-index: 1;
 }
 .game-encounter[data-live="true"] .game-encounter-card {
+  /* PAS-37 hybrid-kept concept: translucent astral card + brass hairline */
   background:
-    linear-gradient(165deg, color-mix(in oklab, #1a2740 92%, transparent), color-mix(in oklab, #0f1a30 95%, transparent));
+    linear-gradient(165deg, color-mix(in oklab, #1a2740 78%, transparent), color-mix(in oklab, #0f1a30 84%, transparent));
   color: #e8eef8;
-  border-color: color-mix(in oklab, #9ec4e8 45%, #c5a059);
+  border-color: color-mix(in oklab, #9ec4e8 42%, #c5a059);
+  backdrop-filter: blur(7px);
+  box-shadow:
+    0 16px 36px color-mix(in oklab, #000 42%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, #c5a059 22%, transparent),
+    0 0 24px color-mix(in oklab, #5a90c8 14%, transparent);
 }
 .game-encounter-head {
   display: flex;
@@ -949,6 +980,11 @@
   justify-content: space-between;
   gap: 0.35rem 0.75rem;
   margin-bottom: 0.25rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid color-mix(in oklab, #c5a059 28%, transparent);
+}
+.game-encounter[data-live="true"] .game-encounter-head {
+  border-bottom-color: color-mix(in oklab, #9ec4e8 28%, #c5a059);
 }
 .game-encounter-vitals {
   display: flex;
@@ -1062,6 +1098,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: .45rem;
+}
+.game-encounter-actions .game-btn--iconed {
+  min-height: 2.35rem;
+}
+.game-encounter-actions .game-btn[data-kind="roll"] {
+  border-color: color-mix(in oklab, #9ec4e8 48%, transparent);
+}
+.game-encounter-actions .game-btn[data-kind="parry"] {
+  border-color: color-mix(in oklab, #7ec9a0 45%, transparent);
+}
+.game-encounter-actions .game-btn[data-kind="slip"] {
+  border-color: color-mix(in oklab, #c5a059 40%, transparent);
 }
 .game-hud-video {
   margin-left: auto;

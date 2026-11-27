@@ -1815,16 +1815,39 @@
         .map((c) => {
           const primary =
             c.id === "roll" ||
+            c.id === "parry" ||
             c.id === "fight" ||
             c.id === "strike" ||
             c.id === "athletics" ||
             c.id === "insight" ||
             c.id === "assist";
           const kind = c.kind || c.id;
-          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${escapeHtml(c.label)}</button>`;
+          const icon = actionIconSrc(kind) || actionIconSrc(c.id);
+          const iconHtml = icon
+            ? `<img class="game-btn-icon" src="${escapeAttr(icon)}" alt="" width="22" height="22" decoding="async" aria-hidden="true" />`
+            : "";
+          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
         })
         .join("");
     }
+  }
+
+  /** PAS-37 transparent action icons (brass/astral line art). */
+  function actionIconSrc(kind) {
+    const map = {
+      strike: "art/ui-icons/icon-strike.png",
+      athletics: "art/ui-icons/icon-strike.png",
+      fight: "art/ui-icons/icon-strike.png",
+      soft: "art/ui-icons/icon-soft.png",
+      insight: "art/ui-icons/icon-soft.png",
+      assist: "art/ui-icons/icon-assist.png",
+      roll: "art/ui-icons/icon-roll.png",
+      parry: "art/ui-icons/icon-parry.png",
+      slip: "art/ui-icons/icon-slip.png",
+      rest: "art/ui-icons/icon-rest.png",
+      companion: "art/ui-icons/icon-companion.png",
+    };
+    return map[kind] || null;
   }
 
   function renderEncounter() {
@@ -2001,7 +2024,7 @@
                 : QUESTS["cross-astral-sea"].title
         }</p>
         <div class="game-status-actions">
-          <button type="button" class="game-btn" data-action="rest">Short rest</button>
+          <button type="button" class="game-btn game-btn--iconed" data-action="rest"><img class="game-btn-icon" src="art/ui-icons/icon-rest.png" alt="" width="20" height="20" decoding="async" aria-hidden="true" /><span class="game-btn-label">Short rest</span></button>
           ${
             state.chapterComplete
               ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
@@ -2053,8 +2076,18 @@
     window.PlanesboundGame = api();
   }
 
+  function iconedActionBtn(action, label, extraClass = "") {
+    const src = actionIconSrc(action);
+    const icon = src
+      ? `<img class="game-btn-icon" src="${escapeAttr(src)}" alt="" width="20" height="20" decoding="async" aria-hidden="true" />`
+      : "";
+    return `<button type="button" class="game-btn game-btn--iconed${extraClass ? ` ${extraClass}` : ""}" data-action="${escapeAttr(action)}">${icon}<span class="game-btn-label">${escapeHtml(label)}</span></button>`;
+  }
+
   function sceneActionsHtml() {
     const loc = state.location;
+    const restBtn = iconedActionBtn("rest", "Short rest");
+    const companionBtn = iconedActionBtn("companion", "Ask companion");
     if (loc === "hub") {
       const more = state.questComplete
         ? `<button type="button" class="game-btn game-btn--astral" data-travel="color-pool">Seek a color pool</button>
@@ -2066,8 +2099,8 @@
       return `<button type="button" class="game-btn game-btn--astral" data-travel="astral-sea">Cast off into the Astral Sea</button>
         ${more}
         ${newVoyageBtn}
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     if (loc === "astral-sea") {
@@ -2082,14 +2115,14 @@
         <button type="button" class="game-btn" data-travel="lighthouse-bearing">Follow Lighthouse pulse</button>
         ${dust}
         ${pool}
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-travel="hub">Return to hub</button>`;
     }
     if (loc === "memory-isle") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="lighthouse-bearing">Take bearing from the isle</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${restBtn}
+        ${companionBtn}`;
     }
     if (loc === "dust-lane") {
       const pool = state.questComplete
@@ -2098,25 +2131,25 @@
       return `${pool}
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
         <button type="button" class="game-btn" data-travel="mineral-shore"${state.objectives.pool ? "" : " disabled"} title="Need color pool first">Force Mineral (needs pool)</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "color-pool") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="mineral-shore">Step through toward Mineral</button>
         <button type="button" class="game-btn" data-travel="dust-lane">Sidestep into Dust Lane</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "mineral-shore") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Return via Lighthouse roads</button>
         <button type="button" class="game-btn" data-travel="color-pool">Back through the pool</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Ride bearing back to hub</button>
       <button type="button" class="game-btn" data-travel="astral-sea">Stay on the Astral Sea</button>
       <button type="button" class="game-btn" data-travel="dust-lane">Cut toward Dust Lane</button>
-      <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+      ${companionBtn}`;
   }
 
   function prefillFromCreation() {
