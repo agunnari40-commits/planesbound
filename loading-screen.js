@@ -91,6 +91,7 @@
   function refreshChrome() {
     displayProgress += (progress - displayProgress) * 0.12;
     const pct = Math.round(displayProgress * 1000) / 10;
+    const valueNow = Math.round(displayProgress * 100);
     const elapsed = ((performance.now() - startedAt) / 1000) * (0.85 + displayProgress);
     const depth = displayProgress * 128.4;
     if (readoutEl) {
@@ -100,6 +101,8 @@
         `Manifest: <strong>${pct.toFixed(1)}%</strong>`;
     }
     if (barEl) barEl.style.width = `${Math.max(2, displayProgress * 100)}%`;
+    const barTrack = document.getElementById("pbLoadingBar");
+    if (barTrack) barTrack.setAttribute("aria-valuenow", String(valueNow));
   }
 
   function markGate(key) {
@@ -141,7 +144,9 @@
   }
 
   function project(x, y, z, t) {
-    // Soft perspective camera dollying back + slight yaw over time
+    // Soft perspective camera dollying back + slight yaw over time.
+    // Floor the denominator so long ?loadingHold=1 runs never flip scale negative
+    // (Canvas ellipse/arc/createRadialGradient throw IndexSizeError on r < 0).
     const camZ = 220 + t * 8;
     const yaw = t * 0.08;
     const cos = Math.cos(yaw);
@@ -149,7 +154,8 @@
     const rx = x * cos - z * sin;
     const rz = x * sin + z * cos;
     const ry = y - t * 2.2;
-    const f = 520 / (camZ + rz);
+    const denom = Math.max(48, camZ + rz);
+    const f = Math.max(0.05, 520 / denom);
     return {
       x: w * 0.52 + rx * f,
       y: h * 0.48 + ry * f,
@@ -159,11 +165,13 @@
   }
 
   function drawShell(cx, cy, rx, ry, color, alpha, phase) {
+    const erx = Math.max(0.5, Math.abs(rx));
+    const ery = Math.max(0.5, Math.abs(ry));
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(phase * 0.02);
     ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, erx, ery, 0, 0, Math.PI * 2);
     ctx.strokeStyle = color;
     ctx.globalAlpha = alpha;
     ctx.lineWidth = 1.25;
@@ -172,7 +180,15 @@
     for (let i = 1; i < 4; i++) {
       const k = i / 4;
       ctx.beginPath();
-      ctx.ellipse(0, 0, rx * Math.sin(Math.PI * k), ry * Math.cos(Math.PI * (k - 0.5)), 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        0,
+        0,
+        Math.max(0.5, erx * Math.sin(Math.PI * k)),
+        Math.max(0.5, Math.abs(ery * Math.cos(Math.PI * (k - 0.5)))),
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.globalAlpha = alpha * 0.35;
       ctx.stroke();
     }
@@ -180,6 +196,16 @@
   }
 
   function drawFrame(now) {
+    try {
+      drawFrameInner(now);
+    } catch (err) {
+      // Keep the capture loop alive if a single frame throws (e.g. hold mode).
+      console.warn("[pb-loading] frame error", err);
+    }
+    if (!dismissed) animId = requestAnimationFrame(drawFrame);
+  }
+
+  function drawFrameInner(now) {
     const t = (now - startedAt) / 1000;
     const travel = t * (14 + displayProgress * 22);
 
@@ -210,10 +236,13 @@
     drawShell(wake.x + 55, wake.y + 30, 95 * wake.s, 55 * wake.s, "#8b3a6b", 0.18, -t);
 
     // Astral envelope around core (filled haze + wire)
+    const coreRx = Math.max(0.5, 118 * core.s);
+    const coreRy = Math.max(0.5, 88 * core.s);
+    const coreInner = Math.max(0.5, 8 * core.s);
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(core.x, core.y, 118 * core.s, 88 * core.s, t * 0.05, 0, Math.PI * 2);
-    const shellFill = ctx.createRadialGradient(core.x, core.y, 8 * core.s, core.x, core.y, 118 * core.s);
+    ctx.ellipse(core.x, core.y, coreRx, coreRy, t * 0.05, 0, Math.PI * 2);
+    const shellFill = ctx.createRadialGradient(core.x, core.y, coreInner, core.x, core.y, coreRx);
     shellFill.addColorStop(0, "rgba(90,40,160,0.22)");
     shellFill.addColorStop(0.55, "rgba(40,80,220,0.12)");
     shellFill.addColorStop(1, "rgba(20,40,120,0)");
@@ -290,13 +319,14 @@
     });
 
     // Daystar core
-    const glow = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, 28 * core.s);
+    const glowR = Math.max(1, 28 * core.s);
+    const glow = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, glowR);
     glow.addColorStop(0, "#fff2c8");
     glow.addColorStop(0.25, "#ff8a3d");
     glow.addColorStop(1, "rgba(255,100,40,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(core.x, core.y, 28 * core.s, 0, Math.PI * 2);
+    ctx.arc(core.x, core.y, glowR, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
     ctx.arc(core.x, core.y, Math.max(3, 5.5 * core.s), 0, Math.PI * 2);
@@ -329,7 +359,6 @@
     });
 
     refreshChrome();
-    if (!dismissed) animId = requestAnimationFrame(drawFrame);
   }
 
   function watchAssets() {
@@ -358,13 +387,22 @@
       }
     }, 8000);
 
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(() => {
-        setProgress(0.55, "Ink & type set");
-        markGate("fonts");
-      });
-    } else {
+    // Fonts gate: never stall forever if Google Fonts / document.fonts hangs
+    const FONT_TIMEOUT_MS = 8000;
+    const finishFonts = () => {
+      if (gates.fonts) return;
+      setProgress(0.55, "Ink & type set");
       markGate("fonts");
+    };
+    if (document.fonts?.ready) {
+      Promise.race([
+        document.fonts.ready.then(() => "ready"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), FONT_TIMEOUT_MS)),
+      ])
+        .then(finishFonts)
+        .catch(finishFonts);
+    } else {
+      finishFonts();
     }
 
     if (gates.dom) setProgress(0.2, "Atlas frame up");
@@ -396,11 +434,16 @@
     }, MIN_MS);
 
     setTimeout(() => {
-      if (skipBtn) skipBtn.dataset.show = "true";
+      if (!skipBtn) return;
+      skipBtn.dataset.show = "true";
+      skipBtn.disabled = false;
+      skipBtn.removeAttribute("aria-hidden");
     }, SKIP_AFTER_MS);
   }
 
   skipBtn?.addEventListener("click", () => {
+    // Ignore clicks while skip is still hidden (opacity-only was bypassable via hover)
+    if (skipBtn.dataset.show !== "true" || skipBtn.disabled) return;
     Object.keys(gates).forEach((k) => {
       gates[k] = true;
     });

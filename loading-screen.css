@@ -111,7 +111,8 @@
   transition: width 0.12s linear;
 }
 .pb-loading-skip {
-  pointer-events: auto;
+  /* Hidden until data-show — no hover/focus reveal, no early clicks */
+  pointer-events: none;
   appearance: none;
   border: 1px solid color-mix(in oklab, #c5a059 55%, transparent);
   background: color-mix(in oklab, #16120e 70%, transparent);
@@ -124,13 +125,16 @@
   border-radius: 999px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 .pb-loading-skip[data-show="true"] {
+  pointer-events: auto;
   opacity: 0.85;
+  visibility: visible;
 }
-.pb-loading-skip:hover,
-.pb-loading-skip:focus-visible {
+.pb-loading-skip[data-show="true"]:hover,
+.pb-loading-skip[data-show="true"]:focus-visible {
   opacity: 1;
   outline: 2px solid #9ec4e8;
   outline-offset: 2px;
