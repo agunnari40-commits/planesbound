@@ -357,6 +357,21 @@ describe("Planesbound combat gates — parry windows", () => {
     assert.equal(s.lastResult.damage, 3);
   });
 
+  it("46c late roll after hitAt cannot dodge on delayed commit", () => {
+    const s = fresh({ foeDamage: 3 });
+    CG.beginFoeAttack(s, 0);
+    // Hit lands at 420; roll starts after landing during parry late grace.
+    assert.equal(CG.startRoll(s, 430).ok, true);
+    // By commit (470) roll elapsed is 40ms → i-frames active at now, but not at hitAt.
+    assert.equal(CG.isInvulnerable(s, 470), true);
+    assert.equal(CG.isInvulnerable(s, 420), false);
+    CG.tick(s, 470);
+    assert.equal(s.attackResolved, true);
+    assert.equal(s.lastResult.hit, true);
+    assert.equal(s.lastResult.blocked, "none");
+    assert.equal(s.lastResult.damage, 3);
+  });
+
   it("47 custom parry window widths", () => {
     const s = fresh({ attackHitAtMs: 300, parryEarlyMs: 20, parryLateMs: 10 });
     CG.beginFoeAttack(s, 0);
