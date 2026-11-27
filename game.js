@@ -1,10 +1,76 @@
-/* Planesbound PAS-6/13/15/18/19/23/24 — voyage + live combat + video mode + art/AAA polish */
+/* Planesbound PAS-6/13/15/18/19/23/24/27 — voyage + live combat + AAA polish (feel/HUD/audio) */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
   const SAVE_KEY_LEGACY = "planesbound-game-v1";
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
+
+  /** Short Web Audio cues — no sample banks or audio libs (PAS-27). */
+  const AudioCues = (() => {
+    let ctx = null;
+    function ensure() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!ctx) ctx = new AC();
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+      return ctx;
+    }
+    function tone({ freq = 440, dur = 0.08, type = "sine", gain = 0.035, slide = 0 }) {
+      const c = ensure();
+      if (!c) return;
+      const t0 = c.currentTime;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (slide) osc.frequency.linearRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g);
+      g.connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
+    }
+    return {
+      hit() {
+        tone({ freq: 240, dur: 0.09, type: "square", gain: 0.032, slide: 90 });
+      },
+      crit() {
+        tone({ freq: 280, dur: 0.08, type: "square", gain: 0.036, slide: 140 });
+        setTimeout(() => tone({ freq: 420, dur: 0.1, type: "sine", gain: 0.03 }), 55);
+      },
+      miss() {
+        tone({ freq: 150, dur: 0.07, type: "triangle", gain: 0.022, slide: -45 });
+      },
+      hurt() {
+        tone({ freq: 105, dur: 0.14, type: "sawtooth", gain: 0.028, slide: -55 });
+      },
+      soft() {
+        tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.028, slide: 130 });
+      },
+      kill() {
+        tone({ freq: 300, dur: 0.08, type: "square", gain: 0.034 });
+        setTimeout(() => tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.03 }), 70);
+      },
+      travel() {
+        tone({ freq: 360, dur: 0.1, type: "sine", gain: 0.022, slide: 180 });
+      },
+      target() {
+        tone({ freq: 640, dur: 0.045, type: "sine", gain: 0.018 });
+      },
+      quest() {
+        tone({ freq: 440, dur: 0.07, type: "sine", gain: 0.026 });
+        setTimeout(() => tone({ freq: 660, dur: 0.1, type: "sine", gain: 0.028 }), 85);
+      },
+    };
+  })();
+
+  let travelToastTimer = 0;
+  let combatFloatSeq = 0;
 
   const LOCATIONS = {
     hub: {
@@ -316,6 +382,66 @@
     pushJournal(`Companion: ${line}`);
   }
 
+  function nextObjectiveHint() {
+    if (state.chapterComplete) return "Explore or begin a new voyage";
+    if (!state.objectives.embark) return "Cast off into the Astral Sea";
+    if (!state.objectives.discover) return "Seek a memory isle";
+    if (!state.objectives.bearing) return "Lock a Lighthouse bearing";
+    if (!state.objectives.pool) return "Touch a color pool";
+    if (!state.objectives.shore) return "Make Mineral landfall";
+    return "Chapter ready to close";
+  }
+
+  function spawnCombatFloat(text, kind) {
+    const host = el("gameCombatFloats") || el("gameSceneViewport") || el("gameScene");
+    if (!host || !text) return;
+    const node = document.createElement("span");
+    const k = kind || "hit";
+    node.className = `game-combat-float game-combat-float--${k}`;
+    node.textContent = text;
+    const seq = ++combatFloatSeq;
+    const x = 52 + ((seq * 13) % 28) - 14;
+    const y = 38 + ((seq * 9) % 18) - 6;
+    node.style.left = `${x}%`;
+    node.style.top = `${y}%`;
+    host.appendChild(node);
+    setTimeout(() => node.remove(), 980);
+  }
+
+  function showTravelToast(title, hint) {
+    let toast = el("gameTravelToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "gameTravelToast";
+      toast.className = "game-travel-toast";
+      toast.setAttribute("aria-live", "polite");
+      toast.dataset.open = "false";
+      el("gameScene")?.appendChild(toast);
+    }
+    toast.innerHTML = `<strong>${escapeHtml(title)}</strong>${
+      hint ? `<span>${escapeHtml(hint)}</span>` : ""
+    }`;
+    toast.dataset.open = "true";
+    if (travelToastTimer) clearTimeout(travelToastTimer);
+    travelToastTimer = setTimeout(() => {
+      toast.dataset.open = "false";
+      travelToastTimer = 0;
+    }, 1700);
+  }
+
+  function pulseSceneTravel() {
+    const scene = el("gameScene");
+    if (!scene) return;
+    scene.dataset.travel = "pulse";
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      delete scene.dataset.travel;
+      return;
+    }
+    setTimeout(() => {
+      if (scene.dataset.travel === "pulse") delete scene.dataset.travel;
+    }, 480);
+  }
+
   function hasItem(id) {
     return state.inventory.some((i) => i.id === id);
   }
@@ -411,6 +537,7 @@
       q2.objectives.find((o) => o.id === id)?.label ||
       id;
     pushJournal(`Objective complete: ${label}`);
+    AudioCues.quest();
 
     if (!state.questComplete && q1.objectives.every((o) => state.objectives[o.id])) {
       state.questComplete = true;
@@ -566,26 +693,31 @@
     if (!encounter?.live) return;
     const needTarget = !encounter.targeted;
     const busy = !!encounter.resolving;
+    const companionLabel = beingName(state.companionBeingId, "Companion");
     encounter.choices = [
       {
         id: "strike",
         label: needTarget ? "Strike (target foe first)" : `Strike · Athletics vs DC ${encounter.dc}`,
         disabled: needTarget || busy,
+        kind: "strike",
       },
       {
         id: "soft",
         label: `Soft word · Insight vs DC ${encounter.dcSoft}`,
         disabled: busy,
+        kind: "soft",
       },
       {
         id: "assist",
-        label: encounter.assistUsed ? "Companion spent" : "Companion assist",
+        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist`,
         disabled: busy || encounter.assistUsed || needTarget,
+        kind: "assist",
       },
       {
         id: "slip",
         label: "Slip past (take 2 damage)",
         disabled: busy,
+        kind: "slip",
       },
     ];
   }
@@ -640,6 +772,9 @@
     if (sceneEl) sceneEl.removeAttribute("data-stage");
     const tgt = el("gameSceneTarget");
     if (tgt) tgt.hidden = true;
+    const floats = el("gameCombatFloats");
+    if (floats) floats.replaceChildren();
+    if (vp) delete vp.dataset.flash;
   }
 
   async function bootEncounterStage(enc) {
@@ -937,6 +1072,7 @@
             renderEncounterChrome();
           }
           setTargetHud(hit);
+          AudioCues.target();
           if (!reduced) {
             companionActor.play("idle");
             playerActor.play("attack", { once: true });
@@ -944,6 +1080,7 @@
           companionSay("Marked. I am with you.");
         } else if (hit && hit.role === "companion") {
           companionSay(LOCATIONS[state.location]?.companion || "Ready when you are.");
+          AudioCues.soft();
           if (!reduced) companionActor.play("attack", { once: true });
         } else {
           clearSel();
@@ -1018,13 +1155,13 @@
             beat.textContent = text;
           }
         },
-        playStrike({ hit, kill, assist }) {
+        playStrike({ hit, kill, assist, crit }) {
           if (reduced) return;
           playerActor.play("attack", { once: true });
           if (assist) companionActor.play("attack", { once: true });
           if (kill) foeActor.play("death", { once: true });
           else if (hit) foeActor.play("hit", { once: true });
-          flashStage(hit ? "hit" : "miss");
+          flashStage(hit ? (crit ? "crit" : "hit") : "miss");
         },
         playFoeStrike() {
           if (reduced) return;
@@ -1118,6 +1255,8 @@
     state.hp = Math.max(1, state.hp - dmg);
     encounter.threat = 0;
     stage?.playFoeStrike?.();
+    spawnCombatFloat(`−${dmg}`, "hurt");
+    AudioCues.hurt();
     stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
     pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
     companionSay("Hold the line — threat reset.");
@@ -1129,6 +1268,8 @@
       encounter.resolving = true;
       state.poolChecked = true;
       state.hp = Math.max(1, state.hp - 2);
+      spawnCombatFloat("−2", "hurt");
+      AudioCues.hurt();
       pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
       companionSay("Discretion. The Mineral grit still waits.");
       recordRoll("Athletics", 0, 0, encounter.dc, false);
@@ -1139,6 +1280,7 @@
     if (choiceId === "strike" && !encounter.targeted) {
       companionSay("Mark the coil first — click its hitbox.");
       stage?.showBeat?.("Target the foe", 900);
+      AudioCues.target();
       return;
     }
 
@@ -1157,12 +1299,18 @@
       const bonus = combatEquipBonus();
       const dmg = 3 + bonus.dmg;
       encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
-      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: true });
-      stage?.showBeat?.(`Companion assist −${dmg}`, 1100);
+      const kill = encounter.foeHp <= 0;
+      stage?.playStrike?.({ hit: true, kill, assist: true });
+      spawnCombatFloat(`−${dmg}`, kill ? "kill" : "assist");
+      if (kill) AudioCues.kill();
+      else AudioCues.hit();
+      stage?.showBeat?.(`${beingName(state.companionBeingId, "Companion")} assist −${dmg}`, 1100);
       stage?.refreshFoeHud?.();
-      pushJournal(`Companion assist deals ${dmg} to the coil (${encounter.foeHp}/${encounter.foeHpMax}).`);
+      pushJournal(
+        `${beingName(state.companionBeingId, "Companion")} assist deals ${dmg} to the coil (${encounter.foeHp}/${encounter.foeHpMax}).`
+      );
       companionSay("Arrow of thought — yours.");
-      if (encounter.foeHp <= 0) {
+      if (kill) {
         state.poolChecked = true;
         addItem({
           id: "prism-scale",
@@ -1194,7 +1342,11 @@
         encounter.threat = Math.max(0, encounter.threat - 2);
         const softDmg = 2 + (state.equipped === "clear-shard" ? 2 : 0);
         encounter.foeHp = Math.max(0, encounter.foeHp - softDmg);
+        const kill = encounter.foeHp <= 0;
         stage?.playSoft?.();
+        spawnCombatFloat(`−${softDmg}`, kill ? "kill" : "soft");
+        if (kill) AudioCues.kill();
+        else AudioCues.soft();
         stage?.showBeat?.(`Soft word −${softDmg} · threat eases`, 1200);
         pushJournal(
           `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — coil loosens (−${softDmg} HP, threat ${encounter.threat}).`
@@ -1202,6 +1354,8 @@
         companionSay("Kindness cuts cleaner than steel here.");
       } else {
         encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
+        spawnCombatFloat("miss", "miss");
+        AudioCues.miss();
         stage?.showBeat?.("Word glances off", 900);
         pushJournal(
           `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — miss. Threat rises to ${encounter.threat}.`
@@ -1238,20 +1392,28 @@
     recordRoll("Athletics", roll, mod, encounter.dc, ok);
     const bonus = combatEquipBonus();
     if (ok) {
-      const dmg = 4 + Math.floor(mod / 2) + bonus.dmg + (total >= encounter.dc + 5 ? 2 : 0);
+      const crit = total >= encounter.dc + 5;
+      const dmg = 4 + Math.floor(mod / 2) + bonus.dmg + (crit ? 2 : 0);
       encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
-      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: false });
+      const kill = encounter.foeHp <= 0;
+      stage?.playStrike?.({ hit: true, kill, assist: false, crit });
+      spawnCombatFloat(crit ? `CRIT −${dmg}` : `−${dmg}`, kill ? "kill" : crit ? "crit" : "hit");
+      if (kill) AudioCues.kill();
+      else if (crit) AudioCues.crit();
+      else AudioCues.hit();
       stage?.showBeat?.(
-        `${bonus.label ? bonus.label + " · " : ""}Hit −${dmg}${encounter.foeHp <= 0 ? " · fallen" : ""}`,
+        `${bonus.label ? bonus.label + " · " : ""}${crit ? "Crit" : "Hit"} −${dmg}${kill ? " · fallen" : ""}`,
         1300
       );
       pushJournal(
         `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — hit for ${dmg} (${encounter.foeHp}/${encounter.foeHpMax}).`
       );
-      companionSay(encounter.foeHp <= 0 ? "Down. Curtain opens." : "Again — keep the pressure.");
+      companionSay(kill ? "Down. Curtain opens." : "Again — keep the pressure.");
     } else {
       encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
       stage?.playStrike?.({ hit: false, kill: false, assist: false });
+      spawnCombatFloat("miss", "miss");
+      AudioCues.miss();
       stage?.showBeat?.(`Miss · threat ${encounter.threat}/${encounter.threatMax}`, 1100);
       pushJournal(
         `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — miss. Threat ${encounter.threat}/${encounter.threatMax}.`
@@ -1519,6 +1681,11 @@
 
     save();
     render();
+    if (from !== loc) {
+      pulseSceneTravel();
+      showTravelToast(LOCATIONS[loc]?.title || loc, nextObjectiveHint());
+      AudioCues.travel();
+    }
 
     const wantsIsle = loc === "memory-isle" && !state.isleChecked;
     const wantsDust = loc === "dust-lane" && !state.dustChecked;
@@ -1657,9 +1824,16 @@
           0,
           Math.min(100, (encounter.threat / Math.max(1, encounter.threatMax)) * 100)
         );
-        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>`;
+        const threatHot = encounter.threat >= Math.max(1, encounter.threatMax - 1);
+        const last = state.lastRoll;
+        const rollChip = last
+          ? `<span class="game-vital game-vital--roll">${escapeHtml(last.skill)} ${last.total}/${last.dc} · ${last.ok ? "ok" : "miss"}</span>`
+          : "";
+        vitals.dataset.threatHot = threatHot ? "true" : "false";
+        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${rollChip}`;
       } else {
         vitals.hidden = true;
+        delete vitals.dataset.threatHot;
       }
     }
     if (actions) {
@@ -1672,7 +1846,8 @@
             c.id === "athletics" ||
             c.id === "insight" ||
             c.id === "assist";
-          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}"${c.disabled ? " disabled" : ""}>${escapeHtml(c.label)}</button>`;
+          const kind = c.kind || c.id;
+          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${escapeHtml(c.label)}</button>`;
         })
         .join("");
     }
@@ -1792,6 +1967,11 @@
       if (party) {
         const pArt = `art/races/${escapeHtml(state.playerBeingId || "human")}.png`;
         const cArt = `art/races/${escapeHtml(state.companionBeingId || "human")}.png`;
+        const hpPct = Math.max(0, Math.min(100, (state.hp / Math.max(1, state.hpMax)) * 100));
+        const fatPct = Math.max(
+          0,
+          Math.min(100, (state.fatigue / Math.max(1, state.fatigueMax)) * 100)
+        );
         party.innerHTML = `
           <div class="game-hud-portraits" aria-hidden="true">
             <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" loading="lazy" decoding="async" onerror="this.src='art/races/human.png'" />
@@ -1799,8 +1979,13 @@
           </div>
           <div class="game-hud-party-copy">
             <strong>${escapeHtml(state.playerName || "Traveler")}</strong>
-            <span>${escapeHtml(beingName(state.playerBeingId))} · L${state.level} · HP ${state.hp}/${state.hpMax} · Fat ${state.fatigue}/${state.fatigueMax}</span>
-            <span class="game-hud-loc">${escapeHtml(loc.title)}${state.equipped ? ` · eq ${escapeHtml(state.equipped)}` : ""}</span>
+            <span>${escapeHtml(beingName(state.playerBeingId))} · L${state.level} · with ${escapeHtml(beingName(state.companionBeingId))}</span>
+            <span class="game-hud-loc">${escapeHtml(loc.title)}${state.equipped ? ` · eq ${escapeHtml(state.equipped)}` : ""} · legs ${state.voyageLegs || 0}</span>
+            <div class="game-hud-meters" aria-hidden="true">
+              <div class="game-hud-meter game-hud-meter--hp" title="HP ${state.hp}/${state.hpMax}"><em>HP</em><i><b style="width:${hpPct}%"></b></i></div>
+              <div class="game-hud-meter game-hud-meter--fat" title="Fatigue ${state.fatigue}/${state.fatigueMax}"><em>Fat</em><i><b style="width:${fatPct}%"></b></i></div>
+            </div>
+            <span class="game-hud-crumb">Next · ${escapeHtml(nextObjectiveHint())}</span>
           </div>`;
       }
     }
