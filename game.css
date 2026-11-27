@@ -71,7 +71,8 @@
     0 0 0 1px color-mix(in oklab, #d7ecff 25%, transparent),
     0 24px 60px color-mix(in oklab, #000 45%, transparent);
   padding: 1.15rem 1.2rem 1.25rem;
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  /* No clip-path: Play-start being lists must overflow the card to scroll the 420 roster */
+  overflow: visible;
 }
 .game-start-card h2 {
   font-family: Cinzel, serif;

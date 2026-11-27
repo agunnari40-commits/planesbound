@@ -172,11 +172,15 @@
     selected[role] = beingId;
     persist();
     MOUNTS.filter((m) => m.role === role).forEach(renderVirtual);
-    document.dispatchEvent(
-      new CustomEvent("planesbound-race-picked", {
-        detail: { role, being: byId(beingId) },
-      })
-    );
+    const mount = closePrefix ? mountByPrefix(closePrefix) : null;
+    // Dock picks open the sheet creation loop; Play-start picks must not.
+    if (!mount?.startForm) {
+      document.dispatchEvent(
+        new CustomEvent("planesbound-race-picked", {
+          detail: { role, being: byId(beingId), source: "dock" },
+        })
+      );
+    }
     if (closePrefix) setListOpen(closePrefix, false);
   }
 
@@ -237,6 +241,13 @@
     });
 
     search?.addEventListener("input", () => applyFilter(mount));
+    // Prevent Enter in search from submitting #gameStartForm (or any parent form).
+    search?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
 
     viewport?.addEventListener(
       "scroll",
@@ -324,11 +335,17 @@
     MOUNTS.forEach(wireMount);
     renderAllPicks();
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && openMount) {
+    // Capture so Play's Escape → exitPlay handler does not also fire.
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "Escape" || !openMount) return;
+        e.preventDefault();
+        e.stopPropagation();
         setListOpen(openMount, false);
-      }
-    });
+      },
+      true
+    );
 
     document.addEventListener("click", (e) => {
       if (!openMount) return;

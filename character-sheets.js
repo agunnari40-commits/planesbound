@@ -486,6 +486,8 @@
 
     document.addEventListener("planesbound-race-picked", (e) => {
       const role = e.detail?.role;
+      // Play-start picks omit this event; ignore legacy source:"start" if any.
+      if (e.detail?.source === "start") return;
       if (role === "player" || role === "companion") onRacePicked(role);
     });
 
