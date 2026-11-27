@@ -1,4 +1,4 @@
-/* Planesbound PAS-6/13/15/18/19/23/24/27 — voyage + live combat + AAA polish (feel/HUD/audio) */
+/* Planesbound PAS-6/13/15/18/19/23/24/27/39 — voyage + live combat + Web Audio cues */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
@@ -6,68 +6,35 @@
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
 
-  /** Short Web Audio cues — no sample banks or audio libs (PAS-27). */
-  const AudioCues = (() => {
-    let ctx = null;
-    function ensure() {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      if (!ctx) ctx = new AC();
-      if (ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
-      }
-      return ctx;
-    }
-    function tone({ freq = 440, dur = 0.08, type = "sine", gain = 0.035, slide = 0 }) {
-      const c = ensure();
-      if (!c) return;
-      const t0 = c.currentTime;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, t0);
-      if (slide) osc.frequency.linearRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      osc.connect(g);
-      g.connect(c.destination);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.03);
-    }
-    return {
-      hit() {
-        tone({ freq: 240, dur: 0.09, type: "square", gain: 0.032, slide: 90 });
-      },
-      crit() {
-        tone({ freq: 280, dur: 0.08, type: "square", gain: 0.036, slide: 140 });
-        setTimeout(() => tone({ freq: 420, dur: 0.1, type: "sine", gain: 0.03 }), 55);
-      },
-      miss() {
-        tone({ freq: 150, dur: 0.07, type: "triangle", gain: 0.022, slide: -45 });
-      },
-      hurt() {
-        tone({ freq: 105, dur: 0.14, type: "sawtooth", gain: 0.028, slide: -55 });
-      },
-      soft() {
-        tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.028, slide: 130 });
-      },
-      kill() {
-        tone({ freq: 300, dur: 0.08, type: "square", gain: 0.034 });
-        setTimeout(() => tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.03 }), 70);
-      },
-      travel() {
-        tone({ freq: 360, dur: 0.1, type: "sine", gain: 0.022, slide: 180 });
-      },
-      target() {
-        tone({ freq: 640, dur: 0.045, type: "sine", gain: 0.018 });
-      },
-      quest() {
-        tone({ freq: 440, dur: 0.07, type: "sine", gain: 0.026 });
-        setTimeout(() => tone({ freq: 660, dur: 0.1, type: "sine", gain: 0.028 }), 85);
-      },
-    };
-  })();
+  /** PAS-39: shared Web Audio module (`audio.js`). Fallback keeps play silent-safe if script missing. */
+  const AudioCues = window.PlanesboundAudio || {
+    hit() {},
+    crit() {},
+    miss() {},
+    hurt() {},
+    soft() {},
+    kill() {},
+    parry() {},
+    roll() {},
+    travel() {},
+    target() {},
+    quest() {},
+    ui() {},
+    isMuted: () => false,
+    toggleMute: () => false,
+    syncMusicForLocation() {},
+    stopMusic() {},
+    ensure() {},
+  };
+
+  function syncMuteButton() {
+    const btn = el("gameMuteAudio");
+    if (!btn || !AudioCues.isMuted) return;
+    const on = !!AudioCues.isMuted();
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Sound · Off" : "Sound · On";
+    btn.title = on ? "Unmute combat cues and music bed" : "Mute all game audio";
+  }
 
   let travelToastTimer = 0;
   let combatFloatSeq = 0;
@@ -1269,6 +1236,7 @@
       state.poolChecked = true;
       state.hp = Math.max(1, state.hp - 2);
       spawnCombatFloat("−2", "hurt");
+      AudioCues.roll?.();
       AudioCues.hurt();
       pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
       companionSay("Discretion. The Mineral grit still waits.");
@@ -1454,6 +1422,7 @@
     if (kind === "isle-check") {
       state.isleChecked = true;
       if (choiceId === "roll") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.mod || 0;
         const total = roll + mod;
@@ -1486,6 +1455,7 @@
     } else if (kind === "dust-check") {
       state.dustChecked = true;
       if (choiceId === "athletics") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ath || 0;
         const total = roll + mod;
@@ -1511,6 +1481,7 @@
           stage?.playResolve?.(false);
         }
       } else if (choiceId === "insight") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ins || 0;
         const total = roll + mod;
@@ -1685,6 +1656,7 @@
       pulseSceneTravel();
       showTravelToast(LOCATIONS[loc]?.title || loc, nextObjectiveHint());
       AudioCues.travel();
+      AudioCues.syncMusicForLocation?.(loc);
     }
 
     const wantsIsle = loc === "memory-isle" && !state.isleChecked;
@@ -1916,6 +1888,11 @@
     document.body.classList.toggle("game-active", open);
     if (open) {
       document.getElementById("companionDialog")?.setAttribute("data-game-mode", "1");
+      AudioCues.ensure?.();
+      AudioCues.syncMusicForLocation?.(state.location || "hub");
+      syncMuteButton();
+    } else {
+      AudioCues.stopMusic?.(true);
     }
     render();
   }
@@ -2218,6 +2195,8 @@
     encounter = null;
     renderEncounter();
     render();
+    // Hub stays quiet — stop any astral bed left from the previous chapter.
+    AudioCues.syncMusicForLocation?.(state.location || "hub");
   }
 
   function exitPlay() {
@@ -2226,6 +2205,7 @@
     clearStageFlourishTimer();
     teardownEncounterStage();
     renderEncounter();
+    AudioCues.stopMusic?.(true);
     setPlayOpen(false);
   }
 
@@ -2279,6 +2259,8 @@
       open: beginPlay,
       castOff: castOffFromCreation,
       travelTo,
+      /** PAS-39 audio surface for combat-gates / tests. */
+      audio: () => window.PlanesboundAudio || AudioCues,
       counselContext: () => {
         const loc = LOCATIONS[state.location] || LOCATIONS.hub;
         const last = state.lastRoll;
@@ -2313,6 +2295,15 @@
     el("gameStartForm")?.addEventListener("submit", startCharacter);
     el("gameCancelStart")?.addEventListener("click", exitPlay);
     el("gameExit")?.addEventListener("click", exitPlay);
+    el("gameMuteAudio")?.addEventListener("click", () => {
+      AudioCues.toggleMute?.();
+      AudioCues.ui?.();
+      syncMuteButton();
+      if (!AudioCues.isMuted?.() && playOpen) {
+        AudioCues.syncMusicForLocation?.(state.location || "hub");
+      }
+    });
+    syncMuteButton();
     el("gameSceneActions")?.addEventListener("click", onSceneClick);
     el("gameSide")?.addEventListener("click", onSceneClick);
     el("gameContinueExplore")?.addEventListener("click", () => {
