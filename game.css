@@ -466,6 +466,8 @@
 }
 .game-scene[data-loc="color-pool"] {
   background-image: url("art/color-pool.jpg");
+  background-position: center 42%;
+  background-size: cover;
 }
 .game-scene[data-loc="dust-lane"] {
   background-image: url("art/dust-lane.jpg");
@@ -480,6 +482,35 @@
 .game-scene[data-loc="lighthouse-bearing"],
 .game-scene[data-loc="color-pool"] {
   box-shadow: inset 0 0 80px color-mix(in oklab, #04060c 55%, transparent);
+}
+/* PAS-34 dream-loop: Color Pool prismatic curtain (chase Seedream-style target) */
+.game-scene[data-loc="color-pool"]::after {
+  background:
+    radial-gradient(ellipse at 52% 38%, color-mix(in oklab, #7ec9ff 22%, transparent), transparent 42%),
+    radial-gradient(ellipse at 48% 48%, color-mix(in oklab, #e8a0ff 14%, transparent), transparent 50%),
+    radial-gradient(ellipse at 55% 55%, color-mix(in oklab, #f0d080 12%, transparent), transparent 48%),
+    linear-gradient(to top, color-mix(in oklab, #07080c 78%, transparent), transparent 48%),
+    linear-gradient(90deg, color-mix(in oklab, #07080c 28%, transparent), transparent 28%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+.game-scene[data-loc="color-pool"][data-stage="true"]::before {
+  background:
+    radial-gradient(ellipse at 50% 42%, color-mix(in oklab, #1a3050 18%, transparent), color-mix(in oklab, #04060c 62%, transparent) 72%);
+}
+.game-scene[data-loc="color-pool"] {
+  box-shadow:
+    inset 0 0 90px color-mix(in oklab, #04060c 48%, transparent),
+    inset 0 0 120px color-mix(in oklab, #3a6a9a 18%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .game-scene[data-loc="color-pool"]::after {
+    animation: game-pool-shimmer 7.5s ease-in-out infinite alternate;
+  }
+}
+@keyframes game-pool-shimmer {
+  0% { opacity: 0.72; filter: hue-rotate(-8deg) saturate(1.05); }
+  100% { opacity: 0.92; filter: hue-rotate(10deg) saturate(1.12); }
 }
 .game-scene[data-travel="pulse"] {
   filter: brightness(1.08) saturate(1.06);
@@ -972,6 +1003,11 @@
     0 16px 36px color-mix(in oklab, #000 42%, transparent),
     inset 0 0 0 1px color-mix(in oklab, #c5a059 22%, transparent),
     0 0 24px color-mix(in oklab, #5a90c8 14%, transparent);
+}
+/* Color Pool live dock (PAS-34): keep pool glow readable behind the card */
+.game-shell[data-encounter="live"] .game-scene[data-loc="color-pool"] ~ .game-encounter,
+.game-encounter[data-live="true"] {
+  background: linear-gradient(180deg, transparent, color-mix(in oklab, #04060c 55%, transparent) 42%);
 }
 .game-encounter-head {
   display: flex;

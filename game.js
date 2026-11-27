@@ -1018,14 +1018,24 @@
       camera.position.set(0, 1.9, 5.6);
       camera.lookAt(0, 1.15, 0);
 
-      scene.add(new T.HemisphereLight(0xc4d0ff, 0x1a1208, 0.72));
-      const key = new T.DirectionalLight(0xfff6ea, 1.1);
+      const poolBeat = enc?.kind === "pool-skirmish";
+      scene.add(new T.HemisphereLight(poolBeat ? 0xd4e8ff : 0xc4d0ff, 0x1a1208, poolBeat ? 0.82 : 0.72));
+      const key = new T.DirectionalLight(0xfff6ea, poolBeat ? 1.25 : 1.1);
       key.position.set(4, 8, 5);
       key.castShadow = !!vMode?.shadows;
       scene.add(key);
-      const fill = new T.DirectionalLight(0x7eb0c8, 0.38);
+      const fill = new T.DirectionalLight(poolBeat ? 0x9ad0e8 : 0x7eb0c8, poolBeat ? 0.52 : 0.38);
       fill.position.set(-5, 3, -2);
       scene.add(fill);
+      // PAS-34: prismatic rim light for Color Pool guardian beat (dream-loop chase)
+      if (poolBeat) {
+        const rim = new T.PointLight(0xc8a0ff, 0.55, 14, 2);
+        rim.position.set(-1.2, 2.4, 1.5);
+        scene.add(rim);
+        const poolGlow = new T.PointLight(0x70d0ff, 0.7, 16, 2);
+        poolGlow.position.set(1.4, 1.1, 0.4);
+        scene.add(poolGlow);
+      }
 
       const floor = new T.Mesh(
         new T.CircleGeometry(3.6, 48),
