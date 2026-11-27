@@ -51,7 +51,9 @@
       muted = !!on;
       writeFlag(MUTE_KEY, muted);
       if (master) master.gain.setTargetAtTime(muted ? 0 : 1, (ctx && ctx.currentTime) || 0, 0.02);
-      if (muted) stopMusic(true);
+      // Keep musicLoc so unmute / setMusicMuted(false) can resume the bed.
+      if (muted) stopMusic(false);
+      else if (musicLoc && !musicMuted) startMusic(musicLoc);
       return muted;
     }
 
@@ -66,8 +68,8 @@
     function setMusicMuted(on) {
       musicMuted = !!on;
       writeFlag(MUSIC_KEY, musicMuted);
-      if (musicMuted) stopMusic(true);
-      else if (musicLoc) startMusic(musicLoc);
+      if (musicMuted) stopMusic(false);
+      else if (musicLoc && !muted) startMusic(musicLoc);
       return musicMuted;
     }
 
@@ -277,6 +279,7 @@
       startMusic,
       stopMusic,
       syncMusicForLocation,
+      getMusicLocation: () => musicLoc,
       cueNames: Object.keys(cues),
     };
   }

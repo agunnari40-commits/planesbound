@@ -2195,6 +2195,8 @@
     encounter = null;
     renderEncounter();
     render();
+    // Hub stays quiet — stop any astral bed left from the previous chapter.
+    AudioCues.syncMusicForLocation?.(state.location || "hub");
   }
 
   function exitPlay() {

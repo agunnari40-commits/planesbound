@@ -33,4 +33,16 @@ describe("PlanesboundAudio", () => {
     assert.equal(b, !a);
     assert.equal(MUTE_KEY, "planesbound-audio-mute-v1");
   });
+
+  it("music mute keeps location so unmute can resume", () => {
+    const audio = createAudio();
+    audio.startMusic("astral-sea");
+    assert.equal(audio.getMusicLocation(), "astral-sea");
+    audio.setMusicMuted(true);
+    assert.equal(audio.isMusicMuted(), true);
+    assert.equal(audio.getMusicLocation(), "astral-sea");
+    audio.setMusicMuted(false);
+    assert.equal(audio.isMusicMuted(), false);
+    assert.equal(audio.getMusicLocation(), "astral-sea");
+  });
 });
