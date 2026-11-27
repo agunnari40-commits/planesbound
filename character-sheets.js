@@ -153,7 +153,16 @@
   }
 
   function portraitUrl(raceId) {
+    const Beings = window.PlanesboundBeings;
+    if (Beings?.artSrc) return Beings.artSrc(raceId || "human");
     return `art/races/${raceId || "human"}.png`;
+  }
+
+  function portraitFallback(raceId) {
+    const Beings = window.PlanesboundBeings;
+    const being = Beings?.all?.()?.find?.((b) => b.id === raceId);
+    if (Beings?.placeholderSrc) return Beings.placeholderSrc(being?.tradition || "core");
+    return "art/races/_placeholder-core.png";
   }
 
   function renderSheet(role) {
@@ -198,7 +207,7 @@
       </div>
       <div class="sheet-body">
         <div class="sheet-portrait-col">
-          <img class="sheet-portrait" src="${portraitUrl(s.raceId)}" alt="" width="132" height="132" loading="lazy" onerror="this.src='art/races/human.png'" />
+          <img class="sheet-portrait" src="${portraitUrl(s.raceId)}" alt="${escapeAttr(s.raceName || "Race")} portrait" width="132" height="132" loading="lazy" data-being="${escapeAttr(s.raceId || "human")}" onerror="this.onerror=null;this.src='${escapeAttr(portraitFallback(s.raceId))}'" />
           <p class="sheet-race-line">${escapeHtml(s.raceName)} · race from 420 roster</p>
         </div>
         <div style="display:grid;gap:0.65rem">

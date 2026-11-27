@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="game.css?v=29b" />
+  <link rel="stylesheet" href="game.css?v=30" />
   <link rel="stylesheet" href="character-sheets.css" />
   <link rel="stylesheet" href="white-room.css" />
   <link rel="stylesheet" href="art-motion.css" />
@@ -520,6 +520,33 @@
     .companion-hint {
       margin: 0 0 .65rem; font-size: .82rem; line-height: 1.45;
     }
+    .companion-avatar-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      margin: 0 0 .55rem;
+    }
+    .companion-avatar-row .companion-hint {
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .companion-handout-avatar {
+      flex: 0 0 auto;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #c5a059;
+      background: #1a1510;
+      box-shadow: 0 4px 14px color-mix(in oklab, #000 28%, transparent);
+    }
+    .companion-handout-avatar--astral {
+      border-color: #9ec4e8;
+      box-shadow:
+        0 4px 14px color-mix(in oklab, #000 28%, transparent),
+        0 0 14px color-mix(in oklab, #7eb0c8 35%, transparent);
+    }
     .companion-pane--notes .companion-hint { color: #5c4a32; }
     .companion-pane--si .companion-hint { color: #b7c7dc; }
     #companionNotes {
@@ -776,8 +803,13 @@
       border-radius: 50%;
       pointer-events: none;
     }
+    /* PAS-30: roster avatars are race stills — keep img visible even if a
+       leftover stage3d dataset remains from an older session. */
     .being-screen[data-video-path="stage3d"] .being-portrait img {
-      opacity: 0;
+      opacity: 1;
+    }
+    .being-screen[data-video-path="still"] .being-portrait img {
+      opacity: 1;
     }
     .video-mode-row {
       display: flex;
@@ -1194,10 +1226,13 @@
         <div class="game-field game-field--picker">
           <label id="gamePlayerBeingLbl">Player race / being</label>
           <input type="hidden" id="gamePlayerBeing" name="playerBeing" value="human" />
-          <button type="button" class="game-being-toggle" id="gamePlayerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gamePlayerBeingList" aria-labelledby="gamePlayerBeingLbl">
-            <span class="game-being-toggle-label" id="gamePlayerBeingLabel">Human · core</span>
-            <span class="pick-chevron" aria-hidden="true">▾</span>
-          </button>
+          <div class="game-being-row">
+            <img class="game-start-avatar" id="gamePlayerBeingPortrait" src="art/races/human.png" alt="Player race portrait" width="48" height="48" decoding="async" data-being="human" data-tradition="core" />
+            <button type="button" class="game-being-toggle" id="gamePlayerBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gamePlayerBeingList" aria-labelledby="gamePlayerBeingLbl">
+              <span class="game-being-toggle-label" id="gamePlayerBeingLabel">Human · core</span>
+              <span class="pick-chevron" aria-hidden="true">▾</span>
+            </button>
+          </div>
           <div class="being-list game-start-being-list" id="gamePlayerBeingList" role="listbox" aria-label="Player race and being list" hidden data-open="false">
             <input class="being-search" id="gamePlayerBeingSearch" type="search" placeholder="Search all races &amp; beings…" autocomplete="off" />
             <p class="game-start-roster-meta"><span id="gamePlayerBeingCount">0</span> in roster · scroll or search</p>
@@ -1211,10 +1246,13 @@
         <div class="game-field game-field--picker">
           <label id="gameCompanionBeingLbl">Companion race / being</label>
           <input type="hidden" id="gameCompanionBeing" name="companionBeing" value="human" />
-          <button type="button" class="game-being-toggle" id="gameCompanionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gameCompanionBeingList" aria-labelledby="gameCompanionBeingLbl">
-            <span class="game-being-toggle-label" id="gameCompanionBeingLabel">Human · core</span>
-            <span class="pick-chevron" aria-hidden="true">▾</span>
-          </button>
+          <div class="game-being-row">
+            <img class="game-start-avatar game-start-avatar--companion" id="gameCompanionBeingPortrait" src="art/races/human.png" alt="Companion race portrait" width="48" height="48" decoding="async" data-being="human" data-tradition="core" />
+            <button type="button" class="game-being-toggle" id="gameCompanionBeingToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="gameCompanionBeingList" aria-labelledby="gameCompanionBeingLbl">
+              <span class="game-being-toggle-label" id="gameCompanionBeingLabel">Human · core</span>
+              <span class="pick-chevron" aria-hidden="true">▾</span>
+            </button>
+          </div>
           <div class="being-list game-start-being-list" id="gameCompanionBeingList" role="listbox" aria-label="Companion race and being list" hidden data-open="false">
             <input class="being-search" id="gameCompanionBeingSearch" type="search" placeholder="Search all races &amp; beings…" autocomplete="off" />
             <p class="game-start-roster-meta"><span id="gameCompanionBeingCount">0</span> in roster · scroll or search</p>
@@ -1321,12 +1359,18 @@
       <div class="companion-body">
         <section class="companion-pane companion-pane--notes" aria-labelledby="notesHeading">
           <h3 id="notesHeading">Player notes</h3>
-          <p class="companion-hint">Ink on parchment — bearings, names, &amp; table decisions. Being: <strong id="companionPlayerBeingLabel">Human</strong>. Saved in this browser.</p>
+          <div class="companion-avatar-row">
+            <img class="companion-handout-avatar" id="handoutPlayerPortrait" src="art/races/human.png" alt="Player being portrait" width="56" height="56" decoding="async" data-being="human" data-tradition="core" />
+            <p class="companion-hint">Ink on parchment — bearings, names, &amp; table decisions. Being: <strong id="companionPlayerBeingLabel">Human</strong>. Saved in this browser.</p>
+          </div>
           <textarea id="companionNotes" spellcheck="true" placeholder="Session notes, party bearings, questions for the keepers…"></textarea>
         </section>
         <section class="companion-pane companion-pane--si" aria-labelledby="siHeading">
           <h3 id="siHeading">Superintelligence companion</h3>
-          <p class="companion-hint">Silvery counsel from the thought-ocean. Companion being: <strong id="companionSiBeingLabel">Human</strong>.</p>
+          <div class="companion-avatar-row">
+            <img class="companion-handout-avatar companion-handout-avatar--astral" id="handoutCompanionPortrait" src="art/races/human.png" alt="Companion being portrait" width="56" height="56" decoding="async" data-being="human" data-tradition="core" />
+            <p class="companion-hint">Silvery counsel from the thought-ocean. Companion being: <strong id="companionSiBeingLabel">Human</strong>.</p>
+          </div>
           <div class="companion-context" id="companionContext" aria-live="polite"></div>
           <div class="companion-log" id="companionLog" aria-live="polite"></div>
           <form class="companion-compose" id="companionForm">
@@ -1844,11 +1888,11 @@ const planes = [
     refreshCompanionContext();
   </script>
   <script src="art-motion.js" defer></script>
-  <script src="races-menu.js?v=29b" defer></script>
-  <script src="character-sheets.js?v=29b" defer></script>
+  <script src="races-menu.js?v=30" defer></script>
+  <script src="character-sheets.js?v=30" defer></script>
   <script src="wow-actors.js" defer></script>
-  <script src="video-mode.js" defer></script>
+  <script src="video-mode.js?v=30" defer></script>
   <script src="white-room.js" defer></script>
-  <script src="game.js?v=29b" defer></script>
+  <script src="game.js?v=30" defer></script>
 </body>
 </html>

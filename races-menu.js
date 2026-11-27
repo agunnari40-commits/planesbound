@@ -1,10 +1,11 @@
-/* Planesbound PAS-3/29 — virtualized searchable being pickers (dock + Play start) */
+/* Planesbound PAS-3/29/30 — virtualized pickers + race/being avatar art */
 (function () {
   const ROW = 40;
   const OVERSCAN = 8;
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
   const ART_DIR = "art/races";
+  const TRADITIONS = new Set(["core", "srd", "folklore", "original"]);
 
   /** Shared selection roles. Each mount binds UI ids via `prefix`. */
   const MOUNTS = [
@@ -14,9 +15,52 @@
     { role: "companion", prefix: "gameCompanion", startForm: true },
   ];
 
-  function raceArtSrc(being) {
-    if (!being) return `${ART_DIR}/_placeholder.png`;
-    return `${ART_DIR}/${being.id}.png`;
+  /** Extra avatar slots outside picker mounts (companion handout, etc.). */
+  const EXTRA_PORTRAITS = [
+    { role: "player", id: "handoutPlayerPortrait" },
+    { role: "companion", id: "handoutCompanionPortrait" },
+  ];
+
+  function traditionKey(tradition) {
+    const t = String(tradition || "core").toLowerCase();
+    return TRADITIONS.has(t) ? t : "core";
+  }
+
+  function placeholderSrc(tradition) {
+    return `${ART_DIR}/_placeholder-${traditionKey(tradition)}.png`;
+  }
+
+  /** Primary race art path for a being object or id string. */
+  function raceArtSrc(beingOrId) {
+    if (!beingOrId) return `${ART_DIR}/_placeholder.png`;
+    if (typeof beingOrId === "string") return `${ART_DIR}/${beingOrId}.png`;
+    if (beingOrId.id) return `${ART_DIR}/${beingOrId.id}.png`;
+    return `${ART_DIR}/_placeholder.png`;
+  }
+
+  function bindPortraitFallback(img, being) {
+    if (!img) return;
+    img.onerror = () => {
+      const next = placeholderSrc(being?.tradition);
+      if (img.dataset.fallback === "tradition") {
+        img.onerror = null;
+        img.src = `${ART_DIR}/_placeholder.png`;
+        return;
+      }
+      img.dataset.fallback = "tradition";
+      img.src = next;
+    };
+  }
+
+  function applyPortrait(img, being) {
+    if (!img || !being) return;
+    delete img.dataset.fallback;
+    img.alt = `${being.name} portrait`;
+    img.dataset.being = being.id;
+    img.dataset.tradition = being.tradition || "core";
+    bindPortraitFallback(img, being);
+    const src = raceArtSrc(being);
+    if (img.getAttribute("src") !== src) img.src = src;
   }
 
   /** @type {{id:string,name:string,tradition:string,line:string}[]} */
@@ -56,12 +100,9 @@
       label: `${prefix}BeingLabel`,
       count: `${prefix}BeingCount`,
       hidden: `${prefix}Being`,
-      portrait: `${prefix === "player" || prefix === "companion" ? prefix : prefix.replace(/^game/, "").toLowerCase()}BeingPortrait`,
+      // One portrait id per mount prefix (dock + Play-start each have their own).
+      portrait: `${prefix}BeingPortrait`,
     };
-  }
-
-  function portraitId(role) {
-    return `${role}BeingPortrait`;
   }
 
   function persist() {
@@ -96,23 +137,18 @@
     }
     if (hidden && "value" in hidden) hidden.value = b.id;
     if (countNode) countNode.textContent = String(beings.length);
-    if (!mount.startForm) {
-      const portrait = document.getElementById(portraitId(role));
-      if (portrait) {
-        portrait.alt = `${b.name} portrait`;
-        portrait.dataset.being = b.id;
-        portrait.dataset.tradition = b.tradition;
-        portrait.src = raceArtSrc(b);
-        portrait.onerror = () => {
-          portrait.onerror = null;
-          portrait.src = `${ART_DIR}/_placeholder-${b.tradition || "core"}.png`;
-        };
-      }
-    }
+    applyPortrait(document.getElementById(id.portrait), b);
+  }
+
+  function renderExtraPortraits() {
+    EXTRA_PORTRAITS.forEach(({ role, id }) => {
+      applyPortrait(document.getElementById(id), byId(selected[role]));
+    });
   }
 
   function renderAllPicks() {
     MOUNTS.forEach(renderMountPick);
+    renderExtraPortraits();
   }
 
   function applyFilter(mount) {
@@ -157,9 +193,7 @@
         )}" data-active="${active}" style="height:${ROW}px">` +
           `<img class="being-thumb" src="${escapeHtml(raceArtSrc(b))}" alt="" width="24" height="24" loading="lazy" decoding="async" data-trad="${escapeHtml(
             b.tradition
-          )}" onerror="this.onerror=null;this.src='${ART_DIR}/_placeholder-${escapeHtml(
-            b.tradition || "core"
-          )}.png'" />` +
+          )}" onerror="this.onerror=null;this.src='${escapeHtml(placeholderSrc(b.tradition))}'" />` +
           `<span class="being-name">${escapeHtml(b.name)}</span>` +
           `<span class="being-trad">${escapeHtml(b.tradition)}</span>` +
           `</button>`
@@ -361,6 +395,9 @@
       getCompanion: () => byId(selected.companion),
       all: () => beings.slice(),
       count: () => beings.length,
+      artSrc: raceArtSrc,
+      placeholderSrc,
+      applyPortrait,
       setSelection(playerId, companionId) {
         if (playerId && byId(playerId)) selected.player = playerId;
         if (companionId && byId(companionId)) selected.companion = companionId;
