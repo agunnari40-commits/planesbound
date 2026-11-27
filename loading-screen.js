@@ -1,27 +1,31 @@
-/* Planesbound PAS-31 — helical Astral Sea loading screen */
+/* Planesbound PAS-41 — helical Astral Sea loading (brass/astral + Grokbot wisps) */
 (function () {
   const MIN_MS = 2600;
   const SKIP_AFTER_MS = 1400;
 
-  /** Planesbound shores riding the Daystar helix (not solar planets). */
+  /** Inner shores riding the Daystar helix — larger radii, slower orbital speeds. */
   const BODIES = [
-    { id: "fire", name: "Fire", color: "#c45a2c", radius: 18, speed: 1.35, phase: 0.2, size: 3.2 },
-    { id: "water", name: "Water", color: "#3d8eb5", radius: 26, speed: 1.05, phase: 1.1, size: 3.4 },
-    { id: "air", name: "Air", color: "#9ec4e8", radius: 34, speed: 0.88, phase: 2.0, size: 3.1 },
-    { id: "earth", name: "Earth", color: "#8a7350", radius: 42, speed: 0.72, phase: 2.8, size: 3.6 },
-    { id: "dust", name: "Dust", color: "#b8a078", radius: 52, speed: 0.58, phase: 0.7, size: 2.8 },
-    { id: "mineral", name: "Mineral", color: "#d7ecff", radius: 62, speed: 0.48, phase: 3.4, size: 3.3 },
-    { id: "ethereal", name: "Ethereal", color: "#c9a0ff", radius: 74, speed: 0.38, phase: 4.2, size: 2.6 },
-    { id: "astral", name: "Astral Sea", color: "#7eb0c8", radius: 88, speed: 0.3, phase: 5.1, size: 4.0 },
-    { id: "void", name: "Digital Void", color: "#7dffb3", radius: 102, speed: 0.24, phase: 1.6, size: 2.9 },
+    { id: "fire", name: "Fire", color: "#c45a2c", radius: 34, speed: 0.42, phase: 0.2, size: 5.2 },
+    { id: "water", name: "Water", color: "#4a7a9a", radius: 48, speed: 0.34, phase: 1.1, size: 5.4 },
+    { id: "air", name: "Air", color: "#9ec4e8", radius: 62, speed: 0.28, phase: 2.0, size: 5.0 },
+    { id: "earth", name: "Earth", color: "#8a7350", radius: 76, speed: 0.24, phase: 2.8, size: 5.6 },
+    { id: "dust", name: "Dust", color: "#b8a078", radius: 92, speed: 0.2, phase: 0.7, size: 4.6 },
+    { id: "mineral", name: "Mineral", color: "#d7ecff", radius: 110, speed: 0.16, phase: 3.4, size: 5.5 },
+    { id: "ethereal", name: "Ethereal", color: "#c5a059", radius: 130, speed: 0.13, phase: 4.2, size: 4.4 },
+    { id: "astral", name: "Astral Sea", color: "#7eb0c8", radius: 152, speed: 0.1, phase: 5.1, size: 6.2 },
+    { id: "void", name: "Digital Void", color: "#a89070", radius: 176, speed: 0.08, phase: 1.6, size: 4.8 },
   ];
 
   const MARKERS = [
-    { label: "Inner Ring · bearing", depth: 0.22, color: "#9ec4e8" },
-    { label: "Ethereal curtain", depth: 0.48, color: "#c9a0ff" },
-    { label: "Astral envelope", depth: 0.72, color: "#3d6cff" },
-    { label: "Schism wake", depth: 0.9, color: "#7dffb3" },
+    { label: "Inner Ring · bearing", depth: 0.22, color: "#c5a059" },
+    { label: "Ethereal curtain", depth: 0.48, color: "#9ec4e8" },
+    { label: "Astral envelope", depth: 0.72, color: "#7eb0c8" },
+    { label: "Schism wake", depth: 0.9, color: "#b8a078" },
   ];
+
+  /** Grokbot / Ani will-o’-wisp sprites (art-division race + quest still). */
+  const WISP_SRC = "art/races/will-o-wisp.png";
+  const WISP_QUEST_SRC = "art/will-o-wisp-race-quest.png";
 
   const root = document.getElementById("pbLoading");
   const canvas = document.getElementById("pbLoadingCanvas");
@@ -45,7 +49,11 @@
   let h = 0;
   let stars = [];
   const trailHist = BODIES.map(() => []);
-  const TRAIL_MAX = 140;
+  const TRAIL_MAX = 160;
+  /** Free-floating Grokbot wisps drifting the envelope. */
+  let wisps = [];
+  let wispImg = null;
+  let wispReady = false;
 
   const gates = {
     dom: document.readyState !== "loading",
@@ -53,6 +61,22 @@
     fonts: false,
     minTime: false,
   };
+
+  function loadWispArt() {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      wispImg = img;
+      wispReady = true;
+    };
+    img.onerror = () => {
+      wispReady = false;
+    };
+    img.src = WISP_SRC;
+    // Warm quest art into HTTP cache for atlas (not drawn full-bleed).
+    const warm = new Image();
+    warm.src = WISP_QUEST_SRC;
+  }
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -64,16 +88,31 @@
     canvas.style.height = `${h}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     seedStars();
+    seedWisps();
   }
 
   function seedStars() {
-    const n = Math.floor((w * h) / 4200);
+    const n = Math.floor((w * h) / 4800);
     stars = Array.from({ length: n }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      r: Math.random() * 1.4 + 0.2,
-      a: Math.random() * 0.55 + 0.15,
+      r: Math.random() * 1.5 + 0.25,
+      a: Math.random() * 0.45 + 0.12,
       tw: Math.random() * Math.PI * 2,
+      warm: Math.random() > 0.72,
+    }));
+  }
+
+  function seedWisps() {
+    const n = Math.max(10, Math.floor((w * h) / 90000));
+    // Seed behind the Daystar travel band so first-frame wrap does not fire.
+    wisps = Array.from({ length: n }, () => ({
+      ang: Math.random() * Math.PI * 2,
+      rad: 40 + Math.random() * 150,
+      z: -160 + Math.random() * 140,
+      speed: 0.08 + Math.random() * 0.12,
+      phase: Math.random() * Math.PI * 2,
+      size: 14 + Math.random() * 18,
     }));
   }
 
@@ -139,10 +178,11 @@
   }
 
   function overlayFocusables() {
-    const nodes = [...root.querySelectorAll(
-      'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )];
-    // Dialog root is a intentional tab stop while Enter atlas is still disabled.
+    const nodes = [
+      ...root.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ),
+    ];
     if (root.getAttribute("tabindex") === "-1") nodes.unshift(root);
     return nodes.filter((el) => {
       if (el === root) return true;
@@ -197,7 +237,6 @@
     if (animId) cancelAnimationFrame(animId);
     animId = 0;
     document.dispatchEvent(new CustomEvent("planesbound-loading-done"));
-    // Hand focus back into the atlas once the modal layer is gone.
     const restore =
       document.getElementById("openPlay") ||
       document.getElementById("videoModeSelect") ||
@@ -217,21 +256,19 @@
   }
 
   function project(x, y, z, t) {
-    // Soft perspective camera dollying back + slight yaw over time.
-    // Floor the denominator so long ?loadingHold=1 runs never flip scale negative
-    // (Canvas ellipse/arc/createRadialGradient throw IndexSizeError on r < 0).
-    const camZ = 220 + t * 8;
-    const yaw = t * 0.08;
+    // Slower dolly/yaw; larger focal scale so the whole wheel reads bigger.
+    const camZ = 200 + t * 3.2;
+    const yaw = t * 0.028;
     const cos = Math.cos(yaw);
     const sin = Math.sin(yaw);
     const rx = x * cos - z * sin;
     const rz = x * sin + z * cos;
-    const ry = y - t * 2.2;
+    const ry = y - t * 0.85;
     const denom = Math.max(48, camZ + rz);
-    const f = Math.max(0.05, 520 / denom);
+    const f = Math.max(0.05, 720 / denom);
     return {
-      x: w * 0.52 + rx * f,
-      y: h * 0.48 + ry * f,
+      x: w * 0.5 + rx * f,
+      y: h * 0.5 + ry * f,
       s: f,
       depth: rz,
     };
@@ -242,16 +279,15 @@
     const ery = Math.max(0.5, Math.abs(ry));
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(phase * 0.02);
+    ctx.rotate(phase * 0.008);
     ctx.beginPath();
     ctx.ellipse(0, 0, erx, ery, 0, 0, Math.PI * 2);
     ctx.strokeStyle = color;
     ctx.globalAlpha = alpha;
-    ctx.lineWidth = 1.25;
+    ctx.lineWidth = 1.6;
     ctx.stroke();
-    // wire latitude hints
-    for (let i = 1; i < 4; i++) {
-      const k = i / 4;
+    for (let i = 1; i < 3; i++) {
+      const k = i / 3;
       ctx.beginPath();
       ctx.ellipse(
         0,
@@ -262,8 +298,30 @@
         0,
         Math.PI * 2
       );
-      ctx.globalAlpha = alpha * 0.35;
+      ctx.globalAlpha = alpha * 0.28;
       ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWispSprite(px, py, size, alpha) {
+    const s = Math.max(8, size);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (wispReady && wispImg) {
+      ctx.shadowColor = "rgba(197,160,89,0.55)";
+      ctx.shadowBlur = s * 0.55;
+      ctx.drawImage(wispImg, px - s / 2, py - s / 2, s, s);
+      ctx.shadowBlur = 0;
+    } else {
+      const g = ctx.createRadialGradient(px, py, 0, px, py, s * 0.55);
+      g.addColorStop(0, "rgba(255,242,200,0.95)");
+      g.addColorStop(0.35, "rgba(197,160,89,0.7)");
+      g.addColorStop(1, "rgba(126,176,200,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(px, py, s * 0.55, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -272,7 +330,6 @@
     try {
       drawFrameInner(now);
     } catch (err) {
-      // Keep the capture loop alive if a single frame throws (e.g. hold mode).
       console.warn("[pb-loading] frame error", err);
     }
     if (!dismissed) animId = requestAnimationFrame(drawFrame);
@@ -280,77 +337,91 @@
 
   function drawFrameInner(now) {
     const t = (now - startedAt) / 1000;
-    const travel = t * (14 + displayProgress * 22);
+    // Much slower forward travel so coils read as a majestic wheel.
+    const travel = t * (5.5 + displayProgress * 8);
 
-    ctx.fillStyle = "#02010a";
+    ctx.fillStyle = "#08060c";
     ctx.fillRect(0, 0, w, h);
 
-    // faint milky band
-    const band = ctx.createLinearGradient(0, h * 0.35, 0, h * 0.65);
-    band.addColorStop(0, "rgba(80,90,140,0)");
-    band.addColorStop(0.5, "rgba(120,140,200,0.08)");
-    band.addColorStop(1, "rgba(80,90,140,0)");
+    // Brass–astral milky band (no neon violet wash)
+    const band = ctx.createLinearGradient(0, h * 0.28, 0, h * 0.72);
+    band.addColorStop(0, "rgba(154,122,56,0)");
+    band.addColorStop(0.45, "rgba(126,176,200,0.07)");
+    band.addColorStop(0.55, "rgba(197,160,89,0.06)");
+    band.addColorStop(1, "rgba(154,122,56,0)");
     ctx.fillStyle = band;
     ctx.fillRect(0, 0, w, h);
 
     for (const s of stars) {
-      const tw = reduced ? s.a : s.a * (0.65 + 0.35 * Math.sin(t * 1.4 + s.tw));
-      ctx.fillStyle = `rgba(220,230,255,${tw})`;
+      const tw = reduced ? s.a : s.a * (0.7 + 0.3 * Math.sin(t * 0.9 + s.tw));
+      ctx.fillStyle = s.warm ? `rgba(242,230,201,${tw})` : `rgba(220,230,245,${tw})`;
       ctx.fillRect(s.x, s.y, s.r, s.r);
     }
 
-    // Core path (Daystar) moving in +Z of local helix frame
     const coreLocal = { x: 0, y: 0, z: travel };
     const core = project(coreLocal.x, coreLocal.y, coreLocal.z, t);
 
-    // Outer schism wakes (behind)
-    const wake = project(0, 0, travel - 90, t);
-    drawShell(wake.x + 40, wake.y - 10, 120 * wake.s, 70 * wake.s, "#2f8f5b", 0.22, t);
-    drawShell(wake.x + 55, wake.y + 30, 95 * wake.s, 55 * wake.s, "#8b3a6b", 0.18, -t);
+    const wake = project(0, 0, travel - 120, t);
+    drawShell(wake.x + 48, wake.y - 12, 168 * wake.s, 98 * wake.s, "rgba(154,122,56,0.55)", 0.2, t);
+    drawShell(wake.x + 64, wake.y + 36, 132 * wake.s, 78 * wake.s, "rgba(126,176,200,0.5)", 0.16, -t);
 
-    // Astral envelope around core (filled haze + wire)
-    const coreRx = Math.max(0.5, 118 * core.s);
-    const coreRy = Math.max(0.5, 88 * core.s);
-    const coreInner = Math.max(0.5, 8 * core.s);
+    const coreRx = Math.max(0.5, 168 * core.s);
+    const coreRy = Math.max(0.5, 124 * core.s);
+    const coreInner = Math.max(0.5, 12 * core.s);
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(core.x, core.y, coreRx, coreRy, t * 0.05, 0, Math.PI * 2);
+    ctx.ellipse(core.x, core.y, coreRx, coreRy, t * 0.018, 0, Math.PI * 2);
     const shellFill = ctx.createRadialGradient(core.x, core.y, coreInner, core.x, core.y, coreRx);
-    shellFill.addColorStop(0, "rgba(90,40,160,0.22)");
-    shellFill.addColorStop(0.55, "rgba(40,80,220,0.12)");
-    shellFill.addColorStop(1, "rgba(20,40,120,0)");
+    shellFill.addColorStop(0, "rgba(197,160,89,0.2)");
+    shellFill.addColorStop(0.45, "rgba(126,176,200,0.1)");
+    shellFill.addColorStop(1, "rgba(20,24,40,0)");
     ctx.fillStyle = shellFill;
     ctx.fill();
     ctx.restore();
-    drawShell(core.x, core.y, 95 * core.s, 72 * core.s, "#3d6cff", 0.45, t * 0.6);
-    drawShell(core.x, core.y, 128 * core.s, 98 * core.s, "#b06bff", 0.28, -t * 0.4);
-    drawShell(core.x, core.y, 155 * core.s, 118 * core.s, "#7dffb3", 0.12, t * 0.25);
+    drawShell(core.x, core.y, 135 * core.s, 100 * core.s, "#c5a059", 0.42, t * 0.22);
+    drawShell(core.x, core.y, 178 * core.s, 132 * core.s, "#9ec4e8", 0.28, -t * 0.16);
+    drawShell(core.x, core.y, 218 * core.s, 160 * core.s, "#7eb0c8", 0.14, t * 0.1);
 
-    // Helical trails + bodies
+    // Free Grokbot wisps drifting the envelope
+    wisps.forEach((wp) => {
+      if (!reduced) {
+        wp.ang += wp.speed * 0.016;
+        wp.z += 0.35;
+        if (wp.z > travel + 40) wp.z = travel - 180;
+      }
+      const lx = Math.cos(wp.ang + wp.phase) * wp.rad;
+      const ly = Math.sin(wp.ang + wp.phase) * wp.rad * 0.48;
+      const p = project(lx, ly, wp.z, t);
+      const pulse = 0.55 + 0.35 * Math.sin(t * 0.7 + wp.phase);
+      // Preserve seeded size × perspective (was *0.04 → always floor at 8px).
+      const spriteSize = Math.max(12, wp.size * Math.max(0.85, p.s * 0.75));
+      drawWispSprite(p.x, p.y, spriteSize, pulse * 0.85);
+    });
+
     BODIES.forEach((b, i) => {
       const hist = trailHist[i];
       if (!reduced) {
-        // Sample several helix points per frame so coils read as corkscrews, not flat rings.
-        for (let s = 0; s < 3; s++) {
-          const tt = t - s * 0.045;
+        for (let s = 0; s < 2; s++) {
+          const tt = t - s * 0.08;
           const ang = tt * b.speed + b.phase;
           const lx = Math.cos(ang) * b.radius;
-          const ly = Math.sin(ang) * b.radius * 0.42;
-          const lz = travel - ang * 5.8 - s * 1.2;
+          const ly = Math.sin(ang) * b.radius * 0.48;
+          const lz = travel - ang * 4.2 - s * 1.6;
           hist.push({ x: lx, y: ly, z: lz });
         }
         while (hist.length > TRAIL_MAX) hist.shift();
       } else if (!hist.length) {
-        for (let k = 0; k < 70; k++) {
-          const ang = k * 0.28 + b.phase;
+        for (let k = 0; k < 80; k++) {
+          const ang = k * 0.22 + b.phase;
           hist.push({
             x: Math.cos(ang) * b.radius,
-            y: Math.sin(ang) * b.radius * 0.42,
-            z: travel - 90 + k * 3.1,
+            y: Math.sin(ang) * b.radius * 0.48,
+            z: travel - 120 + k * 3.4,
           });
         }
       }
 
+      // Soft brass/astral trail (painterly, not HUD neon)
       ctx.beginPath();
       hist.forEach((p, idx) => {
         const pr = project(p.x, p.y, p.z, t);
@@ -358,75 +429,74 @@
         else ctx.lineTo(pr.x, pr.y);
       });
       ctx.strokeStyle = b.color;
-      ctx.globalAlpha = 0.55;
-      ctx.lineWidth = 1.1;
+      ctx.globalAlpha = 0.38;
+      ctx.lineWidth = 2.1;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      ctx.globalAlpha = 0.16;
+      ctx.lineWidth = 5.5;
       ctx.stroke();
       ctx.globalAlpha = 1;
 
       const tip = hist[hist.length - 1];
       if (!tip) return;
       const p = project(tip.x, tip.y, tip.z, t);
-      const r = Math.max(1.6, b.size * p.s * 0.9);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 10;
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      const spriteSize = Math.max(18, b.size * p.s * 1.85);
+      drawWispSprite(p.x, p.y, spriteSize, 0.95);
 
-      // label
-      ctx.font = "600 11px ui-monospace, Menlo, monospace";
-      ctx.fillStyle = "rgba(230,240,255,0.92)";
-      ctx.strokeStyle = "rgba(10,14,28,0.55)";
-      ctx.lineWidth = 3;
-      const lx = p.x + 10;
-      const ly = p.y - 8;
+      // Brass serif-ish labels (canvas approximates Cinzel with serif stack)
+      ctx.font = "600 13px Cinzel, 'Times New Roman', serif";
+      ctx.fillStyle = "rgba(242,230,201,0.94)";
+      const lx = p.x + spriteSize * 0.42;
+      const ly = p.y - spriteSize * 0.2;
       ctx.beginPath();
-      ctx.moveTo(p.x + r + 1, p.y);
+      ctx.moveTo(p.x + spriteSize * 0.28, p.y);
       ctx.lineTo(lx - 2, ly + 3);
-      ctx.strokeStyle = "rgba(200,220,255,0.45)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(197,160,89,0.55)";
+      ctx.lineWidth = 1.1;
       ctx.stroke();
+      ctx.strokeStyle = "rgba(12,10,8,0.55)";
+      ctx.lineWidth = 3.5;
+      ctx.strokeText(b.name, lx, ly);
       ctx.fillText(b.name, lx, ly);
     });
 
-    // Daystar core
-    const glowR = Math.max(1, 28 * core.s);
+    // Daystar / Lighthouse core — brass ember
+    const glowR = Math.max(1, 42 * core.s);
     const glow = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, glowR);
-    glow.addColorStop(0, "#fff2c8");
-    glow.addColorStop(0.25, "#ff8a3d");
-    glow.addColorStop(1, "rgba(255,100,40,0)");
+    glow.addColorStop(0, "#fff4d4");
+    glow.addColorStop(0.2, "#e8c878");
+    glow.addColorStop(0.55, "#c5a059");
+    glow.addColorStop(1, "rgba(154,122,56,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(core.x, core.y, glowR, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(core.x, core.y, Math.max(3, 5.5 * core.s), 0, Math.PI * 2);
-    ctx.fillStyle = "#ffe7a8";
+    ctx.arc(core.x, core.y, Math.max(4, 8 * core.s), 0, Math.PI * 2);
+    ctx.fillStyle = "#f2e6c9";
     ctx.fill();
 
-    // Direction arrow + brand label near core
-    ctx.strokeStyle = "rgba(255,255,255,0.7)";
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(197,160,89,0.75)";
+    ctx.fillStyle = "rgba(242,230,201,0.9)";
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(core.x + 12 * core.s, core.y - 18 * core.s);
-    ctx.lineTo(core.x + 38 * core.s, core.y - 28 * core.s);
-    ctx.lineTo(core.x + 34 * core.s, core.y - 22 * core.s);
-    ctx.moveTo(core.x + 38 * core.s, core.y - 28 * core.s);
-    ctx.lineTo(core.x + 30 * core.s, core.y - 30 * core.s);
+    ctx.moveTo(core.x + 16 * core.s, core.y - 24 * core.s);
+    ctx.lineTo(core.x + 48 * core.s, core.y - 36 * core.s);
+    ctx.lineTo(core.x + 42 * core.s, core.y - 28 * core.s);
+    ctx.moveTo(core.x + 48 * core.s, core.y - 36 * core.s);
+    ctx.lineTo(core.x + 38 * core.s, core.y - 38 * core.s);
     ctx.stroke();
-    ctx.font = "600 11px ui-monospace, Menlo, monospace";
-    ctx.fillText("Daystar bearing →", core.x + 42 * core.s, core.y - 30 * core.s);
+    ctx.font = "600 12px Cinzel, 'Times New Roman', serif";
+    ctx.fillText("Daystar bearing →", core.x + 52 * core.s, core.y - 38 * core.s);
 
-    // Depth markers
     MARKERS.forEach((m, i) => {
-      const mz = travel - 40 - i * 28;
-      const p = project(110 + i * 8, -40 + i * 12, mz, t);
+      const mz = travel - 55 - i * 36;
+      const p = project(150 + i * 10, -55 + i * 14, mz, t);
       ctx.fillStyle = m.color;
-      ctx.globalAlpha = 0.85;
-      ctx.font = "10px ui-monospace, Menlo, monospace";
+      ctx.globalAlpha = 0.88;
+      ctx.font = "600 11px 'Source Serif 4', Georgia, serif";
       ctx.fillText(`${m.label} · ${Math.round(m.depth * 120)} depth`, p.x, p.y);
       ctx.globalAlpha = 1;
     });
@@ -444,7 +514,6 @@
       { once: true }
     );
 
-    // Fallback if beings already ready or never fires
     const poll = setInterval(() => {
       if (window.PlanesboundBeings?.count?.() > 0) {
         clearInterval(poll);
@@ -460,7 +529,6 @@
       }
     }, 8000);
 
-    // Fonts gate: never stall forever if Google Fonts / document.fonts hangs
     const FONT_TIMEOUT_MS = 8000;
     const finishFonts = () => {
       if (gates.fonts) return;
@@ -491,7 +559,6 @@
       );
     }
 
-    // Soft progress while waiting
     const soft = setInterval(() => {
       if (done) {
         clearInterval(soft);
@@ -511,7 +578,6 @@
       skipBtn.dataset.show = "true";
       skipBtn.disabled = false;
       skipBtn.removeAttribute("aria-hidden");
-      // Prefer the now-enabled skip control for keyboard users.
       if (document.activeElement === root || !root.contains(document.activeElement)) {
         try {
           skipBtn.focus({ preventScroll: true });
@@ -523,7 +589,6 @@
   }
 
   skipBtn?.addEventListener("click", () => {
-    // Ignore clicks while skip is still hidden (opacity-only was bypassable via hover)
     if (skipBtn.dataset.show !== "true" || skipBtn.disabled) return;
     Object.keys(gates).forEach((k) => {
       gates[k] = true;
@@ -549,18 +614,16 @@
   };
 
   function armModalFocus() {
-    // Script may parse before .app-shell; re-assert inert once layers exist.
     setAtlasInert(true);
     root.setAttribute("tabindex", "-1");
     document.addEventListener("keydown", trapOverlayFocus, true);
     focusOverlay();
   }
 
+  loadWispArt();
   resize();
   window.addEventListener("resize", resize);
   setStatus("Opening the Astral Sea…");
-  // Modal: park focus in the dialog and inert the atlas underneath so Tab
-  // cannot reach being pickers / Play / hotspots while the overlay covers them.
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", armModalFocus, { once: true });
   } else {
