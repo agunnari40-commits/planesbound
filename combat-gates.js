@@ -193,7 +193,9 @@
     state.attackResolved = true;
     state.attackActive = false;
 
-    if (isInvulnerable(state, nowMs) || isInvulnerable(state, hitAt)) {
+    // I-frames are judged at the landing moment only. Delayed commit (hitAt +
+    // parryLateMs) must not let a roll started after hitAt dodge a landed hit.
+    if (isInvulnerable(state, hitAt)) {
       state.lastResult = { type: "incoming", hit: false, blocked: "iframe", at: nowMs };
       return { hit: false, blocked: "iframe", damage: 0 };
     }
