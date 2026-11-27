@@ -1,4 +1,4 @@
-/* Planesbound PAS-6/13/15/18/19/23/24/27/33 — voyage + live combat + stamina/roll/parry gates */
+/* Planesbound PAS-6/13/15/18/19/23/24/27/33/37/39 — voyage + gates + icons + Web Audio */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
@@ -7,68 +7,35 @@
   const COMPANION_KEY = "planesbound-companion-being-v1";
   const Gates = () => window.PlanesboundCombatGates;
 
-  /** Short Web Audio cues — no sample banks or audio libs (PAS-27). */
-  const AudioCues = (() => {
-    let ctx = null;
-    function ensure() {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      if (!ctx) ctx = new AC();
-      if (ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
-      }
-      return ctx;
-    }
-    function tone({ freq = 440, dur = 0.08, type = "sine", gain = 0.035, slide = 0 }) {
-      const c = ensure();
-      if (!c) return;
-      const t0 = c.currentTime;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, t0);
-      if (slide) osc.frequency.linearRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      osc.connect(g);
-      g.connect(c.destination);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.03);
-    }
-    return {
-      hit() {
-        tone({ freq: 240, dur: 0.09, type: "square", gain: 0.032, slide: 90 });
-      },
-      crit() {
-        tone({ freq: 280, dur: 0.08, type: "square", gain: 0.036, slide: 140 });
-        setTimeout(() => tone({ freq: 420, dur: 0.1, type: "sine", gain: 0.03 }), 55);
-      },
-      miss() {
-        tone({ freq: 150, dur: 0.07, type: "triangle", gain: 0.022, slide: -45 });
-      },
-      hurt() {
-        tone({ freq: 105, dur: 0.14, type: "sawtooth", gain: 0.028, slide: -55 });
-      },
-      soft() {
-        tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.028, slide: 130 });
-      },
-      kill() {
-        tone({ freq: 300, dur: 0.08, type: "square", gain: 0.034 });
-        setTimeout(() => tone({ freq: 520, dur: 0.12, type: "sine", gain: 0.03 }), 70);
-      },
-      travel() {
-        tone({ freq: 360, dur: 0.1, type: "sine", gain: 0.022, slide: 180 });
-      },
-      target() {
-        tone({ freq: 640, dur: 0.045, type: "sine", gain: 0.018 });
-      },
-      quest() {
-        tone({ freq: 440, dur: 0.07, type: "sine", gain: 0.026 });
-        setTimeout(() => tone({ freq: 660, dur: 0.1, type: "sine", gain: 0.028 }), 85);
-      },
-    };
-  })();
+  /** PAS-39: shared Web Audio module (`audio.js`). Fallback keeps play silent-safe if script missing. */
+  const AudioCues = window.PlanesboundAudio || {
+    hit() {},
+    crit() {},
+    miss() {},
+    hurt() {},
+    soft() {},
+    kill() {},
+    parry() {},
+    roll() {},
+    travel() {},
+    target() {},
+    quest() {},
+    ui() {},
+    isMuted: () => false,
+    toggleMute: () => false,
+    syncMusicForLocation() {},
+    stopMusic() {},
+    ensure() {},
+  };
+
+  function syncMuteButton() {
+    const btn = el("gameMuteAudio");
+    if (!btn || !AudioCues.isMuted) return;
+    const on = !!AudioCues.isMuted();
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Sound · Off" : "Sound · On";
+    btn.title = on ? "Unmute combat cues and music bed" : "Mute all game audio";
+  }
 
   let travelToastTimer = 0;
   let combatFloatSeq = 0;
@@ -826,7 +793,13 @@
       const choice = encounter.choices?.find((c) => c.id === "parry");
       const label = parryChoiceLabel(telegraph, parryOpen, staNow, CG);
       if (choice) choice.label = label;
-      if (parryBtn.textContent !== label) parryBtn.textContent = label;
+      // Prefer label span so PAS-37 icons are not wiped by in-place parry updates.
+      const labelEl = parryBtn.querySelector(".game-btn-label");
+      if (labelEl) {
+        if (labelEl.textContent !== label) labelEl.textContent = label;
+      } else if (parryBtn.textContent !== label) {
+        parryBtn.textContent = label;
+      }
     }
   }
 
@@ -1498,7 +1471,7 @@
       }
       if (r.ok) {
         spawnCombatFloat("parry", "assist");
-        AudioCues.crit();
+        AudioCues.parry?.();
         stage?.showBeat?.("Parry!", 1000);
         pushJournal("Parry window caught — coil denied.");
         companionSay("Perfect timing.");
@@ -1523,6 +1496,7 @@
       state.poolChecked = true;
       state.hp = Math.max(1, state.hp - 2);
       spawnCombatFloat("−2", "hurt");
+      AudioCues.roll?.();
       AudioCues.hurt();
       pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
       companionSay("Discretion. The Mineral grit still waits.");
@@ -1711,6 +1685,7 @@
     if (kind === "isle-check") {
       state.isleChecked = true;
       if (choiceId === "roll") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.mod || 0;
         const total = roll + mod;
@@ -1743,6 +1718,7 @@
     } else if (kind === "dust-check") {
       state.dustChecked = true;
       if (choiceId === "athletics") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ath || 0;
         const total = roll + mod;
@@ -1768,6 +1744,7 @@
           stage?.playResolve?.(false);
         }
       } else if (choiceId === "insight") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ins || 0;
         const total = roll + mod;
@@ -1942,6 +1919,7 @@
       pulseSceneTravel();
       showTravelToast(LOCATIONS[loc]?.title || loc, nextObjectiveHint());
       AudioCues.travel();
+      AudioCues.syncMusicForLocation?.(loc);
     }
 
     const wantsIsle = loc === "memory-isle" && !state.isleChecked;
@@ -2099,10 +2077,32 @@
             c.id === "assist";
           const kind = c.kind || c.id;
           const urgent = c.id === "parry" && vitals?.dataset?.parryOpen === "true";
-          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}${urgent ? " game-btn--parry-now" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${escapeHtml(c.label)}</button>`;
+          const icon = actionIconSrc(kind) || actionIconSrc(c.id);
+          const iconHtml = icon
+            ? `<img class="game-btn-icon" src="${escapeAttr(icon)}" alt="" width="22" height="22" decoding="async" aria-hidden="true" />`
+            : "";
+          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}${urgent ? " game-btn--parry-now" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
         })
         .join("");
     }
+  }
+
+  /** PAS-37 transparent action icons (brass/astral line art). */
+  function actionIconSrc(kind) {
+    const map = {
+      strike: "art/ui-icons/icon-strike.png",
+      athletics: "art/ui-icons/icon-strike.png",
+      fight: "art/ui-icons/icon-strike.png",
+      soft: "art/ui-icons/icon-soft.png",
+      insight: "art/ui-icons/icon-soft.png",
+      assist: "art/ui-icons/icon-assist.png",
+      roll: "art/ui-icons/icon-roll.png",
+      parry: "art/ui-icons/icon-parry.png",
+      slip: "art/ui-icons/icon-slip.png",
+      rest: "art/ui-icons/icon-rest.png",
+      companion: "art/ui-icons/icon-companion.png",
+    };
+    return map[kind] || null;
   }
 
   function renderEncounter() {
@@ -2194,6 +2194,11 @@
     document.body.classList.toggle("game-active", open);
     if (open) {
       document.getElementById("companionDialog")?.setAttribute("data-game-mode", "1");
+      AudioCues.ensure?.();
+      AudioCues.syncMusicForLocation?.(state.location || "hub");
+      syncMuteButton();
+    } else {
+      AudioCues.stopMusic?.(true);
     }
     render();
   }
@@ -2279,7 +2284,7 @@
                 : QUESTS["cross-astral-sea"].title
         }</p>
         <div class="game-status-actions">
-          <button type="button" class="game-btn" data-action="rest">Short rest</button>
+          <button type="button" class="game-btn game-btn--iconed" data-action="rest"><img class="game-btn-icon" src="art/ui-icons/icon-rest.png" alt="" width="20" height="20" decoding="async" aria-hidden="true" /><span class="game-btn-label">Short rest</span></button>
           ${
             state.chapterComplete
               ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
@@ -2331,8 +2336,18 @@
     window.PlanesboundGame = api();
   }
 
+  function iconedActionBtn(action, label, extraClass = "") {
+    const src = actionIconSrc(action);
+    const icon = src
+      ? `<img class="game-btn-icon" src="${escapeAttr(src)}" alt="" width="20" height="20" decoding="async" aria-hidden="true" />`
+      : "";
+    return `<button type="button" class="game-btn game-btn--iconed${extraClass ? ` ${extraClass}` : ""}" data-action="${escapeAttr(action)}">${icon}<span class="game-btn-label">${escapeHtml(label)}</span></button>`;
+  }
+
   function sceneActionsHtml() {
     const loc = state.location;
+    const restBtn = iconedActionBtn("rest", "Short rest");
+    const companionBtn = iconedActionBtn("companion", "Ask companion");
     if (loc === "hub") {
       const more = state.questComplete
         ? `<button type="button" class="game-btn game-btn--astral" data-travel="color-pool">Seek a color pool</button>
@@ -2344,8 +2359,8 @@
       return `<button type="button" class="game-btn game-btn--astral" data-travel="astral-sea">Cast off into the Astral Sea</button>
         ${more}
         ${newVoyageBtn}
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     if (loc === "astral-sea") {
@@ -2360,14 +2375,14 @@
         <button type="button" class="game-btn" data-travel="lighthouse-bearing">Follow Lighthouse pulse</button>
         ${dust}
         ${pool}
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-travel="hub">Return to hub</button>`;
     }
     if (loc === "memory-isle") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="lighthouse-bearing">Take bearing from the isle</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${restBtn}
+        ${companionBtn}`;
     }
     if (loc === "dust-lane") {
       const pool = state.questComplete
@@ -2376,25 +2391,25 @@
       return `${pool}
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
         <button type="button" class="game-btn" data-travel="mineral-shore"${state.objectives.pool ? "" : " disabled"} title="Need color pool first">Force Mineral (needs pool)</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "color-pool") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="mineral-shore">Step through toward Mineral</button>
         <button type="button" class="game-btn" data-travel="dust-lane">Sidestep into Dust Lane</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "mineral-shore") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Return via Lighthouse roads</button>
         <button type="button" class="game-btn" data-travel="color-pool">Back through the pool</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Ride bearing back to hub</button>
       <button type="button" class="game-btn" data-travel="astral-sea">Stay on the Astral Sea</button>
       <button type="button" class="game-btn" data-travel="dust-lane">Cut toward Dust Lane</button>
-      <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+      ${companionBtn}`;
   }
 
   function prefillFromCreation() {
@@ -2496,6 +2511,8 @@
     encounter = null;
     renderEncounter();
     render();
+    // Hub stays quiet — stop any astral bed left from the previous chapter.
+    AudioCues.syncMusicForLocation?.(state.location || "hub");
   }
 
   function exitPlay() {
@@ -2504,6 +2521,7 @@
     clearStageFlourishTimer();
     teardownEncounterStage();
     renderEncounter();
+    AudioCues.stopMusic?.(true);
     setPlayOpen(false);
   }
 
@@ -2557,6 +2575,8 @@
       open: beginPlay,
       castOff: castOffFromCreation,
       travelTo,
+      /** PAS-39 audio surface for combat-gates / tests. */
+      audio: () => window.PlanesboundAudio || AudioCues,
       counselContext: () => {
         const loc = LOCATIONS[state.location] || LOCATIONS.hub;
         const last = state.lastRoll;
@@ -2591,6 +2611,15 @@
     el("gameStartForm")?.addEventListener("submit", startCharacter);
     el("gameCancelStart")?.addEventListener("click", exitPlay);
     el("gameExit")?.addEventListener("click", exitPlay);
+    el("gameMuteAudio")?.addEventListener("click", () => {
+      AudioCues.toggleMute?.();
+      AudioCues.ui?.();
+      syncMuteButton();
+      if (!AudioCues.isMuted?.() && playOpen) {
+        AudioCues.syncMusicForLocation?.(state.location || "hub");
+      }
+    });
+    syncMuteButton();
     el("gameSceneActions")?.addEventListener("click", onSceneClick);
     el("gameSide")?.addEventListener("click", onSceneClick);
     el("gameContinueExplore")?.addEventListener("click", () => {

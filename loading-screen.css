@@ -1,0 +1,149 @@
+/* Planesbound PAS-31 — helical Astral Sea loading overlay */
+.pb-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: stretch;
+  background: #02010a;
+  color: #e8f0ff;
+  overflow: hidden;
+  transition: opacity 0.55s ease, visibility 0.55s ease;
+}
+.pb-loading[data-done="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.pb-loading canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pb-loading-chrome {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1rem, 3vw, 2rem);
+  pointer-events: none;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.pb-loading-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+.pb-loading-brand {
+  margin: 0;
+  font-family: Cinzel, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 3.2vw, 2.1rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f2e6c9;
+  text-shadow:
+    0 0 18px color-mix(in oklab, #c5a059 45%, transparent),
+    0 0 40px color-mix(in oklab, #7eb0c8 25%, transparent);
+}
+.pb-loading-tag {
+  margin: 0.35rem 0 0;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  letter-spacing: 0.06em;
+  color: #9ec4e8;
+  opacity: 0.92;
+}
+.pb-loading-status {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7dffb3;
+  text-align: right;
+}
+.pb-loading-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+}
+.pb-loading-readout {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #dce7f5;
+  background: color-mix(in oklab, #050816 72%, transparent);
+  border: 1px solid color-mix(in oklab, #9ec4e8 35%, transparent);
+  border-radius: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  box-shadow: 0 0 24px color-mix(in oklab, #3d6cff 18%, transparent);
+  backdrop-filter: blur(6px);
+  min-width: min(100%, 16rem);
+}
+.pb-loading-readout strong {
+  color: #7dffb3;
+  font-weight: 600;
+}
+.pb-loading-bar {
+  width: min(100%, 18rem);
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in oklab, #1a2038 80%, #000);
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, #9ec4e8 25%, transparent);
+}
+.pb-loading-bar > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3d6cff, #b06bff 45%, #ff8a3d);
+  box-shadow: 0 0 12px color-mix(in oklab, #7eb0c8 55%, transparent);
+  transition: width 0.12s linear;
+}
+.pb-loading-skip {
+  /* Hidden until data-show — no hover/focus reveal, no early clicks */
+  pointer-events: none;
+  appearance: none;
+  border: 1px solid color-mix(in oklab, #c5a059 55%, transparent);
+  background: color-mix(in oklab, #16120e 70%, transparent);
+  color: #e7dcc6;
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.pb-loading-skip[data-show="true"] {
+  pointer-events: auto;
+  opacity: 0.85;
+  visibility: visible;
+}
+.pb-loading-skip[data-show="true"]:hover,
+.pb-loading-skip[data-show="true"]:focus-visible {
+  opacity: 1;
+  outline: 2px solid #9ec4e8;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pb-loading {
+    transition: none;
+  }
+  .pb-loading-bar > i {
+    transition: none;
+  }
+}
