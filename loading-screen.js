@@ -126,18 +126,91 @@
     setTimeout(dismiss, reduced ? 120 : 420);
   }
 
+  function atlasLayers() {
+    return [document.querySelector(".app-shell"), document.getElementById("pageVeil")].filter(Boolean);
+  }
+
+  function setAtlasInert(on) {
+    atlasLayers().forEach((el) => {
+      if (on) el.setAttribute("inert", "");
+      else el.removeAttribute("inert");
+      el.setAttribute("aria-hidden", on ? "true" : "false");
+    });
+  }
+
+  function overlayFocusables() {
+    const nodes = [...root.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )];
+    // Dialog root is a intentional tab stop while Enter atlas is still disabled.
+    if (root.getAttribute("tabindex") === "-1") nodes.unshift(root);
+    return nodes.filter((el) => {
+      if (el === root) return true;
+      if (el.hasAttribute("disabled") || el.getAttribute("aria-hidden") === "true") return false;
+      return true;
+    });
+  }
+
+  function focusOverlay() {
+    if (!root.hasAttribute("tabindex")) root.setAttribute("tabindex", "-1");
+    try {
+      root.focus({ preventScroll: true });
+    } catch (_) {
+      try {
+        root.focus();
+      } catch (__) {
+        /* ignore */
+      }
+    }
+  }
+
+  function trapOverlayFocus(e) {
+    if (dismissed || e.key !== "Tab") return;
+    const list = overlayFocusables();
+    if (!list.length) {
+      e.preventDefault();
+      focusOverlay();
+      return;
+    }
+    const first = list[0];
+    const last = list[list.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey) {
+      if (active === first || !root.contains(active)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (active === last || !root.contains(active)) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
+    document.removeEventListener("keydown", trapOverlayFocus, true);
+    setAtlasInert(false);
     root.dataset.done = "true";
     root.setAttribute("aria-busy", "false");
+    root.removeAttribute("tabindex");
     if (animId) cancelAnimationFrame(animId);
     animId = 0;
     document.dispatchEvent(new CustomEvent("planesbound-loading-done"));
+    // Hand focus back into the atlas once the modal layer is gone.
+    const restore =
+      document.getElementById("openPlay") ||
+      document.getElementById("videoModeSelect") ||
+      document.querySelector(".app-shell button, .app-shell select, #pageMain");
     setTimeout(() => {
       try {
-        root.remove();
+        if (restore && typeof restore.focus === "function") restore.focus({ preventScroll: true });
       } catch (_) {
+        /* ignore */
+      }
+      try {
+        root.remove();
+      } catch (__) {
         /* ignore */
       }
     }, 700);
@@ -438,6 +511,14 @@
       skipBtn.dataset.show = "true";
       skipBtn.disabled = false;
       skipBtn.removeAttribute("aria-hidden");
+      // Prefer the now-enabled skip control for keyboard users.
+      if (document.activeElement === root || !root.contains(document.activeElement)) {
+        try {
+          skipBtn.focus({ preventScroll: true });
+        } catch (_) {
+          skipBtn.focus();
+        }
+      }
     }, SKIP_AFTER_MS);
   }
 
@@ -467,9 +548,24 @@
     isDone: () => dismissed,
   };
 
+  function armModalFocus() {
+    // Script may parse before .app-shell; re-assert inert once layers exist.
+    setAtlasInert(true);
+    root.setAttribute("tabindex", "-1");
+    document.addEventListener("keydown", trapOverlayFocus, true);
+    focusOverlay();
+  }
+
   resize();
   window.addEventListener("resize", resize);
   setStatus("Opening the Astral Sea…");
+  // Modal: park focus in the dialog and inert the atlas underneath so Tab
+  // cannot reach being pickers / Play / hotspots while the overlay covers them.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", armModalFocus, { once: true });
+  } else {
+    armModalFocus();
+  }
   watchAssets();
   animId = requestAnimationFrame(drawFrame);
 })();

@@ -1040,7 +1040,7 @@
   </style>
 </head>
 <body>
-  <div class="pb-loading" id="pbLoading" role="dialog" aria-modal="true" aria-busy="true" aria-labelledby="pbLoadingBrand" aria-describedby="pbLoadingStatus">
+  <div class="pb-loading" id="pbLoading" role="dialog" aria-modal="true" aria-busy="true" tabindex="-1" aria-labelledby="pbLoadingBrand" aria-describedby="pbLoadingStatus">
     <canvas id="pbLoadingCanvas" aria-hidden="true"></canvas>
     <div class="pb-loading-chrome">
       <div class="pb-loading-top">
@@ -1059,9 +1059,9 @@
       </div>
     </div>
   </div>
-  <script src="loading-screen.js?v=31b"></script>
-  <div class="veil" id="pageVeil"></div>
-  <div class="app-shell">
+  <script src="loading-screen.js?v=31c"></script>
+  <div class="veil" id="pageVeil" inert aria-hidden="true"></div>
+  <div class="app-shell" inert aria-hidden="true">
   <aside class="races-dock" id="racesDock" aria-label="Race and being pickers">
     <div class="races-dock-head">
       <p class="hud-kicker">Formation · HUD</p>
