@@ -122,6 +122,31 @@
 .game-field--picker.is-list-open {
   z-index: 8;
 }
+.game-being-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.game-being-row .game-being-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.game-start-avatar {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #c5a059;
+  background: #1a1510;
+  box-shadow: 0 4px 12px color-mix(in oklab, #000 30%, transparent);
+}
+.game-start-avatar--companion {
+  border-color: #9ec4e8;
+  box-shadow:
+    0 4px 12px color-mix(in oklab, #000 30%, transparent),
+    0 0 10px color-mix(in oklab, #7eb0c8 30%, transparent);
+}
 .game-being-toggle {
   appearance: none;
   width: 100%;

@@ -2232,8 +2232,17 @@
       hud.dataset.theme = loc.theme;
       const party = el("gameHudParty");
       if (party) {
-        const pArt = `art/races/${escapeHtml(state.playerBeingId || "human")}.png`;
-        const cArt = `art/races/${escapeHtml(state.companionBeingId || "human")}.png`;
+        const Beings = window.PlanesboundBeings;
+        const pId = state.playerBeingId || "human";
+        const cId = state.companionBeingId || "human";
+        const pTrad =
+          Beings?.all?.()?.find?.((b) => b.id === pId)?.tradition || "core";
+        const cTrad =
+          Beings?.all?.()?.find?.((b) => b.id === cId)?.tradition || "core";
+        const pArt = escapeHtml(Beings?.artSrc?.(pId) || `art/races/${pId}.png`);
+        const cArt = escapeHtml(Beings?.artSrc?.(cId) || `art/races/${cId}.png`);
+        const pFb = escapeHtml(Beings?.placeholderSrc?.(pTrad) || "art/races/_placeholder-core.png");
+        const cFb = escapeHtml(Beings?.placeholderSrc?.(cTrad) || "art/races/_placeholder-core.png");
         const hpPct = Math.max(0, Math.min(100, (state.hp / Math.max(1, state.hpMax)) * 100));
         const fatPct = Math.max(
           0,
@@ -2241,8 +2250,8 @@
         );
         party.innerHTML = `
           <div class="game-hud-portraits" aria-hidden="true">
-            <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" loading="lazy" decoding="async" onerror="this.src='art/races/human.png'" />
-            <img class="game-hud-portrait game-hud-portrait--companion" src="${cArt}" alt="" width="42" height="42" loading="lazy" decoding="async" onerror="this.src='art/races/human.png'" />
+            <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" loading="lazy" decoding="async" data-being="${escapeHtml(pId)}" onerror="this.onerror=null;this.src='${pFb}'" />
+            <img class="game-hud-portrait game-hud-portrait--companion" src="${cArt}" alt="" width="42" height="42" loading="lazy" decoding="async" data-being="${escapeHtml(cId)}" onerror="this.onerror=null;this.src='${cFb}'" />
           </div>
           <div class="game-hud-party-copy">
             <strong>${escapeHtml(state.playerName || "Traveler")}</strong>
