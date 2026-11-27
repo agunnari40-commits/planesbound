@@ -1,10 +1,11 @@
-/* Planesbound PAS-6/13/15/18/19/23/24/27/39 — voyage + live combat + Web Audio cues */
+/* Planesbound PAS-6/13/15/18/19/23/24/27/33/37/39 — voyage + gates + icons + Web Audio */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
   const SAVE_KEY_LEGACY = "planesbound-game-v1";
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
+  const Gates = () => window.PlanesboundCombatGates;
 
   /** PAS-39: shared Web Audio module (`audio.js`). Fallback keeps play silent-safe if script missing. */
   const AudioCues = window.PlanesboundAudio || {
@@ -156,6 +157,7 @@
   let activeTab = "status";
   let playOpen = false;
   let encounter = null;
+  let combatGateRaf = 0;
 
   /** Encounter 3D stage (skinned meshes + hitboxes). */
   let stage = null;
@@ -651,39 +653,209 @@
       dc: 14,
       dcSoft: 12,
       choices: [],
+      gates: Gates()?.createState?.() || null,
     };
+    lastAppliedIncomingKey = null;
     syncLiveChoices();
     renderEncounter();
+    ensureCombatGateLoop();
   }
 
-  function syncLiveChoices() {
+  function stopCombatGateLoop() {
+    if (combatGateRaf) {
+      cancelAnimationFrame(combatGateRaf);
+      combatGateRaf = 0;
+    }
+  }
+
+  /** Dedup key for last applied incoming gate result (avoids dropped/double apply). */
+  let lastAppliedIncomingKey = null;
+
+  function applyIncomingGateResult(result) {
+    if (!encounter?.live || !result) return;
+    if (result.blocked === "iframe") {
+      spawnCombatFloat("dodge", "miss");
+      AudioCues.miss();
+      stage?.showBeat?.("Roll i-frame — clean", 1000);
+      pushJournal("Coil strike passes through your roll (i-frame).");
+      companionSay("Feet — yes.");
+      return;
+    }
+    if (result.blocked === "parry") {
+      spawnCombatFloat("parry", "assist");
+      AudioCues.hit();
+      stage?.showBeat?.("Parry!", 1000);
+      pushJournal("Parry catches the coil mid-lash.");
+      companionSay("Window read.");
+      return;
+    }
+    if (result.hit) {
+      const dmg = result.damage || 2;
+      state.hp = Math.max(1, state.hp - dmg);
+      stage?.playFoeStrike?.();
+      spawnCombatFloat(`−${dmg}`, "hurt");
+      AudioCues.hurt();
+      stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
+      pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
+      companionSay("Hold the line — threat reset.");
+    }
+  }
+
+  /**
+   * Tick gates and apply any newly committed incoming result exactly once.
+   * Used by the rAF loop and by syncLiveChoices so a tick outside rAF cannot drop damage.
+   */
+  function flushGateTick(now) {
+    const CG = Gates();
+    if (!CG || !encounter?.live || !encounter.gates) return false;
+    CG.tick(encounter.gates, now);
+    const result = encounter.gates.lastResult;
+    if (!result || result.type !== "incoming" || !encounter.gates.attackResolved) return false;
+    const key = `${result.at}|${result.blocked}|${result.hit ? 1 : 0}|${result.damage || 0}`;
+    if (key === lastAppliedIncomingKey) return false;
+    lastAppliedIncomingKey = key;
+    applyIncomingGateResult(result);
+    save();
+    return true;
+  }
+
+  function ensureCombatGateLoop() {
+    if (combatGateRaf || !encounter?.live || !encounter.gates || !Gates()) return;
+    let lastChoiceSig = "";
+    const step = (now) => {
+      combatGateRaf = 0;
+      if (!encounter?.live || !encounter.gates) return;
+      const applied = flushGateTick(now);
+      if (applied) {
+        render();
+        lastChoiceSig = "";
+      }
+      // skipTick: rAF already flushed; avoid a second tick with a later now that could race.
+      syncLiveChoices({ skipTick: true });
+      const sig = (encounter.choices || [])
+        .map((c) => `${c.id}:${c.disabled ? 1 : 0}`)
+        .join("|");
+      // Rebuild actions only when id/disabled flip — not when Parry label toggles NOW.
+      if (sig !== lastChoiceSig) {
+        lastChoiceSig = sig;
+        renderEncounterChrome();
+      } else {
+        renderEncounterVitalsOnly();
+      }
+      combatGateRaf = requestAnimationFrame(step);
+    };
+    combatGateRaf = requestAnimationFrame(step);
+  }
+
+  function parryChoiceLabel(telegraph, parryOpen, sta, CG) {
+    const cost = sta != null && CG ? ` · ${CG.ACTIONS.parry.stamina} STA` : "";
+    if (parryOpen) return `Parry · NOW${cost}`;
+    if (telegraph) return `Parry · wait window${cost}`;
+    return `Parry · on telegraph${cost}`;
+  }
+
+  function renderEncounterVitalsOnly() {
+    const vitals = el("gameEncounterVitals");
+    if (!vitals || !encounter?.live) return;
+    const g = encounter.gates;
+    const staMax = g?.staminaMax || 100;
+    const staNow = g ? Math.round(g.stamina) : staMax;
+    const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+    const CG = Gates();
+    const now = performance.now();
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+    const rolling = !!(g && CG && CG.isRolling(g, now));
+    const staEl = vitals.querySelector(".game-vital--sta");
+    if (staEl) {
+      staEl.childNodes[0].textContent = `STA ${staNow}/${staMax}`;
+      const bar = staEl.querySelector("b");
+      if (bar) bar.style.width = `${staPct}%`;
+    }
+    vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+    let gate = vitals.querySelector(".game-vital--gate");
+    if (telegraph || rolling) {
+      if (!gate) {
+        gate = document.createElement("span");
+        gate.className = "game-vital game-vital--gate";
+        vitals.appendChild(gate);
+      }
+      gate.classList.toggle("game-vital--parry-open", parryOpen);
+      gate.classList.toggle("game-vital--rolling", rolling && !telegraph);
+      gate.textContent = telegraph ? (parryOpen ? "PARRY NOW" : "TELEGRAPH") : "ROLL i-frame";
+    } else if (gate) {
+      gate.remove();
+    }
+    const parryBtn = el("gameEncounterActions")?.querySelector('[data-encounter-choice="parry"]');
+    if (parryBtn) {
+      parryBtn.classList.toggle("game-btn--parry-now", parryOpen);
+      // Update label in place so focus / in-flight click is not destroyed at window open.
+      const choice = encounter.choices?.find((c) => c.id === "parry");
+      const label = parryChoiceLabel(telegraph, parryOpen, staNow, CG);
+      if (choice) choice.label = label;
+      // Prefer label span so PAS-37 icons are not wiped by in-place parry updates.
+      const labelEl = parryBtn.querySelector(".game-btn-label");
+      if (labelEl) {
+        if (labelEl.textContent !== label) labelEl.textContent = label;
+      } else if (parryBtn.textContent !== label) {
+        parryBtn.textContent = label;
+      }
+    }
+  }
+
+  function syncLiveChoices(opts = {}) {
     if (!encounter?.live) return;
     const needTarget = !encounter.targeted;
     const busy = !!encounter.resolving;
     const companionLabel = beingName(state.companionBeingId, "Companion");
+    const CG = Gates();
+    const g = encounter.gates;
+    const now = performance.now();
+    // Tick + apply here unless the rAF step already flushed this frame.
+    if (!opts.skipTick && g && CG) {
+      if (flushGateTick(now)) render();
+    }
+    const sta = g ? Math.round(g.stamina) : null;
+    const winded = (action) => (g && CG ? !CG.canAfford(g, action) : false);
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
     encounter.choices = [
       {
         id: "strike",
-        label: needTarget ? "Strike (target foe first)" : `Strike · Athletics vs DC ${encounter.dc}`,
-        disabled: needTarget || busy,
+        label: needTarget
+          ? "Strike (target foe first)"
+          : `Strike · Athletics vs DC ${encounter.dc}${sta != null ? ` · ${CG.ACTIONS.strike.stamina} STA` : ""}`,
+        disabled: needTarget || busy || winded("strike") || telegraph,
         kind: "strike",
       },
       {
         id: "soft",
-        label: `Soft word · Insight vs DC ${encounter.dcSoft}`,
-        disabled: busy,
+        label: `Soft word · Insight vs DC ${encounter.dcSoft}${sta != null ? ` · ${CG.ACTIONS.soft.stamina} STA` : ""}`,
+        disabled: busy || winded("soft") || telegraph,
         kind: "soft",
       },
       {
         id: "assist",
-        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist`,
-        disabled: busy || encounter.assistUsed || needTarget,
+        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist${sta != null ? ` · ${CG.ACTIONS.assist.stamina} STA` : ""}`,
+        disabled: busy || encounter.assistUsed || needTarget || winded("assist") || telegraph,
         kind: "assist",
+      },
+      {
+        id: "roll",
+        label: `Roll · i-frames${sta != null ? ` · ${CG.ACTIONS.roll.stamina} STA` : ""}`,
+        disabled: busy || winded("roll") || !!(g && CG?.isRolling(g, now)),
+        kind: "roll",
+      },
+      {
+        id: "parry",
+        label: parryChoiceLabel(telegraph, parryOpen, sta, CG),
+        disabled: busy || winded("parry") || !telegraph,
+        kind: "parry",
       },
       {
         id: "slip",
         label: "Slip past (take 2 damage)",
-        disabled: busy,
+        disabled: busy || telegraph,
         kind: "slip",
       },
     ];
@@ -700,6 +872,7 @@
   /** Esc cancel: close modal with no HP/fatigue/checked side effects. */
   function dismissEncounter() {
     if (!encounter) return;
+    stopCombatGateLoop();
     encounter = null;
     teardownEncounterStage();
     renderEncounter();
@@ -720,6 +893,7 @@
   }
 
   function teardownEncounterStage() {
+    stopCombatGateLoop();
     clearStageFlourishTimer();
     stageBootGen += 1; // invalidate any in-flight boot
     if (stage) {
@@ -1185,6 +1359,7 @@
   }
 
   function finishEncounter(flourishWon) {
+    stopCombatGateLoop();
     const hadStage = !!stage;
     if (hadStage && stage) {
       stage.flourishing = true;
@@ -1218,9 +1393,22 @@
 
   function foeCounterattack() {
     if (!encounter?.live) return;
-    const dmg = 2 + (encounter.threat >= encounter.threatMax ? 1 : 0);
-    state.hp = Math.max(1, state.hp - dmg);
     encounter.threat = 0;
+    const CG = Gates();
+    if (CG && encounter.gates) {
+      encounter.gates.opts.foeDamage = state.hp <= state.hpMax / 2 ? 3 : 2;
+      CG.beginFoeAttack(encounter.gates, performance.now());
+      AudioCues.target();
+      stage?.showBeat?.("Coil telegraphs — Roll or Parry!", 1100);
+      pushJournal("Threat breaks into a telegraph — roll i-frames or parry the window.");
+      companionSay("Window incoming.");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+    const dmg = 2;
+    state.hp = Math.max(1, state.hp - dmg);
     stage?.playFoeStrike?.();
     spawnCombatFloat(`−${dmg}`, "hurt");
     AudioCues.hurt();
@@ -1229,8 +1417,80 @@
     companionSay("Hold the line — threat reset.");
   }
 
+  function gateSpendOrBail(actionId) {
+    const CG = Gates();
+    if (!CG || !encounter?.gates) return true;
+    const spent = CG.spend(encounter.gates, actionId);
+    if (!spent.ok) {
+      companionSay("Winded — recover stamina.");
+      stage?.showBeat?.("Not enough stamina", 900);
+      AudioCues.miss();
+      encounter.resolving = false;
+      syncLiveChoices();
+      renderEncounterChrome();
+      return false;
+    }
+    return true;
+  }
+
   function resolveLiveCombat(choiceId) {
     if (!encounter?.live || encounter.resolving) return;
+    const CG = Gates();
+    const now = performance.now();
+
+    if (choiceId === "roll") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.startRoll(encounter.gates, now);
+      if (!r.ok) {
+        companionSay("Winded — cannot roll.");
+        stage?.showBeat?.("Stamina low", 800);
+        AudioCues.miss();
+        return;
+      }
+      spawnCombatFloat("roll", "miss");
+      AudioCues.soft();
+      stage?.showBeat?.("Rolling — i-frames", 900);
+      pushJournal("You roll through the Astral grit (i-frame window open).");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
+    if (choiceId === "parry") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.tryParry(encounter.gates, now);
+      if (r.reason === "no_stamina") {
+        companionSay("Arms heavy — no stamina to parry.");
+        AudioCues.miss();
+        return;
+      }
+      if (r.reason === "no_attack") {
+        stage?.showBeat?.("No telegraph", 700);
+        return;
+      }
+      if (r.ok) {
+        spawnCombatFloat("parry", "assist");
+        AudioCues.parry?.();
+        stage?.showBeat?.("Parry!", 1000);
+        pushJournal("Parry window caught — coil denied.");
+        companionSay("Perfect timing.");
+      } else if (r.reason === "early") {
+        spawnCombatFloat("early", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry early", 800);
+        pushJournal("Parry too early — stamina spent, coil still coming.");
+      } else if (r.reason === "late") {
+        spawnCombatFloat("late", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry late", 800);
+        pushJournal("Parry too late — stamina spent.");
+      }
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
     if (choiceId === "slip") {
       encounter.resolving = true;
       state.poolChecked = true;
@@ -1263,6 +1523,7 @@
         renderEncounterChrome();
         return;
       }
+      if (!gateSpendOrBail("assist")) return;
       encounter.assistUsed = true;
       const bonus = combatEquipBonus();
       const dmg = 3 + bonus.dmg;
@@ -1301,6 +1562,7 @@
     }
 
     if (choiceId === "soft") {
+      if (!gateSpendOrBail("soft")) return;
       const roll = rollD20();
       const mod = skillMod("Insight");
       const total = roll + mod;
@@ -1353,6 +1615,7 @@
     }
 
     // strike
+    if (!gateSpendOrBail("strike")) return;
     const roll = rollD20();
     const mod = skillMod("Athletics");
     const total = roll + mod;
@@ -1753,8 +2016,11 @@
     if (title) title.textContent = encounter.title;
     if (body) {
       const eq = combatEquipBonus();
+      const CG = Gates();
+      const g = encounter.gates;
+      const gateHud = g && CG ? ` · ${CG.describeHud(g, performance.now())}` : "";
       const liveHint = encounter.live
-        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}.`
+        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}${gateHud}.`
         : "";
       body.textContent = encounter.body + liveHint;
     }
@@ -1770,16 +2036,32 @@
           0,
           Math.min(100, (encounter.threat / Math.max(1, encounter.threatMax)) * 100)
         );
+        const g = encounter.gates;
+        const staMax = g?.staminaMax || 100;
+        const staNow = g ? Math.round(g.stamina) : staMax;
+        const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+        const CG = Gates();
+        const now = performance.now();
+        const telegraph = !!(g && g.attackActive && !g.attackResolved);
+        const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+        const rolling = !!(g && CG && CG.isRolling(g, now));
         const threatHot = encounter.threat >= Math.max(1, encounter.threatMax - 1);
         const last = state.lastRoll;
         const rollChip = last
           ? `<span class="game-vital game-vital--roll">${escapeHtml(last.skill)} ${last.total}/${last.dc} · ${last.ok ? "ok" : "miss"}</span>`
           : "";
+        const gateChip = telegraph
+          ? `<span class="game-vital game-vital--gate${parryOpen ? " game-vital--parry-open" : ""}">${parryOpen ? "PARRY NOW" : "TELEGRAPH"}</span>`
+          : rolling
+            ? `<span class="game-vital game-vital--gate game-vital--rolling">ROLL i-frame</span>`
+            : "";
         vitals.dataset.threatHot = threatHot ? "true" : "false";
-        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${rollChip}`;
+        vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--sta">STA ${staNow}/${staMax}<i><b style="width:${staPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${gateChip}${rollChip}`;
       } else {
         vitals.hidden = true;
         delete vitals.dataset.threatHot;
+        delete vitals.dataset.parryOpen;
       }
     }
     if (actions) {
@@ -1794,11 +2076,12 @@
             c.id === "insight" ||
             c.id === "assist";
           const kind = c.kind || c.id;
+          const urgent = c.id === "parry" && vitals?.dataset?.parryOpen === "true";
           const icon = actionIconSrc(kind) || actionIconSrc(c.id);
           const iconHtml = icon
             ? `<img class="game-btn-icon" src="${escapeAttr(icon)}" alt="" width="22" height="22" decoding="async" aria-hidden="true" />`
             : "";
-          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
+          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}${urgent ? " game-btn--parry-now" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
         })
         .join("");
     }
