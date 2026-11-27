@@ -1,10 +1,44 @@
-/* Planesbound PAS-6/13/15/18/19/23/24 — voyage + live combat + video mode + art/AAA polish */
+/* Planesbound PAS-6/13/15/18/19/23/24/27/33/37/39 — voyage + gates + icons + Web Audio */
 (function () {
   const SAVE_KEY = "planesbound-game-v3";
   const SAVE_KEY_V2 = "planesbound-game-v2";
   const SAVE_KEY_LEGACY = "planesbound-game-v1";
   const PLAYER_KEY = "planesbound-player-being-v1";
   const COMPANION_KEY = "planesbound-companion-being-v1";
+  const Gates = () => window.PlanesboundCombatGates;
+
+  /** PAS-39: shared Web Audio module (`audio.js`). Fallback keeps play silent-safe if script missing. */
+  const AudioCues = window.PlanesboundAudio || {
+    hit() {},
+    crit() {},
+    miss() {},
+    hurt() {},
+    soft() {},
+    kill() {},
+    parry() {},
+    roll() {},
+    travel() {},
+    target() {},
+    quest() {},
+    ui() {},
+    isMuted: () => false,
+    toggleMute: () => false,
+    syncMusicForLocation() {},
+    stopMusic() {},
+    ensure() {},
+  };
+
+  function syncMuteButton() {
+    const btn = el("gameMuteAudio");
+    if (!btn || !AudioCues.isMuted) return;
+    const on = !!AudioCues.isMuted();
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Sound · Off" : "Sound · On";
+    btn.title = on ? "Unmute combat cues and music bed" : "Mute all game audio";
+  }
+
+  let travelToastTimer = 0;
+  let combatFloatSeq = 0;
 
   const LOCATIONS = {
     hub: {
@@ -123,6 +157,7 @@
   let activeTab = "status";
   let playOpen = false;
   let encounter = null;
+  let combatGateRaf = 0;
 
   /** Encounter 3D stage (skinned meshes + hitboxes). */
   let stage = null;
@@ -316,6 +351,66 @@
     pushJournal(`Companion: ${line}`);
   }
 
+  function nextObjectiveHint() {
+    if (state.chapterComplete) return "Explore or begin a new voyage";
+    if (!state.objectives.embark) return "Cast off into the Astral Sea";
+    if (!state.objectives.discover) return "Seek a memory isle";
+    if (!state.objectives.bearing) return "Lock a Lighthouse bearing";
+    if (!state.objectives.pool) return "Touch a color pool";
+    if (!state.objectives.shore) return "Make Mineral landfall";
+    return "Chapter ready to close";
+  }
+
+  function spawnCombatFloat(text, kind) {
+    const host = el("gameCombatFloats") || el("gameSceneViewport") || el("gameScene");
+    if (!host || !text) return;
+    const node = document.createElement("span");
+    const k = kind || "hit";
+    node.className = `game-combat-float game-combat-float--${k}`;
+    node.textContent = text;
+    const seq = ++combatFloatSeq;
+    const x = 52 + ((seq * 13) % 28) - 14;
+    const y = 38 + ((seq * 9) % 18) - 6;
+    node.style.left = `${x}%`;
+    node.style.top = `${y}%`;
+    host.appendChild(node);
+    setTimeout(() => node.remove(), 980);
+  }
+
+  function showTravelToast(title, hint) {
+    let toast = el("gameTravelToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "gameTravelToast";
+      toast.className = "game-travel-toast";
+      toast.setAttribute("aria-live", "polite");
+      toast.dataset.open = "false";
+      el("gameScene")?.appendChild(toast);
+    }
+    toast.innerHTML = `<strong>${escapeHtml(title)}</strong>${
+      hint ? `<span>${escapeHtml(hint)}</span>` : ""
+    }`;
+    toast.dataset.open = "true";
+    if (travelToastTimer) clearTimeout(travelToastTimer);
+    travelToastTimer = setTimeout(() => {
+      toast.dataset.open = "false";
+      travelToastTimer = 0;
+    }, 1700);
+  }
+
+  function pulseSceneTravel() {
+    const scene = el("gameScene");
+    if (!scene) return;
+    scene.dataset.travel = "pulse";
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      delete scene.dataset.travel;
+      return;
+    }
+    setTimeout(() => {
+      if (scene.dataset.travel === "pulse") delete scene.dataset.travel;
+    }, 480);
+  }
+
   function hasItem(id) {
     return state.inventory.some((i) => i.id === id);
   }
@@ -411,6 +506,7 @@
       q2.objectives.find((o) => o.id === id)?.label ||
       id;
     pushJournal(`Objective complete: ${label}`);
+    AudioCues.quest();
 
     if (!state.questComplete && q1.objectives.every((o) => state.objectives[o.id])) {
       state.questComplete = true;
@@ -557,35 +653,210 @@
       dc: 14,
       dcSoft: 12,
       choices: [],
+      gates: Gates()?.createState?.() || null,
     };
+    lastAppliedIncomingKey = null;
     syncLiveChoices();
     renderEncounter();
+    ensureCombatGateLoop();
   }
 
-  function syncLiveChoices() {
+  function stopCombatGateLoop() {
+    if (combatGateRaf) {
+      cancelAnimationFrame(combatGateRaf);
+      combatGateRaf = 0;
+    }
+  }
+
+  /** Dedup key for last applied incoming gate result (avoids dropped/double apply). */
+  let lastAppliedIncomingKey = null;
+
+  function applyIncomingGateResult(result) {
+    if (!encounter?.live || !result) return;
+    if (result.blocked === "iframe") {
+      spawnCombatFloat("dodge", "miss");
+      AudioCues.miss();
+      stage?.showBeat?.("Roll i-frame — clean", 1000);
+      pushJournal("Coil strike passes through your roll (i-frame).");
+      companionSay("Feet — yes.");
+      return;
+    }
+    if (result.blocked === "parry") {
+      spawnCombatFloat("parry", "assist");
+      AudioCues.hit();
+      stage?.showBeat?.("Parry!", 1000);
+      pushJournal("Parry catches the coil mid-lash.");
+      companionSay("Window read.");
+      return;
+    }
+    if (result.hit) {
+      const dmg = result.damage || 2;
+      state.hp = Math.max(1, state.hp - dmg);
+      stage?.playFoeStrike?.();
+      spawnCombatFloat(`−${dmg}`, "hurt");
+      AudioCues.hurt();
+      stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
+      pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
+      companionSay("Hold the line — threat reset.");
+    }
+  }
+
+  /**
+   * Tick gates and apply any newly committed incoming result exactly once.
+   * Used by the rAF loop and by syncLiveChoices so a tick outside rAF cannot drop damage.
+   */
+  function flushGateTick(now) {
+    const CG = Gates();
+    if (!CG || !encounter?.live || !encounter.gates) return false;
+    CG.tick(encounter.gates, now);
+    const result = encounter.gates.lastResult;
+    if (!result || result.type !== "incoming" || !encounter.gates.attackResolved) return false;
+    const key = `${result.at}|${result.blocked}|${result.hit ? 1 : 0}|${result.damage || 0}`;
+    if (key === lastAppliedIncomingKey) return false;
+    lastAppliedIncomingKey = key;
+    applyIncomingGateResult(result);
+    save();
+    return true;
+  }
+
+  function ensureCombatGateLoop() {
+    if (combatGateRaf || !encounter?.live || !encounter.gates || !Gates()) return;
+    let lastChoiceSig = "";
+    const step = (now) => {
+      combatGateRaf = 0;
+      if (!encounter?.live || !encounter.gates) return;
+      const applied = flushGateTick(now);
+      if (applied) {
+        render();
+        lastChoiceSig = "";
+      }
+      // skipTick: rAF already flushed; avoid a second tick with a later now that could race.
+      syncLiveChoices({ skipTick: true });
+      const sig = (encounter.choices || [])
+        .map((c) => `${c.id}:${c.disabled ? 1 : 0}`)
+        .join("|");
+      // Rebuild actions only when id/disabled flip — not when Parry label toggles NOW.
+      if (sig !== lastChoiceSig) {
+        lastChoiceSig = sig;
+        renderEncounterChrome();
+      } else {
+        renderEncounterVitalsOnly();
+      }
+      combatGateRaf = requestAnimationFrame(step);
+    };
+    combatGateRaf = requestAnimationFrame(step);
+  }
+
+  function parryChoiceLabel(telegraph, parryOpen, sta, CG) {
+    const cost = sta != null && CG ? ` · ${CG.ACTIONS.parry.stamina} STA` : "";
+    if (parryOpen) return `Parry · NOW${cost}`;
+    if (telegraph) return `Parry · wait window${cost}`;
+    return `Parry · on telegraph${cost}`;
+  }
+
+  function renderEncounterVitalsOnly() {
+    const vitals = el("gameEncounterVitals");
+    if (!vitals || !encounter?.live) return;
+    const g = encounter.gates;
+    const staMax = g?.staminaMax || 100;
+    const staNow = g ? Math.round(g.stamina) : staMax;
+    const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+    const CG = Gates();
+    const now = performance.now();
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+    const rolling = !!(g && CG && CG.isRolling(g, now));
+    const staEl = vitals.querySelector(".game-vital--sta");
+    if (staEl) {
+      staEl.childNodes[0].textContent = `STA ${staNow}/${staMax}`;
+      const bar = staEl.querySelector("b");
+      if (bar) bar.style.width = `${staPct}%`;
+    }
+    vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+    let gate = vitals.querySelector(".game-vital--gate");
+    if (telegraph || rolling) {
+      if (!gate) {
+        gate = document.createElement("span");
+        gate.className = "game-vital game-vital--gate";
+        vitals.appendChild(gate);
+      }
+      gate.classList.toggle("game-vital--parry-open", parryOpen);
+      gate.classList.toggle("game-vital--rolling", rolling && !telegraph);
+      gate.textContent = telegraph ? (parryOpen ? "PARRY NOW" : "TELEGRAPH") : "ROLL i-frame";
+    } else if (gate) {
+      gate.remove();
+    }
+    const parryBtn = el("gameEncounterActions")?.querySelector('[data-encounter-choice="parry"]');
+    if (parryBtn) {
+      parryBtn.classList.toggle("game-btn--parry-now", parryOpen);
+      // Update label in place so focus / in-flight click is not destroyed at window open.
+      const choice = encounter.choices?.find((c) => c.id === "parry");
+      const label = parryChoiceLabel(telegraph, parryOpen, staNow, CG);
+      if (choice) choice.label = label;
+      // Prefer label span so PAS-37 icons are not wiped by in-place parry updates.
+      const labelEl = parryBtn.querySelector(".game-btn-label");
+      if (labelEl) {
+        if (labelEl.textContent !== label) labelEl.textContent = label;
+      } else if (parryBtn.textContent !== label) {
+        parryBtn.textContent = label;
+      }
+    }
+  }
+
+  function syncLiveChoices(opts = {}) {
     if (!encounter?.live) return;
     const needTarget = !encounter.targeted;
     const busy = !!encounter.resolving;
+    const companionLabel = beingName(state.companionBeingId, "Companion");
+    const CG = Gates();
+    const g = encounter.gates;
+    const now = performance.now();
+    // Tick + apply here unless the rAF step already flushed this frame.
+    if (!opts.skipTick && g && CG) {
+      if (flushGateTick(now)) render();
+    }
+    const sta = g ? Math.round(g.stamina) : null;
+    const winded = (action) => (g && CG ? !CG.canAfford(g, action) : false);
+    const telegraph = !!(g && g.attackActive && !g.attackResolved);
+    const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
     encounter.choices = [
       {
         id: "strike",
-        label: needTarget ? "Strike (target foe first)" : `Strike · Athletics vs DC ${encounter.dc}`,
-        disabled: needTarget || busy,
+        label: needTarget
+          ? "Strike (target foe first)"
+          : `Strike · Athletics vs DC ${encounter.dc}${sta != null ? ` · ${CG.ACTIONS.strike.stamina} STA` : ""}`,
+        disabled: needTarget || busy || winded("strike") || telegraph,
+        kind: "strike",
       },
       {
         id: "soft",
-        label: `Soft word · Insight vs DC ${encounter.dcSoft}`,
-        disabled: busy,
+        label: `Soft word · Insight vs DC ${encounter.dcSoft}${sta != null ? ` · ${CG.ACTIONS.soft.stamina} STA` : ""}`,
+        disabled: busy || winded("soft") || telegraph,
+        kind: "soft",
       },
       {
         id: "assist",
-        label: encounter.assistUsed ? "Companion spent" : "Companion assist",
-        disabled: busy || encounter.assistUsed || needTarget,
+        label: encounter.assistUsed ? `${companionLabel} spent` : `${companionLabel} assist${sta != null ? ` · ${CG.ACTIONS.assist.stamina} STA` : ""}`,
+        disabled: busy || encounter.assistUsed || needTarget || winded("assist") || telegraph,
+        kind: "assist",
+      },
+      {
+        id: "roll",
+        label: `Roll · i-frames${sta != null ? ` · ${CG.ACTIONS.roll.stamina} STA` : ""}`,
+        disabled: busy || winded("roll") || !!(g && CG?.isRolling(g, now)),
+        kind: "roll",
+      },
+      {
+        id: "parry",
+        label: parryChoiceLabel(telegraph, parryOpen, sta, CG),
+        disabled: busy || winded("parry") || !telegraph,
+        kind: "parry",
       },
       {
         id: "slip",
         label: "Slip past (take 2 damage)",
-        disabled: busy,
+        disabled: busy || telegraph,
+        kind: "slip",
       },
     ];
   }
@@ -601,6 +872,7 @@
   /** Esc cancel: close modal with no HP/fatigue/checked side effects. */
   function dismissEncounter() {
     if (!encounter) return;
+    stopCombatGateLoop();
     encounter = null;
     teardownEncounterStage();
     renderEncounter();
@@ -621,6 +893,7 @@
   }
 
   function teardownEncounterStage() {
+    stopCombatGateLoop();
     clearStageFlourishTimer();
     stageBootGen += 1; // invalidate any in-flight boot
     if (stage) {
@@ -640,6 +913,9 @@
     if (sceneEl) sceneEl.removeAttribute("data-stage");
     const tgt = el("gameSceneTarget");
     if (tgt) tgt.hidden = true;
+    const floats = el("gameCombatFloats");
+    if (floats) floats.replaceChildren();
+    if (vp) delete vp.dataset.flash;
   }
 
   async function bootEncounterStage(enc) {
@@ -742,14 +1018,24 @@
       camera.position.set(0, 1.9, 5.6);
       camera.lookAt(0, 1.15, 0);
 
-      scene.add(new T.HemisphereLight(0xc4d0ff, 0x1a1208, 0.72));
-      const key = new T.DirectionalLight(0xfff6ea, 1.1);
+      const poolBeat = enc?.kind === "pool-skirmish";
+      scene.add(new T.HemisphereLight(poolBeat ? 0xd4e8ff : 0xc4d0ff, 0x1a1208, poolBeat ? 0.82 : 0.72));
+      const key = new T.DirectionalLight(0xfff6ea, poolBeat ? 1.25 : 1.1);
       key.position.set(4, 8, 5);
       key.castShadow = !!vMode?.shadows;
       scene.add(key);
-      const fill = new T.DirectionalLight(0x7eb0c8, 0.38);
+      const fill = new T.DirectionalLight(poolBeat ? 0x9ad0e8 : 0x7eb0c8, poolBeat ? 0.52 : 0.38);
       fill.position.set(-5, 3, -2);
       scene.add(fill);
+      // PAS-34: prismatic rim light for Color Pool guardian beat (dream-loop chase)
+      if (poolBeat) {
+        const rim = new T.PointLight(0xc8a0ff, 0.55, 14, 2);
+        rim.position.set(-1.2, 2.4, 1.5);
+        scene.add(rim);
+        const poolGlow = new T.PointLight(0x70d0ff, 0.7, 16, 2);
+        poolGlow.position.set(1.4, 1.1, 0.4);
+        scene.add(poolGlow);
+      }
 
       const floor = new T.Mesh(
         new T.CircleGeometry(3.6, 48),
@@ -937,6 +1223,7 @@
             renderEncounterChrome();
           }
           setTargetHud(hit);
+          AudioCues.target();
           if (!reduced) {
             companionActor.play("idle");
             playerActor.play("attack", { once: true });
@@ -944,6 +1231,7 @@
           companionSay("Marked. I am with you.");
         } else if (hit && hit.role === "companion") {
           companionSay(LOCATIONS[state.location]?.companion || "Ready when you are.");
+          AudioCues.soft();
           if (!reduced) companionActor.play("attack", { once: true });
         } else {
           clearSel();
@@ -1018,13 +1306,13 @@
             beat.textContent = text;
           }
         },
-        playStrike({ hit, kill, assist }) {
+        playStrike({ hit, kill, assist, crit }) {
           if (reduced) return;
           playerActor.play("attack", { once: true });
           if (assist) companionActor.play("attack", { once: true });
           if (kill) foeActor.play("death", { once: true });
           else if (hit) foeActor.play("hit", { once: true });
-          flashStage(hit ? "hit" : "miss");
+          flashStage(hit ? (crit ? "crit" : "hit") : "miss");
         },
         playFoeStrike() {
           if (reduced) return;
@@ -1081,6 +1369,7 @@
   }
 
   function finishEncounter(flourishWon) {
+    stopCombatGateLoop();
     const hadStage = !!stage;
     if (hadStage && stage) {
       stage.flourishing = true;
@@ -1114,21 +1403,111 @@
 
   function foeCounterattack() {
     if (!encounter?.live) return;
-    const dmg = 2 + (encounter.threat >= encounter.threatMax ? 1 : 0);
-    state.hp = Math.max(1, state.hp - dmg);
     encounter.threat = 0;
+    const CG = Gates();
+    if (CG && encounter.gates) {
+      encounter.gates.opts.foeDamage = state.hp <= state.hpMax / 2 ? 3 : 2;
+      CG.beginFoeAttack(encounter.gates, performance.now());
+      AudioCues.target();
+      stage?.showBeat?.("Coil telegraphs — Roll or Parry!", 1100);
+      pushJournal("Threat breaks into a telegraph — roll i-frames or parry the window.");
+      companionSay("Window incoming.");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+    const dmg = 2;
+    state.hp = Math.max(1, state.hp - dmg);
     stage?.playFoeStrike?.();
+    spawnCombatFloat(`−${dmg}`, "hurt");
+    AudioCues.hurt();
     stage?.showBeat?.(`Coil strikes — −${dmg} HP`, 1200);
     pushJournal(`Threat breaks: coil lashes for ${dmg} HP (${state.hp}/${state.hpMax}).`);
     companionSay("Hold the line — threat reset.");
   }
 
+  function gateSpendOrBail(actionId) {
+    const CG = Gates();
+    if (!CG || !encounter?.gates) return true;
+    const spent = CG.spend(encounter.gates, actionId);
+    if (!spent.ok) {
+      companionSay("Winded — recover stamina.");
+      stage?.showBeat?.("Not enough stamina", 900);
+      AudioCues.miss();
+      encounter.resolving = false;
+      syncLiveChoices();
+      renderEncounterChrome();
+      return false;
+    }
+    return true;
+  }
+
   function resolveLiveCombat(choiceId) {
     if (!encounter?.live || encounter.resolving) return;
+    const CG = Gates();
+    const now = performance.now();
+
+    if (choiceId === "roll") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.startRoll(encounter.gates, now);
+      if (!r.ok) {
+        companionSay("Winded — cannot roll.");
+        stage?.showBeat?.("Stamina low", 800);
+        AudioCues.miss();
+        return;
+      }
+      spawnCombatFloat("roll", "miss");
+      AudioCues.soft();
+      stage?.showBeat?.("Rolling — i-frames", 900);
+      pushJournal("You roll through the Astral grit (i-frame window open).");
+      ensureCombatGateLoop();
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
+    if (choiceId === "parry") {
+      if (!CG || !encounter.gates) return;
+      const r = CG.tryParry(encounter.gates, now);
+      if (r.reason === "no_stamina") {
+        companionSay("Arms heavy — no stamina to parry.");
+        AudioCues.miss();
+        return;
+      }
+      if (r.reason === "no_attack") {
+        stage?.showBeat?.("No telegraph", 700);
+        return;
+      }
+      if (r.ok) {
+        spawnCombatFloat("parry", "assist");
+        AudioCues.parry?.();
+        stage?.showBeat?.("Parry!", 1000);
+        pushJournal("Parry window caught — coil denied.");
+        companionSay("Perfect timing.");
+      } else if (r.reason === "early") {
+        spawnCombatFloat("early", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry early", 800);
+        pushJournal("Parry too early — stamina spent, coil still coming.");
+      } else if (r.reason === "late") {
+        spawnCombatFloat("late", "miss");
+        AudioCues.miss();
+        stage?.showBeat?.("Parry late", 800);
+        pushJournal("Parry too late — stamina spent.");
+      }
+      syncLiveChoices();
+      renderEncounterChrome();
+      return;
+    }
+
     if (choiceId === "slip") {
       encounter.resolving = true;
       state.poolChecked = true;
       state.hp = Math.max(1, state.hp - 2);
+      spawnCombatFloat("−2", "hurt");
+      AudioCues.roll?.();
+      AudioCues.hurt();
       pushJournal(`Skirmish: slip past — take 2 damage (${state.hp}/${state.hpMax}).`);
       companionSay("Discretion. The Mineral grit still waits.");
       recordRoll("Athletics", 0, 0, encounter.dc, false);
@@ -1139,6 +1518,7 @@
     if (choiceId === "strike" && !encounter.targeted) {
       companionSay("Mark the coil first — click its hitbox.");
       stage?.showBeat?.("Target the foe", 900);
+      AudioCues.target();
       return;
     }
 
@@ -1153,16 +1533,23 @@
         renderEncounterChrome();
         return;
       }
+      if (!gateSpendOrBail("assist")) return;
       encounter.assistUsed = true;
       const bonus = combatEquipBonus();
       const dmg = 3 + bonus.dmg;
       encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
-      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: true });
-      stage?.showBeat?.(`Companion assist −${dmg}`, 1100);
+      const kill = encounter.foeHp <= 0;
+      stage?.playStrike?.({ hit: true, kill, assist: true });
+      spawnCombatFloat(`−${dmg}`, kill ? "kill" : "assist");
+      if (kill) AudioCues.kill();
+      else AudioCues.hit();
+      stage?.showBeat?.(`${beingName(state.companionBeingId, "Companion")} assist −${dmg}`, 1100);
       stage?.refreshFoeHud?.();
-      pushJournal(`Companion assist deals ${dmg} to the coil (${encounter.foeHp}/${encounter.foeHpMax}).`);
+      pushJournal(
+        `${beingName(state.companionBeingId, "Companion")} assist deals ${dmg} to the coil (${encounter.foeHp}/${encounter.foeHpMax}).`
+      );
       companionSay("Arrow of thought — yours.");
-      if (encounter.foeHp <= 0) {
+      if (kill) {
         state.poolChecked = true;
         addItem({
           id: "prism-scale",
@@ -1185,6 +1572,7 @@
     }
 
     if (choiceId === "soft") {
+      if (!gateSpendOrBail("soft")) return;
       const roll = rollD20();
       const mod = skillMod("Insight");
       const total = roll + mod;
@@ -1194,7 +1582,11 @@
         encounter.threat = Math.max(0, encounter.threat - 2);
         const softDmg = 2 + (state.equipped === "clear-shard" ? 2 : 0);
         encounter.foeHp = Math.max(0, encounter.foeHp - softDmg);
+        const kill = encounter.foeHp <= 0;
         stage?.playSoft?.();
+        spawnCombatFloat(`−${softDmg}`, kill ? "kill" : "soft");
+        if (kill) AudioCues.kill();
+        else AudioCues.soft();
         stage?.showBeat?.(`Soft word −${softDmg} · threat eases`, 1200);
         pushJournal(
           `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — coil loosens (−${softDmg} HP, threat ${encounter.threat}).`
@@ -1202,6 +1594,8 @@
         companionSay("Kindness cuts cleaner than steel here.");
       } else {
         encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
+        spawnCombatFloat("miss", "miss");
+        AudioCues.miss();
         stage?.showBeat?.("Word glances off", 900);
         pushJournal(
           `Soft word: Insight ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dcSoft} — miss. Threat rises to ${encounter.threat}.`
@@ -1231,6 +1625,7 @@
     }
 
     // strike
+    if (!gateSpendOrBail("strike")) return;
     const roll = rollD20();
     const mod = skillMod("Athletics");
     const total = roll + mod;
@@ -1238,20 +1633,28 @@
     recordRoll("Athletics", roll, mod, encounter.dc, ok);
     const bonus = combatEquipBonus();
     if (ok) {
-      const dmg = 4 + Math.floor(mod / 2) + bonus.dmg + (total >= encounter.dc + 5 ? 2 : 0);
+      const crit = total >= encounter.dc + 5;
+      const dmg = 4 + Math.floor(mod / 2) + bonus.dmg + (crit ? 2 : 0);
       encounter.foeHp = Math.max(0, encounter.foeHp - dmg);
-      stage?.playStrike?.({ hit: true, kill: encounter.foeHp <= 0, assist: false });
+      const kill = encounter.foeHp <= 0;
+      stage?.playStrike?.({ hit: true, kill, assist: false, crit });
+      spawnCombatFloat(crit ? `CRIT −${dmg}` : `−${dmg}`, kill ? "kill" : crit ? "crit" : "hit");
+      if (kill) AudioCues.kill();
+      else if (crit) AudioCues.crit();
+      else AudioCues.hit();
       stage?.showBeat?.(
-        `${bonus.label ? bonus.label + " · " : ""}Hit −${dmg}${encounter.foeHp <= 0 ? " · fallen" : ""}`,
+        `${bonus.label ? bonus.label + " · " : ""}${crit ? "Crit" : "Hit"} −${dmg}${kill ? " · fallen" : ""}`,
         1300
       );
       pushJournal(
         `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — hit for ${dmg} (${encounter.foeHp}/${encounter.foeHpMax}).`
       );
-      companionSay(encounter.foeHp <= 0 ? "Down. Curtain opens." : "Again — keep the pressure.");
+      companionSay(kill ? "Down. Curtain opens." : "Again — keep the pressure.");
     } else {
       encounter.threat = Math.min(encounter.threatMax, encounter.threat + 1);
       stage?.playStrike?.({ hit: false, kill: false, assist: false });
+      spawnCombatFloat("miss", "miss");
+      AudioCues.miss();
       stage?.showBeat?.(`Miss · threat ${encounter.threat}/${encounter.threatMax}`, 1100);
       pushJournal(
         `Strike: Athletics ${roll}${mod ? `+${mod}` : ""} = ${total} vs DC ${encounter.dc} — miss. Threat ${encounter.threat}/${encounter.threatMax}.`
@@ -1292,6 +1695,7 @@
     if (kind === "isle-check") {
       state.isleChecked = true;
       if (choiceId === "roll") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.mod || 0;
         const total = roll + mod;
@@ -1324,6 +1728,7 @@
     } else if (kind === "dust-check") {
       state.dustChecked = true;
       if (choiceId === "athletics") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ath || 0;
         const total = roll + mod;
@@ -1349,6 +1754,7 @@
           stage?.playResolve?.(false);
         }
       } else if (choiceId === "insight") {
+        AudioCues.roll?.();
         const roll = rollD20();
         const mod = encounter.ins || 0;
         const total = roll + mod;
@@ -1519,6 +1925,12 @@
 
     save();
     render();
+    if (from !== loc) {
+      pulseSceneTravel();
+      showTravelToast(LOCATIONS[loc]?.title || loc, nextObjectiveHint());
+      AudioCues.travel();
+      AudioCues.syncMusicForLocation?.(loc);
+    }
 
     const wantsIsle = loc === "memory-isle" && !state.isleChecked;
     const wantsDust = loc === "dust-lane" && !state.dustChecked;
@@ -1542,39 +1954,13 @@
     return document.getElementById(id);
   }
 
-  function fillBeingSelect(selectEl, selectedId) {
-    if (!selectEl) return;
+  /** Sync Play-start roster pickers to the full beings catalog (PAS-29). */
+  function syncStartBeingPickers(playerId, companionId) {
     const api = window.PlanesboundBeings;
-    const beings = api?.all?.() || [{ id: "human", name: "Human", tradition: "core" }];
-    const preferred = [
-      "human",
-      "aasimar",
-      "elf",
-      "dwarf",
-      "tiefling",
-      "dragonborn",
-      "halfling",
-      "gnome",
-      "orc",
-      "goblin",
-    ];
-    const byId = new Map(beings.map((b) => [b.id, b]));
-    const picks = [];
-    preferred.forEach((id) => {
-      if (byId.has(id)) picks.push(byId.get(id));
-    });
-    beings.slice(0, 80).forEach((b) => {
-      if (!picks.some((p) => p.id === b.id)) picks.push(b);
-    });
-    if (selectedId && byId.has(selectedId) && !picks.some((p) => p.id === selectedId)) {
-      picks.unshift(byId.get(selectedId));
-    }
-    selectEl.innerHTML = picks
-      .map(
-        (b) =>
-          `<option value="${escapeAttr(b.id)}"${b.id === selectedId ? " selected" : ""}>${escapeHtml(b.name)} (${escapeHtml(b.tradition)})</option>`
-      )
-      .join("");
+    if (!api?.setSelection) return;
+    const p = playerId || api.getPlayer?.()?.id || "human";
+    const c = companionId || api.getCompanion?.()?.id || "human";
+    api.setSelection(p, c);
   }
 
   function escapeHtml(s) {
@@ -1640,8 +2026,11 @@
     if (title) title.textContent = encounter.title;
     if (body) {
       const eq = combatEquipBonus();
+      const CG = Gates();
+      const g = encounter.gates;
+      const gateHud = g && CG ? ` · ${CG.describeHud(g, performance.now())}` : "";
       const liveHint = encounter.live
-        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}.`
+        ? ` You ${state.hp}/${state.hpMax} HP · Coil ${encounter.foeHp}/${encounter.foeHpMax} · Threat ${encounter.threat}/${encounter.threatMax}${eq.label ? ` · ${eq.label}` : ""}${gateHud}.`
         : "";
       body.textContent = encounter.body + liveHint;
     }
@@ -1657,9 +2046,32 @@
           0,
           Math.min(100, (encounter.threat / Math.max(1, encounter.threatMax)) * 100)
         );
-        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>`;
+        const g = encounter.gates;
+        const staMax = g?.staminaMax || 100;
+        const staNow = g ? Math.round(g.stamina) : staMax;
+        const staPct = Math.max(0, Math.min(100, (staNow / Math.max(1, staMax)) * 100));
+        const CG = Gates();
+        const now = performance.now();
+        const telegraph = !!(g && g.attackActive && !g.attackResolved);
+        const parryOpen = !!(g && CG && CG.inParryWindow(g, now));
+        const rolling = !!(g && CG && CG.isRolling(g, now));
+        const threatHot = encounter.threat >= Math.max(1, encounter.threatMax - 1);
+        const last = state.lastRoll;
+        const rollChip = last
+          ? `<span class="game-vital game-vital--roll">${escapeHtml(last.skill)} ${last.total}/${last.dc} · ${last.ok ? "ok" : "miss"}</span>`
+          : "";
+        const gateChip = telegraph
+          ? `<span class="game-vital game-vital--gate${parryOpen ? " game-vital--parry-open" : ""}">${parryOpen ? "PARRY NOW" : "TELEGRAPH"}</span>`
+          : rolling
+            ? `<span class="game-vital game-vital--gate game-vital--rolling">ROLL i-frame</span>`
+            : "";
+        vitals.dataset.threatHot = threatHot ? "true" : "false";
+        vitals.dataset.parryOpen = parryOpen ? "true" : "false";
+        vitals.innerHTML = `<span class="game-vital">You ${state.hp}/${state.hpMax}<i><b style="width:${hpPct}%"></b></i></span><span class="game-vital game-vital--sta">STA ${staNow}/${staMax}<i><b style="width:${staPct}%"></b></i></span><span class="game-vital game-vital--foe">Foe ${encounter.foeHp}/${encounter.foeHpMax}<i><b style="width:${foePct}%"></b></i></span><span class="game-vital game-vital--threat${threatHot ? " game-vital--threat-hot" : ""}">Threat ${encounter.threat}/${encounter.threatMax}<i><b style="width:${threatPct}%"></b></i></span>${gateChip}${rollChip}`;
       } else {
         vitals.hidden = true;
+        delete vitals.dataset.threatHot;
+        delete vitals.dataset.parryOpen;
       }
     }
     if (actions) {
@@ -1667,15 +2079,40 @@
         .map((c) => {
           const primary =
             c.id === "roll" ||
+            c.id === "parry" ||
             c.id === "fight" ||
             c.id === "strike" ||
             c.id === "athletics" ||
             c.id === "insight" ||
             c.id === "assist";
-          return `<button type="button" class="game-btn${primary ? " game-btn--astral" : ""}" data-encounter-choice="${escapeAttr(c.id)}"${c.disabled ? " disabled" : ""}>${escapeHtml(c.label)}</button>`;
+          const kind = c.kind || c.id;
+          const urgent = c.id === "parry" && vitals?.dataset?.parryOpen === "true";
+          const icon = actionIconSrc(kind) || actionIconSrc(c.id);
+          const iconHtml = icon
+            ? `<img class="game-btn-icon" src="${escapeAttr(icon)}" alt="" width="22" height="22" decoding="async" aria-hidden="true" />`
+            : "";
+          return `<button type="button" class="game-btn game-btn--iconed${primary ? " game-btn--astral" : ""}${urgent ? " game-btn--parry-now" : ""}" data-encounter-choice="${escapeAttr(c.id)}" data-kind="${escapeAttr(kind)}"${c.disabled ? " disabled" : ""}${encounter.resolving ? ' data-busy="true"' : ""}>${iconHtml}<span class="game-btn-label">${escapeHtml(c.label)}</span></button>`;
         })
         .join("");
     }
+  }
+
+  /** PAS-37 transparent action icons (brass/astral line art). */
+  function actionIconSrc(kind) {
+    const map = {
+      strike: "art/ui-icons/icon-strike.png",
+      athletics: "art/ui-icons/icon-strike.png",
+      fight: "art/ui-icons/icon-strike.png",
+      soft: "art/ui-icons/icon-soft.png",
+      insight: "art/ui-icons/icon-soft.png",
+      assist: "art/ui-icons/icon-assist.png",
+      roll: "art/ui-icons/icon-roll.png",
+      parry: "art/ui-icons/icon-parry.png",
+      slip: "art/ui-icons/icon-slip.png",
+      rest: "art/ui-icons/icon-rest.png",
+      companion: "art/ui-icons/icon-companion.png",
+    };
+    return map[kind] || null;
   }
 
   function renderEncounter() {
@@ -1767,6 +2204,11 @@
     document.body.classList.toggle("game-active", open);
     if (open) {
       document.getElementById("companionDialog")?.setAttribute("data-game-mode", "1");
+      AudioCues.ensure?.();
+      AudioCues.syncMusicForLocation?.(state.location || "hub");
+      syncMuteButton();
+    } else {
+      AudioCues.stopMusic?.(true);
     }
     if (window.PlanesboundMorrowrootPlay?.isActive?.()) {
       window.PlanesboundMorrowrootPlay.render?.();
@@ -1799,17 +2241,36 @@
       hud.dataset.theme = loc.theme;
       const party = el("gameHudParty");
       if (party) {
-        const pArt = `art/races/${escapeHtml(state.playerBeingId || "human")}.png`;
-        const cArt = `art/races/${escapeHtml(state.companionBeingId || "human")}.png`;
+        const Beings = window.PlanesboundBeings;
+        const pId = state.playerBeingId || "human";
+        const cId = state.companionBeingId || "human";
+        const pTrad =
+          Beings?.all?.()?.find?.((b) => b.id === pId)?.tradition || "core";
+        const cTrad =
+          Beings?.all?.()?.find?.((b) => b.id === cId)?.tradition || "core";
+        const pArt = escapeHtml(Beings?.artSrc?.(pId) || `art/races/${pId}.png`);
+        const cArt = escapeHtml(Beings?.artSrc?.(cId) || `art/races/${cId}.png`);
+        const pFb = escapeHtml(Beings?.placeholderSrc?.(pTrad) || "art/races/_placeholder-core.png");
+        const cFb = escapeHtml(Beings?.placeholderSrc?.(cTrad) || "art/races/_placeholder-core.png");
+        const hpPct = Math.max(0, Math.min(100, (state.hp / Math.max(1, state.hpMax)) * 100));
+        const fatPct = Math.max(
+          0,
+          Math.min(100, (state.fatigue / Math.max(1, state.fatigueMax)) * 100)
+        );
         party.innerHTML = `
           <div class="game-hud-portraits" aria-hidden="true">
-            <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" loading="lazy" decoding="async" onerror="this.src='art/races/human.png'" />
-            <img class="game-hud-portrait game-hud-portrait--companion" src="${cArt}" alt="" width="42" height="42" loading="lazy" decoding="async" onerror="this.src='art/races/human.png'" />
+            <img class="game-hud-portrait" src="${pArt}" alt="" width="42" height="42" loading="lazy" decoding="async" data-being="${escapeHtml(pId)}" onerror="this.onerror=null;this.src='${pFb}'" />
+            <img class="game-hud-portrait game-hud-portrait--companion" src="${cArt}" alt="" width="42" height="42" loading="lazy" decoding="async" data-being="${escapeHtml(cId)}" onerror="this.onerror=null;this.src='${cFb}'" />
           </div>
           <div class="game-hud-party-copy">
             <strong>${escapeHtml(state.playerName || "Traveler")}</strong>
-            <span>${escapeHtml(beingName(state.playerBeingId))} · L${state.level} · HP ${state.hp}/${state.hpMax} · Fat ${state.fatigue}/${state.fatigueMax}</span>
-            <span class="game-hud-loc">${escapeHtml(loc.title)}${state.equipped ? ` · eq ${escapeHtml(state.equipped)}` : ""}</span>
+            <span>${escapeHtml(beingName(state.playerBeingId))} · L${state.level} · with ${escapeHtml(beingName(state.companionBeingId))}</span>
+            <span class="game-hud-loc">${escapeHtml(loc.title)}${state.equipped ? ` · eq ${escapeHtml(state.equipped)}` : ""} · legs ${state.voyageLegs || 0}</span>
+            <div class="game-hud-meters" aria-hidden="true">
+              <div class="game-hud-meter game-hud-meter--hp" title="HP ${state.hp}/${state.hpMax}"><em>HP</em><i><b style="width:${hpPct}%"></b></i></div>
+              <div class="game-hud-meter game-hud-meter--fat" title="Fatigue ${state.fatigue}/${state.fatigueMax}"><em>Fat</em><i><b style="width:${fatPct}%"></b></i></div>
+            </div>
+            <span class="game-hud-crumb">Next · ${escapeHtml(nextObjectiveHint())}</span>
           </div>`;
       }
     }
@@ -1851,7 +2312,7 @@
                 : QUESTS["cross-astral-sea"].title
         }</p>
         <div class="game-status-actions">
-          <button type="button" class="game-btn" data-action="rest">Short rest</button>
+          <button type="button" class="game-btn game-btn--iconed" data-action="rest"><img class="game-btn-icon" src="art/ui-icons/icon-rest.png" alt="" width="20" height="20" decoding="async" aria-hidden="true" /><span class="game-btn-label">Short rest</span></button>
           ${
             state.chapterComplete
               ? `<button type="button" class="game-btn game-btn--astral" data-action="new-voyage">New voyage</button>`
@@ -1903,8 +2364,18 @@
     window.PlanesboundGame = api();
   }
 
+  function iconedActionBtn(action, label, extraClass = "") {
+    const src = actionIconSrc(action);
+    const icon = src
+      ? `<img class="game-btn-icon" src="${escapeAttr(src)}" alt="" width="20" height="20" decoding="async" aria-hidden="true" />`
+      : "";
+    return `<button type="button" class="game-btn game-btn--iconed${extraClass ? ` ${extraClass}` : ""}" data-action="${escapeAttr(action)}">${icon}<span class="game-btn-label">${escapeHtml(label)}</span></button>`;
+  }
+
   function sceneActionsHtml() {
     const loc = state.location;
+    const restBtn = iconedActionBtn("rest", "Short rest");
+    const companionBtn = iconedActionBtn("companion", "Ask companion");
     if (loc === "hub") {
       const more = state.questComplete
         ? `<button type="button" class="game-btn game-btn--astral" data-travel="color-pool">Seek a color pool</button>
@@ -1916,8 +2387,8 @@
       return `<button type="button" class="game-btn game-btn--astral" data-travel="astral-sea">Cast off into the Astral Sea</button>
         ${more}
         ${newVoyageBtn}
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn" data-action="play-modes">Other play modes</button>
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
@@ -1933,14 +2404,14 @@
         <button type="button" class="game-btn" data-travel="lighthouse-bearing">Follow Lighthouse pulse</button>
         ${dust}
         ${pool}
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-travel="hub">Return to hub</button>`;
     }
     if (loc === "memory-isle") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="lighthouse-bearing">Take bearing from the isle</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${restBtn}
+        ${companionBtn}`;
     }
     if (loc === "dust-lane") {
       const pool = state.questComplete
@@ -1949,25 +2420,25 @@
       return `${pool}
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
         <button type="button" class="game-btn" data-travel="mineral-shore"${state.objectives.pool ? "" : " disabled"} title="Need color pool first">Force Mineral (needs pool)</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "color-pool") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="mineral-shore">Step through toward Mineral</button>
         <button type="button" class="game-btn" data-travel="dust-lane">Sidestep into Dust Lane</button>
         <button type="button" class="game-btn" data-travel="astral-sea">Back to open Sea</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+        ${companionBtn}`;
     }
     if (loc === "mineral-shore") {
       return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Return via Lighthouse roads</button>
         <button type="button" class="game-btn" data-travel="color-pool">Back through the pool</button>
-        <button type="button" class="game-btn" data-action="rest">Short rest</button>
-        <button type="button" class="game-btn" data-action="companion">Ask companion</button>
+        ${restBtn}
+        ${companionBtn}
         <button type="button" class="game-btn game-btn--ghost" data-action="atlas">Browse atlas</button>`;
     }
     return `<button type="button" class="game-btn game-btn--astral" data-travel="hub">Ride bearing back to hub</button>
       <button type="button" class="game-btn" data-travel="astral-sea">Stay on the Astral Sea</button>
       <button type="button" class="game-btn" data-travel="dust-lane">Cut toward Dust Lane</button>
-      <button type="button" class="game-btn" data-action="companion">Ask companion</button>`;
+      ${companionBtn}`;
   }
 
   function prefillFromCreation() {
@@ -1984,8 +2455,7 @@
       setPlayOpen(true);
       showStart(true);
       const pref = prefillFromCreation();
-      fillBeingSelect(el("gamePlayerBeing"), pref.playerBeingId || "human");
-      fillBeingSelect(el("gameCompanionBeing"), pref.companionBeingId || "human");
+      syncStartBeingPickers(pref.playerBeingId || "human", pref.companionBeingId || "human");
       const nameInput = el("gamePlayerName");
       if (nameInput && !nameInput.value) nameInput.value = pref.name || state.playerName || "";
       nameInput?.focus();
@@ -2070,6 +2540,8 @@
     encounter = null;
     renderEncounter();
     render();
+    // Hub stays quiet — stop any astral bed left from the previous chapter.
+    AudioCues.syncMusicForLocation?.(state.location || "hub");
   }
 
   function exitPlay() {
@@ -2083,6 +2555,7 @@
     } catch (_) {
       /* ignore */
     }
+    AudioCues.stopMusic?.(true);
     setPlayOpen(false);
   }
 
@@ -2142,6 +2615,8 @@
       showStart,
       setPlayOpen,
       travelTo,
+      /** PAS-39 audio surface for combat-gates / tests. */
+      audio: () => window.PlanesboundAudio || AudioCues,
       counselContext: () => {
         const loc = LOCATIONS[state.location] || LOCATIONS.hub;
         const last = state.lastRoll;
@@ -2176,6 +2651,15 @@
     el("gameStartForm")?.addEventListener("submit", startCharacter);
     el("gameCancelStart")?.addEventListener("click", exitPlay);
     el("gameExit")?.addEventListener("click", exitPlay);
+    el("gameMuteAudio")?.addEventListener("click", () => {
+      AudioCues.toggleMute?.();
+      AudioCues.ui?.();
+      syncMuteButton();
+      if (!AudioCues.isMuted?.() && playOpen) {
+        AudioCues.syncMusicForLocation?.(state.location || "hub");
+      }
+    });
+    syncMuteButton();
     el("gameSceneActions")?.addEventListener("click", onSceneClick);
     el("gameSide")?.addEventListener("click", onSceneClick);
     el("gameContinueExplore")?.addEventListener("click", () => {
@@ -2232,8 +2716,10 @@
 
     document.addEventListener("planesbound-beings-ready", () => {
       if (playOpen && el("gameStart")?.dataset.open === "true") {
-        fillBeingSelect(el("gamePlayerBeing"), el("gamePlayerBeing")?.value || "human");
-        fillBeingSelect(el("gameCompanionBeing"), el("gameCompanionBeing")?.value || "human");
+        syncStartBeingPickers(
+          el("gamePlayerBeing")?.value || "human",
+          el("gameCompanionBeing")?.value || "human"
+        );
       }
     });
 

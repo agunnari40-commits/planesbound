@@ -11,6 +11,7 @@
   const ABILS = ["str", "dex", "con", "int", "wis", "cha"];
   const ABIL_LABEL = { str: "STR", dex: "DEX", con: "CON", int: "INT", wis: "WIS", cha: "CHA" };
 
+  /** SRD-safe core classes for player & companion sheets (race/being = 420 roster). */
   const CLASSES = [
     "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
     "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard",
@@ -152,7 +153,16 @@
   }
 
   function portraitUrl(raceId) {
+    const Beings = window.PlanesboundBeings;
+    if (Beings?.artSrc) return Beings.artSrc(raceId || "human");
     return `art/races/${raceId || "human"}.png`;
+  }
+
+  function portraitFallback(raceId) {
+    const Beings = window.PlanesboundBeings;
+    const being = Beings?.all?.()?.find?.((b) => b.id === raceId);
+    if (Beings?.placeholderSrc) return Beings.placeholderSrc(being?.tradition || "core");
+    return "art/races/_placeholder-core.png";
   }
 
   function renderSheet(role) {
@@ -174,12 +184,8 @@
       </div>`
     ).join("");
 
-    const classOpts = CLASSES.map(
-      (c) => `<option value="${c}" ${s.className === c ? "selected" : ""}>${c}</option>`
-    ).join("");
-    const bgOpts = BACKGROUNDS.map(
-      (b) => `<option value="${b}" ${s.background === b ? "selected" : ""}>${b}</option>`
-    ).join("");
+    const classOpts = CLASSES.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("");
+    const bgOpts = BACKGROUNDS.map((b) => `<option value="${escapeHtml(b)}"></option>`).join("");
 
     const skillsHtml = SKILLS.map(([name, abl]) => {
       const checked = s.skills?.[name] ? "checked" : "";
@@ -201,8 +207,8 @@
       </div>
       <div class="sheet-body">
         <div class="sheet-portrait-col">
-          <img class="sheet-portrait" src="${portraitUrl(s.raceId)}" alt="" width="132" height="132" loading="lazy" onerror="this.src='art/races/human.png'" />
-          <p class="sheet-race-line">${s.raceName}</p>
+          <img class="sheet-portrait" src="${portraitUrl(s.raceId)}" alt="${escapeAttr(s.raceName || "Race")} portrait" width="132" height="132" loading="lazy" data-being="${escapeAttr(s.raceId || "human")}" onerror="this.onerror=null;this.src='${escapeAttr(portraitFallback(s.raceId))}'" />
+          <p class="sheet-race-line">${escapeHtml(s.raceName)} · race from 420 roster</p>
         </div>
         <div style="display:grid;gap:0.65rem">
           <div class="sheet-grid-2">
@@ -218,11 +224,13 @@
           <div class="sheet-grid-2">
             <div class="sheet-field">
               <label for="sheetClass">Class</label>
-              <select id="sheetClass" data-field="className"><option value="">Choose class…</option>${classOpts}</select>
+              <input id="sheetClass" list="sheetClassList" data-field="className" value="${escapeHtml(s.className || "")}" placeholder="Search class…" autocomplete="off" />
+              <datalist id="sheetClassList">${classOpts}</datalist>
             </div>
             <div class="sheet-field">
               <label for="sheetBg">Background</label>
-              <select id="sheetBg" data-field="background"><option value="">Choose background…</option>${bgOpts}</select>
+              <input id="sheetBg" list="sheetBgList" data-field="background" value="${escapeHtml(s.background || "")}" placeholder="Search background…" autocomplete="off" />
+              <datalist id="sheetBgList">${bgOpts}</datalist>
             </div>
           </div>
           <div class="sheet-abilities" aria-label="Ability scores">${abilHtml}</div>
@@ -487,6 +495,8 @@
 
     document.addEventListener("planesbound-race-picked", (e) => {
       const role = e.detail?.role;
+      // Play-start picks omit this event; ignore legacy source:"start" if any.
+      if (e.detail?.source === "start") return;
       if (role === "player" || role === "companion") onRacePicked(role);
     });
 
