@@ -688,6 +688,7 @@
       choices: [],
       gates: Gates()?.createState?.() || null,
     };
+    lastAppliedIncomingKey = null;
     syncLiveChoices();
     renderEncounter();
     ensureCombatGateLoop();
@@ -699,6 +700,9 @@
       combatGateRaf = 0;
     }
   }
+
+  /** Dedup key for last applied incoming gate result (avoids dropped/double apply). */
+  let lastAppliedIncomingKey = null;
 
   function applyIncomingGateResult(result) {
     if (!encounter?.live || !result) return;
@@ -730,26 +734,41 @@
     }
   }
 
+  /**
+   * Tick gates and apply any newly committed incoming result exactly once.
+   * Used by the rAF loop and by syncLiveChoices so a tick outside rAF cannot drop damage.
+   */
+  function flushGateTick(now) {
+    const CG = Gates();
+    if (!CG || !encounter?.live || !encounter.gates) return false;
+    CG.tick(encounter.gates, now);
+    const result = encounter.gates.lastResult;
+    if (!result || result.type !== "incoming" || !encounter.gates.attackResolved) return false;
+    const key = `${result.at}|${result.blocked}|${result.hit ? 1 : 0}|${result.damage || 0}`;
+    if (key === lastAppliedIncomingKey) return false;
+    lastAppliedIncomingKey = key;
+    applyIncomingGateResult(result);
+    save();
+    return true;
+  }
+
   function ensureCombatGateLoop() {
     if (combatGateRaf || !encounter?.live || !encounter.gates || !Gates()) return;
     let lastChoiceSig = "";
     const step = (now) => {
       combatGateRaf = 0;
       if (!encounter?.live || !encounter.gates) return;
-      const CG = Gates();
-      const wasAttacking = encounter.gates.attackActive && !encounter.gates.attackResolved;
-      CG.tick(encounter.gates, now);
-      if (wasAttacking && encounter.gates.attackResolved && encounter.gates.lastResult?.type === "incoming") {
-        applyIncomingGateResult(encounter.gates.lastResult);
-        save();
+      const applied = flushGateTick(now);
+      if (applied) {
         render();
         lastChoiceSig = "";
       }
-      syncLiveChoices();
+      // skipTick: rAF already flushed; avoid a second tick with a later now that could race.
+      syncLiveChoices({ skipTick: true });
       const sig = (encounter.choices || [])
-        .map((c) => `${c.id}:${c.disabled ? 1 : 0}:${c.label}`)
+        .map((c) => `${c.id}:${c.disabled ? 1 : 0}`)
         .join("|");
-      // Rebuild actions only when labels/disabled flip; vitals still refresh every frame for STA.
+      // Rebuild actions only when id/disabled flip — not when Parry label toggles NOW.
       if (sig !== lastChoiceSig) {
         lastChoiceSig = sig;
         renderEncounterChrome();
@@ -759,6 +778,13 @@
       combatGateRaf = requestAnimationFrame(step);
     };
     combatGateRaf = requestAnimationFrame(step);
+  }
+
+  function parryChoiceLabel(telegraph, parryOpen, sta, CG) {
+    const cost = sta != null && CG ? ` · ${CG.ACTIONS.parry.stamina} STA` : "";
+    if (parryOpen) return `Parry · NOW${cost}`;
+    if (telegraph) return `Parry · wait window${cost}`;
+    return `Parry · on telegraph${cost}`;
   }
 
   function renderEncounterVitalsOnly() {
@@ -794,10 +820,17 @@
       gate.remove();
     }
     const parryBtn = el("gameEncounterActions")?.querySelector('[data-encounter-choice="parry"]');
-    if (parryBtn) parryBtn.classList.toggle("game-btn--parry-now", parryOpen);
+    if (parryBtn) {
+      parryBtn.classList.toggle("game-btn--parry-now", parryOpen);
+      // Update label in place so focus / in-flight click is not destroyed at window open.
+      const choice = encounter.choices?.find((c) => c.id === "parry");
+      const label = parryChoiceLabel(telegraph, parryOpen, staNow, CG);
+      if (choice) choice.label = label;
+      if (parryBtn.textContent !== label) parryBtn.textContent = label;
+    }
   }
 
-  function syncLiveChoices() {
+  function syncLiveChoices(opts = {}) {
     if (!encounter?.live) return;
     const needTarget = !encounter.targeted;
     const busy = !!encounter.resolving;
@@ -805,7 +838,10 @@
     const CG = Gates();
     const g = encounter.gates;
     const now = performance.now();
-    if (g && CG) CG.tick(g, now);
+    // Tick + apply here unless the rAF step already flushed this frame.
+    if (!opts.skipTick && g && CG) {
+      if (flushGateTick(now)) render();
+    }
     const sta = g ? Math.round(g.stamina) : null;
     const winded = (action) => (g && CG ? !CG.canAfford(g, action) : false);
     const telegraph = !!(g && g.attackActive && !g.attackResolved);
@@ -839,11 +875,7 @@
       },
       {
         id: "parry",
-        label: parryOpen
-          ? `Parry · NOW${sta != null ? ` · ${CG.ACTIONS.parry.stamina} STA` : ""}`
-          : telegraph
-            ? `Parry · wait window${sta != null ? ` · ${CG.ACTIONS.parry.stamina} STA` : ""}`
-            : `Parry · on telegraph${sta != null ? ` · ${CG.ACTIONS.parry.stamina} STA` : ""}`,
+        label: parryChoiceLabel(telegraph, parryOpen, sta, CG),
         disabled: busy || winded("parry") || !telegraph,
         kind: "parry",
       },

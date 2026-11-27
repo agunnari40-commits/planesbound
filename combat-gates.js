@@ -83,9 +83,12 @@
     if (dt > 0 && !isRolling(state, nowMs)) {
       state.stamina = clamp(state.stamina + dt * state.opts.staminaRegenPerMs, 0, state.staminaMax);
     }
-    // Auto-resolve overdue foe hits (caller may also poll resolveIncoming)
-    if (state.attackActive && !state.attackResolved && nowMs >= state.attackStartedAt + state.opts.attackHitAtMs) {
-      resolveIncoming(state, nowMs);
+    // Auto-resolve only after the full parry window closes (hitAt + parryLateMs),
+    // so presses in the late grace window still see an active attack.
+    if (state.attackActive && !state.attackResolved) {
+      const commitAt =
+        state.attackStartedAt + state.opts.attackHitAtMs + state.opts.parryLateMs;
+      if (nowMs >= commitAt) resolveIncoming(state, nowMs);
     }
     return state;
   }

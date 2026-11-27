@@ -342,7 +342,16 @@ describe("Planesbound combat gates — parry windows", () => {
   it("46 tick auto-resolves overdue hit", () => {
     const s = fresh({ foeDamage: 3 });
     CG.beginFoeAttack(s, 0);
-    CG.tick(s, 500);
+    // Commit after hitAt + parryLateMs (420+50), not at hitAt
+    CG.tick(s, 420);
+    assert.equal(s.attackResolved, false);
+    assert.equal(CG.tryParry(s, 450).ok, true); // late grace still reachable
+  });
+
+  it("46b tick commits after parry late window", () => {
+    const s = fresh({ foeDamage: 3 });
+    CG.beginFoeAttack(s, 0);
+    CG.tick(s, 470);
     assert.equal(s.attackResolved, true);
     assert.equal(s.lastResult.hit, true);
     assert.equal(s.lastResult.damage, 3);
