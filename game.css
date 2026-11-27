@@ -987,12 +987,31 @@
 .game-encounter-vitals .game-vital--foe i > b {
   background: linear-gradient(90deg, #8a2f28, #d45a45);
 }
+.game-encounter-vitals .game-vital--sta i > b {
+  background: linear-gradient(90deg, #2f6b4a, #7ec9a0);
+}
 .game-encounter-vitals .game-vital--threat i > b {
   background: linear-gradient(90deg, #7a5a18, #e0b24a);
 }
 .game-encounter-vitals .game-vital--threat-hot {
   border-color: color-mix(in oklab, #e0b24a 55%, transparent);
   box-shadow: 0 0 10px color-mix(in oklab, #e0b24a 28%, transparent);
+}
+.game-encounter-vitals .game-vital--gate {
+  min-width: auto;
+  letter-spacing: 0.06em;
+  font-size: 0.58rem;
+  color: #f0d9a8;
+  border-color: color-mix(in oklab, #e0b24a 45%, transparent);
+}
+.game-encounter-vitals .game-vital--parry-open {
+  color: #e8fff4;
+  border-color: color-mix(in oklab, #7ec9a0 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, #7ec9a0 35%, transparent);
+}
+.game-encounter-vitals .game-vital--rolling {
+  color: #cfe6ff;
+  border-color: color-mix(in oklab, #9ec4e8 50%, transparent);
 }
 .game-encounter-vitals .game-vital--roll {
   min-width: auto;
@@ -1006,6 +1025,21 @@
 }
 .game-encounter-actions .game-btn[data-kind="soft"] {
   border-color: color-mix(in oklab, #b8d8f0 40%, transparent);
+}
+.game-encounter-actions .game-btn[data-kind="roll"] {
+  border-color: color-mix(in oklab, #9ec4e8 48%, transparent);
+}
+.game-encounter-actions .game-btn[data-kind="parry"] {
+  border-color: color-mix(in oklab, #7ec9a0 45%, transparent);
+}
+.game-btn--parry-now {
+  border-color: color-mix(in oklab, #7ec9a0 75%, transparent) !important;
+  box-shadow: 0 0 14px color-mix(in oklab, #7ec9a0 40%, transparent);
+  animation: game-parry-pulse 0.55s ease-in-out infinite;
+}
+@keyframes game-parry-pulse {
+  0%, 100% { box-shadow: 0 0 8px color-mix(in oklab, #7ec9a0 28%, transparent); }
+  50% { box-shadow: 0 0 18px color-mix(in oklab, #7ec9a0 55%, transparent); }
 }
 .game-encounter-actions .game-btn[data-busy="true"] {
   opacity: 0.72;
