@@ -105,13 +105,14 @@
 
   function seedWisps() {
     const n = Math.max(10, Math.floor((w * h) / 90000));
+    // Seed behind the Daystar travel band so first-frame wrap does not fire.
     wisps = Array.from({ length: n }, () => ({
       ang: Math.random() * Math.PI * 2,
       rad: 40 + Math.random() * 150,
-      z: Math.random() * 200 - 80,
+      z: -160 + Math.random() * 140,
       speed: 0.08 + Math.random() * 0.12,
       phase: Math.random() * Math.PI * 2,
-      size: 10 + Math.random() * 16,
+      size: 14 + Math.random() * 18,
     }));
   }
 
@@ -392,7 +393,9 @@
       const ly = Math.sin(wp.ang + wp.phase) * wp.rad * 0.48;
       const p = project(lx, ly, wp.z, t);
       const pulse = 0.55 + 0.35 * Math.sin(t * 0.7 + wp.phase);
-      drawWispSprite(p.x, p.y, wp.size * p.s * 0.04, pulse * 0.85);
+      // Preserve seeded size × perspective (was *0.04 → always floor at 8px).
+      const spriteSize = Math.max(12, wp.size * Math.max(0.85, p.s * 0.75));
+      drawWispSprite(p.x, p.y, spriteSize, pulse * 0.85);
     });
 
     BODIES.forEach((b, i) => {
